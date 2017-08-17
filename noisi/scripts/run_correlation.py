@@ -17,38 +17,47 @@ from obspy.signal.invsim import cosine_taper
 from noisi import filter
 from scipy.signal import sosfilt
 from noisi.util.windows import my_centered, zero_buddy
+from noisi.util.geo import geograph_to_geocent
 from noisi.util.corr_pairs import define_correlationpairs, rem_fin_prs, rem_no_obs
 import matplotlib.pyplot as plt
+import instaseis
+
+
 #ToDo: put in the possibility to run on mixed channel pairs
-def paths_input(cp,source_conf,step,kernelrun,ignore_network):
+def paths_input(cp,source_conf,step,kernelrun,ignore_network,instaseis):
     
     inf1 = cp[0].split()
     inf2 = cp[1].split()
     
-    
-    # Wavefield files
     conf = json.load(open(os.path.join(source_conf['project_path'],'config.json')))
     channel = source_conf['channel']
-
+    
+    # station names
     if ignore_network:
         sta1 = "*.{}..{}".format(*(inf1[1:2]+[channel]))
         sta2 = "*.{}..{}".format(*(inf2[1:2]+[channel]))
     else:
         sta1 = "{}.{}..{}".format(*(inf1[0:2]+[channel]))
         sta2 = "{}.{}..{}".format(*(inf2[0:2]+[channel]))
+
+
+    # Wavefield files  
+    if instaseis == False:
+        if source_conf['preprocess_do']:
+            dir = os.path.join(source_conf['source_path'],'wavefield_processed')
+        else:
+            dir = conf['wavefield_path']
     
-    if source_conf['preprocess_do']:
-        dir = os.path.join(source_conf['source_path'],'wavefield_processed')
+        wf1 = glob(os.path.join(dir,sta1+'.h5'))[0]
+        wf2 = glob(os.path.join(dir,sta2+'.h5'))[0]
     else:
-        dir = conf['wavefield_path']
+        # need to return two receiver coordinate pairs. For buried sensors, depth could be used but no elevation is possible, 
         
-   
+        # so maybe keep everything at 0 m?
+        # lists of information directly from the stations.txt file.
+        wf1 = inf1
+        wf2 = inf2
 
-   
-    wf1 = glob(os.path.join(dir,sta1+'.h5'))[0]
-    wf2 = glob(os.path.join(dir,sta2+'.h5'))[0]
-
-    
     
     # Starting model for the noise source
     if kernelrun:
@@ -108,6 +117,7 @@ def paths_input(cp,source_conf,step,kernelrun,ignore_network):
             print("No adjoint source found for station pair: {}, {}".format(sta1,sta2))
                 # ToDo: this is too horrible, please find another solution.
             adjt = '-'
+        
     else:
         adjt = ''
 
@@ -162,14 +172,24 @@ def paths_output(cp,source_conf,step):
         corr_trace_name)   
     return (kern_name,corr_trace_name)
     
-def get_ns(wf1,source_conf):
+def get_ns(wf1,source_conf,insta):
     
     # Nr of time steps in traces
-    with WaveField(wf1) as wf1:
-        nt = int(wf1.stats['nt'])
-        Fs = round(wf1.stats['Fs'],8)
-
-    print('Sampling rate (Hz) %g' %Fs)
+    if insta:
+        # get path to instaseis db
+        #ToDo: ugly.
+        dbpath = json.load(open(os.path.join(source_conf['project_path'],'config.json')))['wavefield_path']
+        # open 
+        db = instaseis.open_db(dbpath)
+        # get a test seismogram to determine...
+        stest = db.get_seismograms(source=instaseis.ForceSource(latitude=0.0,longitude=0.0),receiver=instaseis.Receiver(latitude=10.,longitude=0.0))[0]
+        
+        nt = stest.stats.npts
+        Fs = stest.stats.sampling_rate
+    else:
+        with WaveField(wf1) as wf1:
+            nt = int(wf1.stats['nt'])
+            Fs = round(wf1.stats['Fs'],8)
     
     # Necessary length of zero padding for carrying out frequency domain correlations/convolutions
     n = next_fast_len(2*nt-1)     
@@ -183,13 +203,13 @@ def get_ns(wf1,source_conf):
         
     n_corr = 2*n_lag + 1
     
-    return nt,n,n_corr
+    return nt,n,n_corr,Fs
         
     
 
 
 def g1g2_corr(wf1,wf2,corr_file,kernel,adjt,
-    src,source_conf,kernelrun):
+    src,source_conf,kernelrun,insta):
     
     #ToDo: Take care of saving metainformation
     #ToDo: Think about how to manage different types of sources (numpy array vs. get from configuration -- i.e. read source from file as option)
@@ -197,102 +217,127 @@ def g1g2_corr(wf1,wf2,corr_file,kernel,adjt,
     #ToDo: Parallel loop(s)
     #ToDo tests
     
-    ntime, n, n_corr = get_ns(wf1,source_conf)
     
     
-    taper = cosine_taper(ntime,p=0.05)
-    
-    with WaveField(wf1) as wf1, WaveField(wf2) as wf2:
+    # change to: open both and then close the files lower down. if instaseis, change to getting from instaseis db
+    # with WaveField(wf1) as wf1, WaveField(wf2) as wf2:
         
         
-        if wf1.stats['Fs'] != wf2.stats['Fs']:
-            msg = 'Sampling rates of synthetic green\'s functions must match.'
-            raise ValueError(msg)
-        
-        # initialize new hdf5 files for correlation and green's function correlation
-        #with wf1.copy_setup(corr_file,nt=n_corr) as correl, NoiseSource(src) as nsrc:
-        #with wf1.copy_setup(corr_file,nt=n_corr) as correl:
+    #     if wf1.stats['Fs'] != wf2.stats['Fs']:
+    #         msg = 'Sampling rates of synthetic green\'s functions must match.'
+    #         raise ValueError(msg)
         
 
-        with NoiseSource(src) as nsrc:
+    with NoiseSource(src) as nsrc:
 
-            correlation = np.zeros(n_corr)
+        ntime, n, n_corr, Fs = get_ns(wf1,source_conf,insta)
+        print(ntime)
+        taper = cosine_taper(ntime,p=0.05)
+        ntraces = nsrc.src_loc[0].shape[0]
+
+        correlation = np.zeros(n_corr)
+
+        if insta:
+            # open database
+            dbpath = json.load(open(os.path.join(source_conf['project_path'],'config.json')))['wavefield_path']
+            # open and determine Fs, nt
+            db = instaseis.open_db(dbpath)
+            # get receiver locations
+            lat1 = geograph_to_geocent(float(wf1[2]))
+            lon1 = float(wf1[3])
+            rec1 = instaseis.Receiver(latitude=lat1,longitude=lon1)
+            lat2 = geograph_to_geocent(float(wf2[2]))
+            lon2 = float(wf2[3])
+            rec2 = instaseis.Receiver(latitude=lat2,longitude=lon2)
+
+        if kernelrun:
             
-            if kernelrun:
+            #if not os.path.exists(adjt):
+            #    print('Adjoint source %s not found, skipping kernel.')
+            #    return()
+
+            kern = np.zeros((ntraces,len(adjt)))
+            
+
+
+            f = Stream()
+            for adjtfile in adjt:
+                if adjtfile == '-':
+                    return
+                f += read(adjtfile)[0]
+                f[-1].data = my_centered(f[-1].data,n_corr)
+            
+        # Loop over source locations
+        #with click.progressbar(range(wf1.stats['ntraces']),\
+        #label='Correlating...' ) as ind:
+        for i in range(ntraces):
+
+            # noise source spectrum at this location
+            # if calculating kernel, the spectrum is location independent.
+            S = nsrc.get_spect(i)
+
+            if S.sum() == 0.: # The spectrum has 0 phase anyway
+                continue
+
+           
+            if insta:
+            # get source locations
+                lat_src = geograph_to_geocent(nsrc.src_loc[1,i])
+                lon_src = nsrc.src_loc[0,i]
+                fsrc = instaseis.ForceSource(latitude=lat_src,longitude=lon_src,f_r=1.e12)
                 
-                #if not os.path.exists(adjt):
-                #    print('Adjoint source %s not found, skipping kernel.')
-                #    return()
-
-                kern = np.zeros((wf1.stats['ntraces'],len(adjt)))
+                s1 = np.ascontiguousarray(db.get_seismograms(source=fsrc,receiver=rec1)[0].data*taper)
+                s2 = np.ascontiguousarray(db.get_seismograms(source=fsrc,receiver=rec2)[0].data*taper)
                 
 
-
-                f = Stream()
-                for adjtfile in adjt:
-                    if adjtfile == '-':
-                        return
-                    f += read(adjtfile)[0]
-                    f[-1].data = my_centered(f[-1].data,n_corr)
-                
-            # Loop over source locations
-            #with click.progressbar(range(wf1.stats['ntraces']),\
-            #label='Correlating...' ) as ind:
-            for i in range(wf1.stats['ntraces']):
-
-                # noise source spectrum at this location
-                # if calculating kernel, the spectrum is location independent.
-                S = nsrc.get_spect(i)
-
-                if S.sum() == 0.: # The spectrum has 0 phase anyway
-                    continue
-
-               
+            else:
                 s1 = np.ascontiguousarray(wf1.data[i,:]*taper)
                 s2 = np.ascontiguousarray(wf2.data[i,:]*taper)
-                
-                spec1 = np.fft.rfft(s1,n)
-                spec2 = np.fft.rfft(s2,n)
-                
-              
-                g1g2_tr = np.multiply(np.conjugate(spec1),spec2)
-                # if i%50000 == 0:
-                #     print(g1g2_tr[0:10],file=None)
-                #     print(g1g2_tr.max(),file=None)
+            
+            
 
-                c = np.multiply(g1g2_tr,S)
+            spec1 = np.fft.rfft(s1,n)
+            spec2 = np.fft.rfft(s2,n)
+            
+          
+            g1g2_tr = np.multiply(np.conjugate(spec1),spec2)
+            # if i%50000 == 0:
+            #     print(g1g2_tr[0:10],file=None)
+            #     print(g1g2_tr.max(),file=None)
 
-                # if i%50000==0:
-                #     print(c[0:10],file=None)
-                #     print(c.max(),file=None)
+            c = np.multiply(g1g2_tr,S)
 
-                if kernelrun:
-                    
-                    corr_temp = my_centered(np.fft.ifftshift(np.fft.irfft(c,n)),n_corr)
-                    ##if i%50000 == 0:
-                    #    ##print(corr_temp[0:10],file=None)
-                        #print(corr_temp.max(),file=None)
-                    # A Riemann sum
-                    for j in range(len(adjt)):
-                        kern[i,j] = np.dot(corr_temp,f[j].data) * f[j].stats.delta
-                    
+            # if i%50000==0:
+            #     print(c[0:10],file=None)
+            #     print(c.max(),file=None)
+
+            if kernelrun:
                 
-                else:
-                                    
-                    correlation += my_centered(np.fft.ifftshift(np.fft.irfft(c,n)),n_corr)
+                corr_temp = my_centered(np.fft.ifftshift(np.fft.irfft(c,n)),n_corr)
+                ##if i%50000 == 0:
+                #    ##print(corr_temp[0:10],file=None)
+                    #print(corr_temp.max(),file=None)
+                # A Riemann sum
+                for j in range(len(adjt)):
+                    kern[i,j] = np.dot(corr_temp,f[j].data) * f[j].stats.delta
                 
-                if i%50000 == 0:
-                    print("Finished {} source locations.".format(i))
-        
+            
+            else:
+                                
+                correlation += my_centered(np.fft.ifftshift(np.fft.irfft(c,n)),n_corr)
+            
+            if i%50000 == 0:
+                print("Finished {} source locations.".format(i))
+    
 
-        
+    
 
         if kernelrun:
             np.save(kernel,kern) 
 
         else:
             trace = Trace()
-            trace.stats.sampling_rate = wf1.stats['Fs']
+            trace.stats.sampling_rate = Fs
             trace.data = correlation
             trace.write(filename=corr_file,format='SAC')
             
@@ -480,6 +525,8 @@ def run_corr(source_configfile,step,kernelrun=False,
     #ToDo think about that configuration decorator
     source_config=json.load(open(source_configfile))
     obs_only = source_config['model_observed_only']
+    #ToDo: ugly.
+    insta = json.load(open(os.path.join(source_config['project_path'],'config.json')))['instaseis']
 
     #conf = json.load(open(os.path.join(source_conf['project_path'],'config.json')))
     
@@ -525,14 +572,18 @@ def run_corr(source_configfile,step,kernelrun=False,
     
     print('Rank number %g' %rank)
     print('working on pair nr. %g to %g of %g.' %(rank*num_pairs,rank*num_pairs+num_pairs,len(p)))
+
+
     
     for cp in p_p:
         
         try:
-            wf1,wf2,src,adjt = paths_input(cp,source_config,step,kernelrun,ignore_network)
+            wf1,wf2,src,adjt = paths_input(cp,source_config,step,kernelrun,ignore_network,insta)
             print(wf1,wf2,src)
-        
             kernel,corr = paths_output(cp,source_config,step)
+            print(kernel)
+        
+        
             
             
         except:
@@ -547,6 +598,7 @@ def run_corr(source_configfile,step,kernelrun=False,
             continue
 
         for asr in adjt:
+            # This is only a checking loop ... really needed?
             if not os.path.exists(asr) and kernelrun:
                 print('No adjoint source found for:')
                 print(os.path.basename(asr))
@@ -557,7 +609,7 @@ def run_corr(source_configfile,step,kernelrun=False,
                # if source_config['ktype'] == 'td':
 
                     #print('Time domain preliminary kernel...')
-        g1g2_corr(wf1,wf2,corr,kernel,adjt,src,source_config,kernelrun=kernelrun)
+        g1g2_corr(wf1,wf2,corr,kernel,adjt,src,source_config,kernelrun=kernelrun,insta=insta)
 
             #     elif source_config['ktype'] == 'fd':
             #         print('Frequency domain preliminary kernel...')

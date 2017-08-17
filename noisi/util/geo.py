@@ -18,6 +18,13 @@ def wgs84():
     
     return(a,b,e_2,f)
 
+        # geographic to geocentric
+def geograph_to_geocent(theta):
+    # https://en.wikipedia.org/wiki/Latitude#Geocentric_latitude
+    e2 = wgs84()[2]
+    theta = np.rad2deg(np.arctan((1 - e2) * np.tan(np.deg2rad(theta))))
+    return theta
+
 def len_deg_lon(lat):
     
     (a,b,e_2,f) = wgs84()

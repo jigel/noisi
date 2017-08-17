@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.signal import hilbert
 from math import pi, log
-from noisi.util.windows import get_window
+from noisi.util.windows import get_window,my_centered
 from noisi.util.plot import plot_window
 #def window(wtype,n,i0,i1):
 #    win = np.zeros(n)
@@ -125,10 +125,16 @@ def log_en_ratio(correlation,g_speed,window_params):
     delta = correlation.stats.delta
     window = get_window(correlation.stats,g_speed,window_params)
     win = window[0]
+    data = my_centered(correlation.data,correlation.stats.npts)
+
     if window[2]:
-        E_plus = np.trapz((correlation.data * win)**2) * delta
-        E_minus = np.trapz((correlation.data * win[::-1])**2) * delta
-        msr = log(E_plus/(E_minus+np.finfo(E_minus).tiny))
+        #E_plus = np.trapz((correlation.data * win)**2) * delta
+        #E_minus = np.trapz((correlation.data * win[::-1])**2) * delta
+        sig_c = correlation.data * win
+        sig_a = correlation.data * win[::-1]
+        E_plus = np.trapz(np.power(sig_c,2))*delta
+        E_minus = np.trapz(np.power(sig_a,2))*delta
+        msr = log(E_plus/E_minus)#+np.finfo(E_minus).tiny))
         if window_params['plot']:
             plot_window(correlation,win,msr)
     else:

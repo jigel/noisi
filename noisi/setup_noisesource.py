@@ -55,19 +55,21 @@ else:
 
 wfs = glob(os.path.join(wavefield_path,ext))
 if wfs != []:
-	print 'Found wavefield.'
+    print 'Found wavefield.'
+    with WaveField(wfs[0]) as wf:
+        df = wf.stats['Fs']
+        nt = wf.stats['nt']
+        
+else:
+    df = float(raw_input('Sampling rate in Hz?\n'))
+    nt = int(raw_input('Nr of time steps?\n'))
 
-
-with WaveField(wfs[0]) as wf:
-    df = wf.stats['Fs']
-    nt = wf.stats['nt']
-    # The number of points for the fft is larger due to zeropadding --> apparent higher frequency sampling\n",
-    n = next_fast_len(2*nt-1)
+# The number of points for the fft is larger due to zeropadding --> apparent higher frequency sampling\n",
+n = next_fast_len(2*nt-1)    
+freq = np.fft.rfftfreq(n,d=1./df)
     
-    freq = np.fft.rfftfreq(n,d=1./df)
-    
-    taper = cosine_taper(len(freq),0.01)
-    print 'Determined frequency axis.'
+taper = cosine_taper(len(freq),0.01)
+print 'Determined frequency axis.'
 
 
 def get_distance(grid,location):
@@ -176,6 +178,23 @@ with h5py.File(os.path.join(sourcepath,'step_0','starting_model.h5'),'w') as fh:
     fh.create_dataset('distr_weights',data=weights1.astype(np.float32))
     fh.create_dataset('spect_basis',data=basis2.astype(np.float32))
     fh.create_dataset('spect_weights',data=weights2.astype(np.float32))
+
+
+# Save the 'base model' to an hdf5 file.
+
+basis1_b = np.ones(basis1.shape)
+weights1_b = np.ones(weights1.shape)
+print 'Current source model allows no updates of spectral basis functions!'
+with h5py.File(os.path.join(sourcepath,'step_0','base_model.h5'),'w') as fh:
+    fh.create_dataset('coordinates',data=grd.astype(np.float32))
+    fh.create_dataset('frequencies',data=freq.astype(np.float32))
+    fh.create_dataset('distr_basis',data=basis1_b.astype(np.float32))
+    fh.create_dataset('distr_weights',data=weights1_b.astype(np.float32))
+    fh.create_dataset('spect_basis',data=basis2.astype(np.float32))
+    fh.create_dataset('spect_weights',data=weights2.astype(np.float32))
+
+
+
 
 print 'Done.'
 

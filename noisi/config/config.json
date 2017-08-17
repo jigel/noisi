@@ -14,5 +14,6 @@
         "MXZ"
 	],
     "synt_data": "DIS",
+    "instaseis": "False",
     "wavefield_path": "x"
 }

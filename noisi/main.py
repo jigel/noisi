@@ -74,7 +74,7 @@ def setup_source(source_model):
     os.makedirs(os.path.join(source_model,'step_0'))
     os.mkdir(os.path.join(source_model,'observed_correlations'))
     os.mkdir(os.path.join(source_model,'green_c'))
-    for d in ['adjt','grad','corr']:
+    for d in ['adjt','grad','corr','kern']:
         os.mkdir(os.path.join(source_model,'step_0',d))
 
     from . import _ROOT
@@ -181,7 +181,6 @@ def measurement(source_model,step,ignore_network,step_test):
 @click.argument('source_model')
 @click.argument('step')
 @click.option('--ignore_network',is_flag=True)
-
 def kernel(source_model,step,ignore_network):
     source_model = os.path.join(source_model,'source_config.json')
     run_corr(source_model,step,kernelrun=True,ignore_network=ignore_network)

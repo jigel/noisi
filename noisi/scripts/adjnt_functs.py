@@ -23,11 +23,11 @@ def log_en_ratio_adj(corr_o,corr_s,g_speed,window_params):
         E_plus = np.trapz(np.power(sig_c,2))*corr_s.stats.delta
         E_minus = np.trapz(np.power(sig_a,2))*corr_s.stats.delta
         # to win**2
-        u_plus = np.multiply(sig_c,win) 
-        u_minus = np.multiply(sig_a,win[::-1])
+        u_plus = sig_c * win
+        u_minus = sig_a * win[::-1]
         #adjt_src = 2./pi * (msr_s-msr_o) * (u_plus / E_plus - u_minus / E_minus)
-        # I don't know where that factor 2 came from. Not consistent with new derivation of kernels
-        adjt_src = 1./pi * (u_plus / E_plus - u_minus / E_minus)
+        # I don't know where that factor 1/pi came from. Not consistent with new derivation of kernels
+        adjt_src = 2. * (u_plus / E_plus - u_minus / E_minus)
         success = True
     else:
         adjt_src = win-win+np.nan

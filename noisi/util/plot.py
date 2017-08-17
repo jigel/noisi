@@ -42,7 +42,7 @@ def plot_grid(map_x,map_y,map_z,stations=[],v=None,globe=False,
         m = Basemap(rsphere=6378137,resolution=coastres,
         projection=proj,lat_0=lat_0,lon_0=lon_0)
 
-    plt.figure()
+    plt.figure(figsize=(11,9))
     plt.subplot(111)
     
     if title is not None:
@@ -70,21 +70,22 @@ def plot_grid(map_x,map_y,map_z,stations=[],v=None,globe=False,
     
     print('max. value on map: %g' %map_z.max())
     if mode == 'interp':
-        
+        pass
         # triangulate first, then project, 
         # and use plt.tripcolor to put it on the map.
         triangles = tri.Triangulation(map_x,map_y)
         (triangles.x,triangles.y) = m(triangles.x,triangles.y)
-        # if it doesn't work, use pcolor mode
+        #if it doesn't work, use pcolor mode
 
         plt.tripcolor(triangles,map_z,shading=shade, vmin=v_min,vmax=v,cmap=cm)
 
-        m.colorbar(location='bottom',pad=0.4)
+        cbar = m.colorbar(location='bottom',pad=0.3)
 
     elif mode == 'pcolor':
         mx, my = m(map_x,map_y)
         m.pcolor(mx,my,map_z,cmap=cm,tri=True,shading=shade,vmin=v_min,vmax=v)
-        m.colorbar(location='bottom',pad=0.4)
+        cbar = m.colorbar(location='bottom',pad=0.3)
+
 
     elif mode == 'srclocs':
 
@@ -109,23 +110,25 @@ def plot_grid(map_x,map_y,map_z,stations=[],v=None,globe=False,
 
         m.scatter(mx[indx],my[indx],marker='o',c=colors[indx],s=sizes[indx])
         
+    if normalize:
+        cbar.set_ticks([-1.0,0.,1.0])
     
     
     if globe:
-       m.drawcoastlines(linewidth=0.5,color='0.7')
+       m.drawcoastlines(linewidth=1.,color='0.5')
     else:
-       m.drawcoastlines(linewidth=2.0)
+       m.drawcoastlines(linewidth=1.0)
     
     
     if globe:
-       #pass
-       m.drawparallels(np.arange(-90.,120.,30.),labels=[1,0,0,0],color='0.7') # draw parallels
-       m.drawmeridians(np.arange(-180,210,60.),labels=[0,0,0,1],color='0.7') # draw meridians
+       pass
+       #m.drawparallels(np.arange(-90.,120.,30.),labels=[1,0,0,0],color='0.7') # draw parallels
+       #m.drawmeridians(np.arange(-180,210,60.),labels=[0,0,0,1],color='0.7') # draw meridians
 
     else:
         if not proj == 'ortho':
-           d_lon = round(abs(lonmax-lonmin) / 5.)
-           d_lat = round(abs(latmax-latmin) / 5.)
+           d_lon = round(abs(lonmax-lonmin) / 3.)
+           d_lat = round(abs(latmax-latmin) / 3.)
            parallels = np.arange(latmin,latmax,d_lat).astype(int)
            meridians = np.arange(lonmin,lonmax,d_lon).astype(int)
            m.drawparallels(parallels,labels=[1,0,0,0]) # draw parallels
@@ -133,8 +136,8 @@ def plot_grid(map_x,map_y,map_z,stations=[],v=None,globe=False,
 
     #draw station locations
     for sta in stations:
-        m.plot(sta[0],sta[1],'r^',markersize=4,latlon=True)
-    
+        #m.plot(sta[0],sta[1],'^',color='r',markersize=10,markeredgecolor='0.5',latlon=True)
+        m.plot(sta[0],sta[1],'^',color='lime',markersize=5,markeredgecolor='0.5',latlon=True)
     if outfile is None:
         plt.show()
     else:
