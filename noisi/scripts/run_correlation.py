@@ -250,6 +250,10 @@ def g1g2_corr(wf1,wf2,corr_file,kernel,adjt,
             lon2 = float(wf2[3])
             rec2 = instaseis.Receiver(latitude=lat2,longitude=lon2)
 
+        else:
+            wf1 = WaveField(wf1)
+            wf2 = WaveField(wf2)
+
         if kernelrun:
             
             #if not os.path.exists(adjt):
@@ -330,7 +334,9 @@ def g1g2_corr(wf1,wf2,corr_file,kernel,adjt,
                 print("Finished {} source locations.".format(i))
     
 
-    
+        if not insta:
+            wf1.close()
+            wf2.close()
 
         if kernelrun:
             np.save(kernel,kern) 
