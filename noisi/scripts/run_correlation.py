@@ -335,8 +335,8 @@ def g1g2_corr(wf1,wf2,corr_file,kernel,adjt,
     
 
         if not insta:
-            wf1.close()
-            wf2.close()
+            wf1.file.close()
+            wf2.file.close()
 
         if kernelrun:
             np.save(kernel,kern) 
