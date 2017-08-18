@@ -16,10 +16,10 @@ oldstep = sys.argv[2]
 grad_file = sys.argv[3]
 grad_old = sys.argv[4]
 update_mode = sys.argv[5]#'conjgrad'# steepest, conjgrad
-min_snr = 5.0
-min_stck = 320.
-nr_msr = 300
-step_length = 
+min_snr = sys.argv[6]#min_snr = 5.0
+min_stck = sys.argv[7]#min_stck = 320.
+nr_msr = sys.argv[8]#nr_msr = 300
+step_length = sys.argv[9]#step_length = 
 mode = 'max' # 'max', 'random'
 # Give as part per hundred, e.g 0.1 for 10%
 perc_step_length = None
@@ -30,7 +30,7 @@ perc_of_max_misfit = 0.6666
 # of data will be selected and copied and their misfit evaluated
 # for a step length test. Otherwise, only the update of the source model
 # is performed. 
-prepare_test_steplength = True
+
 ####################################
 
 
@@ -112,7 +112,7 @@ def _update_conjugategrad(
 
 
 ############ Preparation procedure #################################################
-
+prepare_test_steplength = False
 # where is the measurement database located?
 source_model = os.path.join(source_model,'source_config.json')
 source_config=json.load(open(source_model))
@@ -131,15 +131,16 @@ if not os.path.exists(newdir):
 	os.mkdir(os.path.join(newdir,'adjt'))
 	os.mkdir(os.path.join(newdir,'grad'))
 	os.mkdir(os.path.join(newdir,'kern'))
+	prepare_test_steplength = True
 
 os.system('cp {} {}'.format(os.path.join(datadir,'base_model.h5'),newdir))
 os.system('cp {} {}'.format(os.path.join(datadir,'starting_model.h5'),newdir))
 
 
 
-
+obs_dir = os.path.join(source_config['source_path'],'observed_correlations')
 if prepare_test_steplength:
-	obs_dir = os.path.join(source_config['source_path'],'observed_correlations')
+	
 
 	# Read in the csv files of measurement.
 	data = pd.read_csv(msrfile)
