@@ -47,7 +47,10 @@ def get_essential_sacmeta(sac):
     newsacdict['az']      =   sac['az']    
     newsacdict['baz']     =   sac['baz']   
     newsacdict['kuser0']  =   sac['kuser0']
-    newsacdict['kuser1']  =   sac['kuser1']
+    try:
+        newsacdict['kuser1']  =   sac['kuser1']
+    except KeyError:
+        newsacdict['kuser1'] = ''
     newsacdict['kuser2']  =   sac['kuser2']
     newsacdict['kevnm']   =   sac['kevnm']
 
