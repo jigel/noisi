@@ -22,8 +22,13 @@ def get_station_info(stats):
 
     sta1 = '{}.{}.{}.{}'.format(stats.network,stats.station,stats.location,
     stats.channel)
-    sta2 = '{}.{}.{}.{}'.format(stats.sac.kuser0.strip(),stats.sac.kevnm.strip(),
-    stats.sac.kuser1.strip(),stats.sac.kuser2.strip())
+
+    try:
+        sta2 = '{}.{}.{}.{}'.format(stats.sac.kuser0.strip(),stats.sac.kevnm.strip(),
+        stats.sac.kuser1.strip(),stats.sac.kuser2.strip())
+    except AttributeError:
+        sta2 = '{}.{}.{}.{}'.format(stats.sac.kuser0.strip(),stats.sac.kevnm.strip(),
+        '',stats.sac.kuser2.strip())
     lat1 = stats.sac.stla
     lon1 = stats.sac.stlo
     lat2 = stats.sac.evla
