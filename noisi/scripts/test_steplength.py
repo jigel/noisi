@@ -12,14 +12,14 @@ from warnings import warn
 ####################################
 # ToDo: more fancy and more secure with click or argparse
 source_model = sys.argv[1]
-oldstep = sys.argv[2]
+oldstep = int(sys.argv[2])
 grad_file = sys.argv[3]
 grad_old = sys.argv[4]
 update_mode = sys.argv[5]#'conjgrad'# steepest, conjgrad
-min_snr = sys.argv[6]#min_snr = 5.0
-min_stck = sys.argv[7]#min_stck = 320.
-nr_msr = sys.argv[8]#nr_msr = 300
-step_length = sys.argv[9]#step_length = 
+min_snr = float(sys.argv[6])#min_snr = 5.0
+min_stck = int(sys.argv[7])#min_stck = 320.
+nr_msr = int(sys.argv[8])#nr_msr = 300
+step_length = float(sys.argv[9])#step_length = 
 mode = 'max' # 'max', 'random'
 # Give as part per hundred, e.g 0.1 for 10%
 perc_step_length = None
