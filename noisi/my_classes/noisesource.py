@@ -16,13 +16,13 @@ class NoiseSource(object):
     """
     
     
-    def __init__(self,model):
+    def __init__(self,model,w='r+'):
             
         # Model is an hdf5 file which contains the basis and weights of the source model!
         
        
         try:
-            self.model = h5py.File(model,'r+')
+            self.model = h5py.File(model,w)
             self.src_loc = self.model['coordinates']
             self.freq = self.model['frequencies']
              

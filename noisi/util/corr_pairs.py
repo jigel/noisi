@@ -80,7 +80,7 @@ def rem_fin_prs(stapairs,source_conf,step,kernelrun):
 
 
     stapairs_new = []
-
+    
     for sp in stapairs:
         id1 = sp[0].split()[0]+sp[0].split()[1]
         id2 = sp[1].split()[0]+sp[1].split()[1]

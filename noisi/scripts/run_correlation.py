@@ -231,7 +231,7 @@ def g1g2_corr(wf1,wf2,corr_file,kernel,adjt,
     with NoiseSource(src) as nsrc:
 
         ntime, n, n_corr, Fs = get_ns(wf1,source_conf,insta)
-        print(ntime)
+        
         taper = cosine_taper(ntime,p=0.05)
         ntraces = nsrc.src_loc[0].shape[0]
 
@@ -280,7 +280,7 @@ def g1g2_corr(wf1,wf2,corr_file,kernel,adjt,
             # if calculating kernel, the spectrum is location independent.
             S = nsrc.get_spect(i)
 
-            if S.sum() == 0.: # The spectrum has 0 phase anyway
+            if S.sum() == 0.: # The spectrum has 0 phase so only checking absolute value here
                 continue
 
            

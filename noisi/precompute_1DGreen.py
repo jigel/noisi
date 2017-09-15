@@ -15,25 +15,25 @@ import sys
 
 # In[2]:
 
-stations_file = sys.argv[1]
-stations = open(stations_file,'r').read().split('\n')
+#stations_file = sys.argv[1]
+#stations = open(stations_file,'r').read().split('\n')
 
-rec_codes = []
-rec_locations = []
+#rec_codes = []
+#rec_locations = []
 
-for sta in stations:
-    if sta=='':
-        continue
-    inf = sta.split()
-    rec_codes.append(inf[0].strip()+'.'+inf[1].strip())
-    rec_locations.append([float(inf[2]),float(inf[3])])
+#for sta in stations:
+#    if sta=='':
+#        continue
+#    inf = sta.split()
+#    rec_codes.append(inf[0].strip()+'.'+inf[1].strip())
+#    rec_locations.append([float(inf[2]),float(inf[3])])
 
 
 # set the parameters
 output_location = './wavefield_vel'
 srcgrid = np.load('./sourcegrid.npy')
-#rec_codes = ['BO.SAG..BHZ','BO.NSK..BHZ','BO.KMT..BHZ','BO.IZH..BHZ']
-#rec_locations = [[36.2553,133.3050],[34.3403,132.0018],[33.6782,135.4899],[34.1359,129.2066]]
+rec_codes = ['NET.STA1..CHA','NET.STA2..CHA']#['BO.SAG..BHZ','BO.NSK..BHZ','BO.KMT..BHZ','BO.IZH..BHZ']
+rec_locations = [[-1.,-1.],[1.,1.]]#[[36.2553,133.3050],[34.3403,132.0018],[33.6782,135.4899],[34.1359,129.2066]]
 v_phase = 3300.
 v_group = 2400.
 q = 100.
