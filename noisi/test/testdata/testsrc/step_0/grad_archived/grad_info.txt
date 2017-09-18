@@ -1,0 +1,49 @@
+Analyzed 1 station pairs of 1 successfully.
+No data found for 0 station pairs.
+No measurement taken for 0 station pairs due to short interstation distance.
+Signal to noise ratio below threshold for 0 station pairs.
+Number of staacked windows below threshold for 0 station pairs.
+
+Parameters:==============================================================
+Source dir: test/testdata/testsrc/source_config.json 
+Step: 0Minimum SNR: 0Minimum stack length: 0Save all interstation gradients: False
+=========================================================================
+Project:
+{
+    "date_created": "2017.08.23",
+    "grid_coord_centr": null,
+    "grid_dx": 10000,
+    "grid_lat_max": 2,
+    "grid_lat_min": -2,
+    "grid_lon_max": 2,
+    "grid_lon_min": -2,
+    "grid_radius": 0,
+    "hdur_pointsource": 10,
+    "instaseis": false,
+    "project_name": "testdata",
+    "project_path": "test/testdata/",
+    "station_channels": [
+        "MXZ"
+    ],
+    "synt_data": "VEL",
+    "wavefield_path": "test/testdata/wavefield_vel/"
+}
+
+=========================================================================
+Source model:
+{"preprocess_filter_params": [0.003, 0.3, 3, true], "max_lag": 160, "preprocess_truncate_sec": null, "ktype": "td", "project_path": "test/testdata/", "source_path": "test/testdata/testsrc", "mtype": "ln_energy_ratio", "preprocess_decimation_factor": null, "project_name": "testdata", "source_name": "testsrc", "preprocess_filter_kind": "bandpass", "model_observed_only": false, "date_created": "2017.08.23", "channel": "CHA", "preprocess_do": true}
+=========================================================================
+Measurement:
+{
+    "bandpass": null, 
+    "date_created": "2017.08.23",
+    "g_speed": 3300.0,
+    "ignore_network": false,
+    "mtype": "ln_energy_ratio",
+    "window_params_causal": true,
+    "window_params_hw": 20,
+    "window_params_sep_noise": 0.0,
+    "window_params_win_overlap": false,
+    "window_params_wtype": "hann",
+    "window_plot_measurements": false 
+}

@@ -45,6 +45,7 @@ def paths_input(cp,source_conf,step,kernelrun,ignore_network,instaseis):
     if instaseis == False:
         if source_conf['preprocess_do']:
             dir = os.path.join(source_conf['source_path'],'wavefield_processed')
+            
         else:
             dir = conf['wavefield_path']
     

@@ -1,0 +1,4 @@
+net,sta,lat,lon,
+NET,STA1,-1.0,-1.0,
+NET,STA2,1.0,1.0,
+
