@@ -7,6 +7,8 @@ def test_forward():
 
 	# copy the preprocessed wavefields
 	os.system('mkdir '+os.path.join(srcdir,'wavefield_processed'))
+	os.system('cp test/testdata/testsrc/step_0/starting_model_archived.h5\
+		test/testdata/testsrc/step_0/starting_model.h5')
 	os.system('cp test/testdata/testsrc/wavefield_processed_archived/*.h5 \
 		test/testdata/testsrc/wavefield_processed')
 
@@ -24,3 +26,4 @@ def test_forward():
 	# remove the resulting data and the preprocessed wavefields
 	os.system('rm -rf test/testdata/testsrc/wavefield_processed/')
 	os.system('rm test/testdata/testsrc/step_0/corr/*')
+	os.system('rm test/testdata/testsrc/step_0/starting_model.h5')

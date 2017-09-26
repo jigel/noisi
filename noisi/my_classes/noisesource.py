@@ -30,7 +30,9 @@ class NoiseSource(object):
             self.distr_basis = self.model['distr_basis'][:]
             self.spect_basis = self.model['spect_basis'][:]
             self.distr_weights = self.model['distr_weights'][:]
-            self.spect_weights = self.model['spect_weights'][:]
+            
+            # discontinued: (the distribution yields the spectral weights)
+            #self.spect_weights = self.model['spect_weights'][:]
             
             # The 'max amplitude' is probably needed often, and the distribution should not be too heavy to hold in memory, it has dimension 1 x number of sources
             self.source_distribution = self.expand_distr()
@@ -54,21 +56,28 @@ class NoiseSource(object):
         pass
 
     def expand_distr(self):
-        return np.dot(self.distr_weights,self.distr_basis)
+        expand = np.dot(self.distr_weights,self.distr_basis)
         
+        return np.array(expand,ndmin=2)
+
 
     def get_spect(self,iloc):
         # return one spectrum in location with index iloc
         # The reason this function is for one spectrum only is that the entire gridded matrix of spectra by location is most probably pretty big.
-        spect = np.dot(self.spect_weights[iloc],self.spect_basis) 
-        return self.source_distribution[iloc] * spect
+        
+
+        weights = np.array(self.expand_distr()[:,iloc])
+        
+        
+        return np.dot(weights, self.spect_basis)
     
     
     def plot(self,**options):
         
         # plot the distribution
-        m = self.expand_distr()
-        plot_grid(self.src_loc[0],self.src_loc[1],m,**options)
+        ms = self.expand_distr()
+        for m in ms: 
+            plot_grid(self.src_loc[0],self.src_loc[1],m,**options)
 
 
     

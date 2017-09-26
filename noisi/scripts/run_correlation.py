@@ -280,6 +280,7 @@ def g1g2_corr(wf1,wf2,corr_file,kernel,adjt,
             # noise source spectrum at this location
             # if calculating kernel, the spectrum is location independent.
             S = nsrc.get_spect(i)
+            
 
             if S.sum() == 0.: # The spectrum has 0 phase so only checking absolute value here
                 continue
