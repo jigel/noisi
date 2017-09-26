@@ -12,38 +12,55 @@ import json
 from glob import glob
 import os
 from scipy.fftpack import next_fast_len
-from scipy.signal import hann
-
+from scipy.signal import hann, iirfilter, freqz_zpk
 
 ##################################################################
 # USER INPUT
 ##################################################################
-# path to project
+# path to project and source model
 projectpath = '../'
 sourcepath = '.'
 
+# geography - a sequence of distributions 'homogeneous', 'ocean',
+# 'gaussian_blob' in any order. The order has to match with the 
+# order od the list of spectra in params_spectra, i.e. the first 
+# distribution will be assigned the first spectrum, the second 
+# distribution the second spectrum, etc. 
+# Similarly, the first 'gaussian_blob' will be assigned the first
+# set of parameters in params_gaussian_blobs, and so on.
+distributions = ['homogeneous']
 
-# geography - Add anything else than a homogeneous distribution by setting to "True" the following:
-only_ocean = False
-gaussian_blobs = False
-no_background = False
-params_gaussian_blobs = [{'center':(0.,0.),'sigma_radius_m':500000.,'rel_weight':2.}]
+# Resolution of the coastlines (only relevant for ocean distributions)
+# (see basemap documentation)
+# Use coarser for global and finer for regional models
+coastres = 'c' 
 
-#spectra
-params_gaussian_spectra = [{'central_freq':0.005,'sigma_freq':0.001,'weight':1.}]
+# Geographic gaussian blobs. Will only be used if 'gaussian_blob'
+# is found in the list of distributions. Will be used
+# in order of appearance
+params_gaussian_blobs = [{'center':(-10.,0.),'sigma_radius_m':2000000.,
+'rel_weight':2.,'only_ocean':True}]
 
 
-                          #{'central_freq':0.075,'sigma_freq':0.1,'weight':10.}]
-
+# Parameters are pulled out of the measr_config file.
 ###############################################################################
 
 grd  = np.load(os.path.join(projectpath,'sourcegrid.npy'))
 ntraces = np.shape(grd)[-1]
 print 'Loaded source grid'
 
+
 config = json.load(open(os.path.join(projectpath,'config.json')))
 source_config = json.load(open(os.path.join(sourcepath,'source_config.json')))
+measr_config = json.load(open(os.path.join(sourcepath,'measr_config.json')))
 print 'Loaded config files.'
+
+
+#if len(distributions) != len(measr_config['bandpass']):
+#    raise NotImplementedError('Currently, geographic basis functions\
+#are not yet available and the number of distributions must be == \
+#the number of spectral basis functions.')
+
 
 if source_config['preprocess_do']:
     ext = '*.h5'
@@ -61,140 +78,164 @@ if wfs != []:
         nt = wf.stats['nt']
         
 else:
-    df = float(raw_input('Sampling rate in Hz?\n'))
-    nt = int(raw_input('Nr of time steps?\n'))
+    df = float(raw_input('Sampling rate of synthetic Greens functions in Hz?\n'))
+    nt = int(raw_input('Nr of time steps in synthetic Greens functions?\n'))
 
-# The number of points for the fft is larger due to zeropadding --> apparent higher frequency sampling\n",
+
+
+
+
+#s for the fft is larger due to zeropadding --> apparent higher frequency sampling\n",
+    # n = next_fast_len(2*nt-1)
 n = next_fast_len(2*nt-1)    
 freq = np.fft.rfftfreq(n,d=1./df)
-    
 taper = cosine_taper(len(freq),0.01)
 print 'Determined frequency axis.'
-
 
 def get_distance(grid,location):
     def f(lat,lon,location):
         return abs(gps2dist_azimuth(lat,lon,location[0],location[1])[0])
     dist = np.array([f(lat,lon,location) for lat,lon in zip(grid[1],grid[0])])
     return dist
-    # Use Basemap to figure out where ocean is
+
+# Use Basemap to figure out where ocean is
 def get_ocean_mask():
+    print 'Getting ocean mask...'
     from mpl_toolkits.basemap import Basemap
-    m = Basemap(rsphere=6378137,resolution='c',projection='cea',lat_0=0.,
+    m = Basemap(rsphere=6378137,resolution=coastres,projection='cea',lat_0=0.,
                 lon_0=0.,llcrnrlat=-90.,urcrnrlat=90.,llcrnrlon=-180.,urcrnrlon=180.)
     (x,y) = m(grd[0],grd[1])
     ocean_mask = map(lambda (x,y): not m.is_land(x,y),zip(x,y))
     return ocean_mask
 
 
+   
+
+def get_geodist(disttype,gaussian_params=None):
+
+    if disttype == 'gaussian':
+        dist = get_distance(grd,gaussian_params['center'])
+        gdist = np.exp(-(dist)**2/(2*gaussian_params['sigma_radius_m']**2))
+
+        if gaussian_params['only_ocean']:
+            if not 'ocean_mask' in locals():
+                ocean_mask = get_ocean_mask()
+            gdist *= ocean_mask
+
+        return gdist
+
+    elif disttype == 'homogeneous':
+        return np.ones(ntraces)
+
+    elif disttype == 'ocean':
+        if not 'ocean_mask' in locals():
+            ocean_mask = get_ocean_mask()
+        return ocean_mask
+
+
+def get_spectrum(sparams):
+    spec = taper*np.exp(-(freq-sparams['central_freq'])**2/(2*sparams['sigma_freq']**2))
+    return spec / np.max(np.abs(spec))
+
+
+def get_specbasis(bandpass):
+
+    low = bandpass[0]
+    high = bandpass[1]
+    corners = bandpass[2]
+
+    low = low / (0.5*df)
+    high = high / (0.5*df)
+
+    z, p, k = iirfilter(corners, [low, high], btype='band',
+                        ftype='butter', output='zpk')
+    w, h = freqz_zpk(z,p,k, worN=len(freq))
+    
+    # always zerophase
+    h2 = h*np.conjugate(h)
+    
+    return np.real(h2)
+
 #########################
 # Create the source distr
 #########################
 
+
+#########################
 # geography
-num_bases = 1
-if gaussian_blobs:
-    num_bases += len(params_gaussian_blobs)
+#########################
+num_bases = len(distributions)
+gauss_cnt = 0
+basis_geo = np.zeros((num_bases,ntraces))
 
-basis1 = np.zeros((num_bases,ntraces))
+print 'Filling distribution...'
 
-print 'Filling geographical distribution...'
-# homogeneous layer
-basis1[0,:] = np.ones(ntraces) 
+for i in range(num_bases):
 
-if only_ocean:
-    ocean_mask = np.array(get_ocean_mask()).astype(int)
-    basis1[0,:] *= ocean_mask
+    if distributions[i] =='gaussian':
 
-    # superimposed Gaussian blob(s)
-if gaussian_blobs:
-    i = 1
-    for blob in params_gaussian_blobs:
-        dist = get_distance(grd,blob['center'])
-        basis1[i,:] = np.exp(-(dist)**2/(2*blob['sigma_radius_m']**2))
+        gaussparams = params_gaussian_blobs[gauss_cnt]
+        gauss_cnt += 1
+        basis_geo[i,:] = get_geodist('gaussian',gaussparams)
+
+    elif distributions[i] in ['ocean','homogeneous']:
+
+        basis_geo[i,:] = get_geodist(distributions[i])
         
-        if only_ocean:
-            basis1[i,:] *= ocean_mask
-        i+=1
-
-
-print 'Filling spectra...'  
-# spectra
-basis2 = np.zeros((len(params_gaussian_spectra),len(freq)))
-# 'sort of hum gaussian'
-i = 0
-for spec in params_gaussian_spectra:
-    basis2[i,:] = taper*np.exp(-(freq-spec['central_freq'])**2/(2*spec['sigma_freq']**2))
-# This normalization means different integrals...
-    basis2[i,:] /= np.max(np.abs(basis2[0,:]))
-    i+=1
-
-
-######################
-# set the weights
-#####################
-# geography
-weights1 = np.ones(np.shape(basis1)[0])
-
-if gaussian_blobs:
-    i = 1
-    for blob in params_gaussian_blobs:
-        weights1[i] = blob['rel_weight']
-        i+=1
-    if no_background:
-        weights1[0] = 0.
-#print weights1
-# spectra --- much harder to assign manually, since we need weights for every location. just assigning ones.\n",
-weights2 = np.ones((np.shape(grd)[-1],np.shape(basis2)[0]))
-i=0
-for spec in params_gaussian_spectra:
-    weights2[:,i] *= spec['weight']
+    
+    else:
+        print(distributions)
+        raise NotImplementedError('Unknown geographical distributions. \
+            Must be \'gaussian\', \'homogeneous\' or \'ocean\'.')
 
 print 'Plotting...'
-
-
 from noisi.util import plot
+for i in range(num_bases):
+    plot.plot_grid(grd[0],grd[1],basis_geo[i,:],
+    outfile = os.path.join(sourcepath,'geog_distr_basis{}.png'.format(i)))
 
 
+#########################
+# spectrum
+#########################
 
-distr = np.dot(weights1,basis1)
-plot.plot_grid(grd[0],grd[1],distr,outfile = os.path.join(sourcepath,'geog_distr_startingmodel.png'))
+if measr_config['bandpass'] is None:
+    basis_spec = np.array(np.ones(len(freq)),ndmin=2)
+
+else:
+    num_sbases = len(measr_config['bandpass'])
+    basis_spec = np.zeros((num_sbases,len(freq)))
+    for i in range(num_sbases):
+        basis_spec[i,:] = get_specbasis(measr_config['bandpass'][i])
 
 
 plt.figure()
-plt.semilogx(freq,np.dot(weights2[0,:],basis2))
+for i in range(basis_spec.shape[0]):
+    plt.semilogx(freq,basis_spec[i,:],'--')
 plt.xlabel('Frequency (Hz)')
 plt.ylabel('Source power (scaled)')
 plt.savefig(os.path.join(sourcepath,'freq_distr_startingmodel.png'))
 
 
+########################
+# Initial geographic 
+# weighting (unif)
+########################
+
+weights = np.eye(basis_spec.shape[0],num_bases)
+
+########################
 # Save to an hdf5 file
-print basis2
-
+########################
 with h5py.File(os.path.join(sourcepath,'step_0','starting_model.h5'),'w') as fh:
-    fh.create_dataset('coordinates',data=grd.astype(np.float32))
-    fh.create_dataset('frequencies',data=freq.astype(np.float32))
-    fh.create_dataset('distr_basis',data=basis1.astype(np.float32))
-    fh.create_dataset('distr_weights',data=weights1.astype(np.float32))
-    fh.create_dataset('spect_basis',data=basis2.astype(np.float32))
-    fh.create_dataset('spect_weights',data=weights2.astype(np.float32))
+    fh.create_dataset('coordinates',data=grd.astype(np.float64))
+    fh.create_dataset('frequencies',data=freq.astype(np.float64))
+    fh.create_dataset('distr_basis',data=basis_geo.astype(np.float64))
 
-
-# Save the 'base model' to an hdf5 file.
-
-basis1_b = np.ones(basis1.shape)
-weights1_b = np.ones(weights1.shape)
-print 'Current source model allows no updates of spectral basis functions!'
-with h5py.File(os.path.join(sourcepath,'step_0','base_model.h5'),'w') as fh:
-    fh.create_dataset('coordinates',data=grd.astype(np.float32))
-    fh.create_dataset('frequencies',data=freq.astype(np.float32))
-    fh.create_dataset('distr_basis',data=basis1_b.astype(np.float32))
-    fh.create_dataset('distr_weights',data=weights1_b.astype(np.float32))
-    fh.create_dataset('spect_basis',data=basis2.astype(np.float32))
-    fh.create_dataset('spect_weights',data=weights2.astype(np.float32))
-
-
-
+    # for now: Geographic model can vary freely.
+    fh.create_dataset('distr_weights',data=weights)
+    fh.create_dataset('spect_basis',data=basis_spec.astype(np.float64))
+    #fh.create_dataset('spect_weights',data=np.ones(min(basis_spec.shape)))
 
 print 'Done.'
 
