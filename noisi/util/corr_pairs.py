@@ -69,7 +69,6 @@ def rem_fin_prs(stapairs,source_conf,step,kernelrun):
     :param step: step nr
     :param kernelrun: run for calculating kernels or correlations 
     """
-
     
     channel = source_conf['channel']
 
@@ -95,17 +94,28 @@ def rem_fin_prs(stapairs,source_conf,step,kernelrun):
         sta1 = "{}.{}..{}".format(*(inf1[0:2]+[channel]))
         sta2 = "{}.{}..{}".format(*(inf2[0:2]+[channel]))
         
-        if kernelrun:
-            kern_name = "{}--{}.npy".format(sta1,sta2)
-            kern_name = os.path.join(mod_dir,kern_name)
-            if not os.path.exists(kern_name):
-                stapairs_new.append(sp)
-        else:
-            corr_name = "{}--{}.sac".format(sta1,sta2)    
-            corr_name = os.path.join(mod_dir,corr_name)
-            if not os.path.exists(corr_name):
-                
-                stapairs_new.append(sp)
+        # if kernelrun: Too complicated! Too many different cases with 
+        # different measurements, causal and acausal branch, etc
+
+        #     if measr_conf['bandpass']
+
+        #     kern_basicname = "{}--{}.*.npy".format(sta1,sta2),
+                          
+        #     for kern_name in kern_names:
+
+        #         kern_name = os.path.join(mod_dir,kern_name)
+        #         kerns_calc.append(glob(kern_name))
+
+        #     if len(kern_name)
+        #     #kern_name = os.path.join(mod_dir,kern_name)
+        #     #if not os.path.exists(kern_name):
+        #     #    stapairs_new.append(sp)
+        # else:
+        corr_name = "{}--{}.sac".format(sta1,sta2)    
+        corr_name = os.path.join(mod_dir,corr_name)
+        if not os.path.exists(corr_name):
+            
+            stapairs_new.append(sp)
 
     return stapairs_new
 

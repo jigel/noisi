@@ -19,5 +19,6 @@ def test_kernel():
 
 	# remove stuff
 	os.system('rm test/testdata/testsrc/step_0/adjt/*')
-	os.system('rm -rf test/testdata/testsrc/step_0/kern/*')
+	print 'kernel test'
+	#os.system('rm -rf test/testdata/testsrc/step_0/kern/*')
 	os.system('rm -rf test/testdata/testsrc/wavefield_processed')

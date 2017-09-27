@@ -56,52 +56,10 @@ def get_essential_sacmeta(sac):
 
     return newsacdict
 
-# def get_synthetics_filename(obs_filename,dir,ignore_network,synth_location='',
-#     fileformat='sac',synth_channel_basename='MX'):
-
-#     inf = obs_filename.split('--')
-
-#     if len(inf) == 1:
-#         # old station name format
-#         inf = obs_filename.split('.')
-#         net1 = inf[0]
-#         sta1 = inf[1]
-#         cha1 = inf[3]
-#         net2 = inf[4]
-#         sta2 = inf[5]
-#         cha2 = inf[7]
-#     elif len(inf) == 2:
-#         # new station name format
-#         inf1 = inf[0].split('.')
-#         inf2 = inf[1].split('.')
-#         net1 = inf1[0]
-#         sta1 = inf1[1]
-#         net2 = inf2[0]
-#         sta2 = inf2[1]
-#         cha1 = inf1[3]
-#         cha2 = inf2[3]
 
 
-#     cha1 = synth_channel_basename + cha1[-1]
-#     cha2 = synth_channel_basename + cha2[-1]
 
-#     if ignore_network:
-#         synth_filename = '*.{}.{}.{}--*.{}.{}.{}.{}'.format(sta1,synth_location,
-#         cha1,sta2,synth_location,cha2,fileformat)
-#     else:
-#         synth_filename = '{}.{}.{}.{}--{}.{}.{}.{}.{}'.format(net1,sta1,synth_location,
-#         cha1,net2,sta2,synth_location,cha2,fileformat)
-    
-#     try: 
-#         sfilename = glob(os.path.join(dir,synth_filename))[0]
-#         return(sfilename)
-#     except IndexError:
-#         print('No synthetic file found at:')
-#         print(synth_filename)
-#         return None
-
-
-def adjointsrcs(source_config,mtype,step,ignore_network,**options):
+def adjointsrcs(source_config,mtype,step,ignore_network,bandpass,**options):
     
     """
     Get 'adjoint source' from noise correlation data and synthetics. 
@@ -132,12 +90,15 @@ def adjointsrcs(source_config,mtype,step,ignore_network,**options):
         
         for f in bar:
             
+            # read data
             try: 
                 tr_o = read(f)[0]
             except:
                 print('\nCould not read data: '+os.path.basename(f))
                 #i+=1
                 continue
+
+            # read synthetics
             try:
                 synth_filename = get_synthetics_filename(os.path.basename(f),synth_dir,
                     ignore_network=ignore_network)
@@ -166,51 +127,66 @@ def adjointsrcs(source_config,mtype,step,ignore_network,**options):
             # Waveforms must have same nr of samples.
             tr_s.data = my_centered(tr_s.data,tr_o.stats.npts)    
            
-           
-            # Get the adjoint source
             func = af.get_adj_func(mtype)
-            data, success = func(tr_o,tr_s,**options)
-            if not success:
-                continue
-            
-            adj_src = Stream()
 
-            if isinstance(data,list):
+
+            # Bandpasses
+            for j in range(len(bandpass)):
+
+
                 
-                adj_src += Trace(data=data[0])
-                adj_src += Trace(data=data[1])
+
+                tr_o_filt = tr_o.copy()
+                tr_s_filt = tr_s.copy()
+
+
+                bp = bandpass[j]
+                tr_o_filt.taper(0.05)
+                tr_s_filt.taper(0.05)
                 
-                # TODO: super ugly
-                brnch = 'c'
-                for adjtrc in adj_src:
-                    adjtrc.stats.sampling_rate = tr_s.stats.sampling_rate
-                    adjtrc.stats.sac = tr_s.stats.sac.copy()
-            # Save the adjoint source
-                    file_adj_src = os.path.join(adj_dir,
+                if bp != None:
+                    tr_o_filt.filter('bandpass',freqmin=bp[0],freqmax=bp[1],
+                        corners=bp[2],zerophase=True)
+                    tr_s_filt.filter('bandpass',freqmin=bp[0],freqmax=bp[1],
+                        corners=bp[2],zerophase=True)
+                
+
+                # Get the adjoint source
+                
+                data, success = func(tr_o_filt,tr_s_filt,**options)
+                if not success:
+                    continue
+                
+                adj_src = Stream()
+
+                if isinstance(data,list):
+                    
+                    adj_src += Trace(data=data[0])
+                    adj_src += Trace(data=data[1])
+                    
+                    # TODO: super ugly
+                    brnchs = ['c','a']
+                    for k in range(2):
+                        adjtrc = adj_src[k]
+                        adjtrc.stats.sampling_rate = tr_s.stats.sampling_rate
+                        adjtrc.stats.sac = tr_s.stats.sac.copy()
+                        # Save the adjoint source
+                        file_adj_src = os.path.join(adj_dir,
+                            os.path.basename(synth_filename).
+                            rstrip('sac')+'{}.{}.sac'.format(brnchs[k],j))
+                        adjtrc.write(file_adj_src,format='SAC')
+
+                
+                else:
+                    adj_src += Trace(data=data)
+                    for adjtrc in adj_src:
+                        adjtrc.stats.sampling_rate = tr_s.stats.sampling_rate
+                        adjtrc.stats.sac = tr_s.stats.sac.copy()
+                        # Save the adjoint source
+                        file_adj_src = os.path.join(adj_dir,
                         os.path.basename(synth_filename).
-                        rstrip('sac')+'{}.sac'.format(brnch))
-                    print(file_adj_src)
-                    adjtrc.write(file_adj_src,format='SAC')
-                    brnch = 'a'
-            
-            else:
-                adj_src += Trace(data=data)
-                for adjtrc in adj_src:
-                    adjtrc.stats.sampling_rate = tr_s.stats.sampling_rate
-                    adjtrc.stats.sac = tr_s.stats.sac.copy()
-            # Save the adjoint source
-                    file_adj_src = os.path.join(adj_dir,
-                        os.path.basename(synth_filename))
-                    adjtrc.write(file_adj_src,format='SAC')
-
-
-            
-           
-              
-            # step index
-            #i+=1
-    #
-
+                            rstrip('sac')+'{}.sac'.format(j))
+                        adjtrc.write(file_adj_src,format='SAC')
 
 
 
@@ -219,24 +195,34 @@ def run_adjointsrcs(source_configfile,measr_configfile,step,ignore_network):
     source_config=json.load(open(source_configfile))
     measr_config=json.load(open(measr_configfile))
     
-    
+    g_speed = measr_config['g_speed']
     mtype = measr_config['mtype']
-   
+    bandpass = measr_config['bandpass']
+
+    if bandpass == None:
+        bandpass = [None]
+        
+    if type(bandpass[0]) != list and bandpass[0] != None:
+            bandpass = [bandpass]
+            warn('\'Bandpass\' should be defined as list of filters.')
     
+    window_params = {}
+
     # TODo all available misfits --  what parameters do they need (if any.)
     if mtype in ['ln_energy_ratio','energy_diff']:
-        g_speed = measr_config['g_speed']
-        window_params = {}
         window_params['hw'] = measr_config['window_params_hw']
         window_params['sep_noise'] = measr_config['window_params_sep_noise']
         window_params['win_overlap'] = measr_config['window_params_win_overlap']
         window_params['wtype'] = measr_config['window_params_wtype']
         window_params['causal_side'] = measr_config['window_params_causal']
         window_params['plot'] = False # To avoid plotting the same thing twice
-        # ToDo think of a better solution here.
-   
+        
+    
         adjointsrcs(source_config,mtype,step,ignore_network=ignore_network,g_speed=g_speed,
-        window_params=window_params)
+        bandpass=bandpass,window_params=window_params)
+
+
+
     
         
         
