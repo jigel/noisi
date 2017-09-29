@@ -94,9 +94,9 @@ def _update_conjugategrad(
 	norm_oldgrad = np.linalg.norm(old_grad,ord=2,axis=(1))
 
 	beta = np.power(norm_neggrad,2) / np.power(norm_oldgrad,2)
-	print(beta)
+	
 	beta_update = np.dot(beta,old_upd)
-	print old_upd.shape
+	
 
 	upd = neg_grad + beta_update
 
@@ -106,6 +106,9 @@ def _update_conjugategrad(
 
 	#src_model.model['distr_basis'][:] += step_length * upd
 	descent_direction = step_length * upd
+	np.save(updatename,upd)
+	print(step_length*upd[0:20])
+	src_model.model['distr_basis'][:] += step_length * upd
 	
 	
 	return(descent_direction,upd)
