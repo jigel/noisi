@@ -170,8 +170,8 @@ def _prepare_test_steplength(msrfile,source_config,newdir):
 	
 	for i in data_select.index:
 		
-		sta1 = data_select.at[i,'sta1'].split('.')[0:2]
-		sta2 = data_select.at[i,'sta2'].split('.')[0:2]
+		sta1 = data_select.at[i,'sta1'].split('.')[0:4]
+		sta2 = data_select.at[i,'sta2'].split('.')[0:4]
 		
 		#lat1 = data_select.at[i,'lat1']
 		#lat2 = data_select.at[i,'lat2']
@@ -186,7 +186,8 @@ def _prepare_test_steplength(msrfile,source_config,newdir):
 		#print(synth_filename)
 		# copy the relevant observed correlation, oh my
 		obs_dir = os.path.join(source_config['source_path'],'observed_correlations')
-		obs_correlations = glob_obs_corr(sta1,sta2,obs_dir,ignore_network=True)
+		obs_correlations = glob_obs_corr('{}.{}.{}.{}'.format(*sta1),
+			'{}.{}.{}.{}'.format(*sta2),obs_dir,ignore_network=True)
 		
 
 		if len(obs_correlations) > 0:
