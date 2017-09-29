@@ -100,14 +100,14 @@ def _update_conjugategrad(
 	print(beta_update[0:10])
 
 	upd = neg_grad + beta_update
-
+	np.save(updatename,upd)
 
 	# save the update so it can be used to determine the next step
 	#np.save(updatename,upd)
 
 	#src_model.model['distr_basis'][:] += step_length * upd
 	descent_direction = step_length * upd
-	np.save(updatename,upd)
+	
 
 	print(step_length*upd[0:20])
 	
