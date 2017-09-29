@@ -13,12 +13,11 @@ def test_kernel():
 
 	# assert the results are the same
 	# ToDo: path
-	k1 = np.load('test/testdata/testsrc/step_0/kern/NET.STA1..CHA--NET.STA2..CHA.npy')
+	k1 = np.load('test/testdata/testsrc/step_0/kern/NET.STA1..CHA--NET.STA2..CHA.0.npy')
 	k2 = np.load('test/testdata/testsrc/step_0/kern_archived/NET.STA1..CHA--NET.STA2..CHA.npy')
 	assert (k1 == k2).sum() == len(k1)
 
 	# remove stuff
 	os.system('rm test/testdata/testsrc/step_0/adjt/*')
-	print 'kernel test'
-	#os.system('rm -rf test/testdata/testsrc/step_0/kern/*')
+	os.system('rm test/testdata/testsrc/step_0/kern/*')
 	os.system('rm -rf test/testdata/testsrc/wavefield_processed')

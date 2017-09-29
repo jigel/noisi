@@ -10,8 +10,8 @@ from obspy.geodetics import gps2dist_azimuth
 
 from noisi.scripts import adjnt_functs as af
 from noisi.util.corr_pairs import get_synthetics_filename
-from noisi.util.windows import get_window, my_centered, snratio
-
+from noisi.util.windows import my_centered, snratio
+from warnings import warn
 
 def get_station_info(stats):
 
@@ -129,11 +129,13 @@ def adjointsrcs(source_config,mtype,step,ignore_network,bandpass,**options):
            
             func = af.get_adj_func(mtype)
 
+            # ugly...sorry
+            hws = options['window_params']['hw'][:]
 
             # Bandpasses
             for j in range(len(bandpass)):
 
-
+                options['window_params']['hw'] = hws[j]
                 
 
                 tr_o_filt = tr_o.copy()
@@ -211,9 +213,15 @@ def run_adjointsrcs(source_configfile,measr_configfile,step,ignore_network):
     # TODo all available misfits --  what parameters do they need (if any.)
     if mtype in ['ln_energy_ratio','energy_diff']:
         window_params['hw'] = measr_config['window_params_hw']
+        if type(window_params['hw']) != list:
+            window_params['hw'] = [window_params['hw']]
+        if len(window_params['hw']) != len(bandpass):
+            warn('Using the same window length for all measurements.')
+            window_params['hw'] = len(bandpass)*[window_params['hw'][0]]
+
         window_params['sep_noise'] = measr_config['window_params_sep_noise']
         window_params['win_overlap'] = measr_config['window_params_win_overlap']
-        window_params['wtype'] = measr_config['window_params_wtype']
+        window_params['wtype'] = measr_config['window_params_wtype'] 
         window_params['causal_side'] = measr_config['window_params_causal']
         window_params['plot'] = False # To avoid plotting the same thing twice
         

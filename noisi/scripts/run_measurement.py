@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 #ToDo plot if requested.
 from noisi.scripts import measurements as rm
 #from noisi.scripts import adjnt_functs as af
-from noisi.util.windows import get_window, my_centered, snratio
+from noisi.util.windows import my_centered, snratio
 from noisi.util.corr_pairs import get_synthetics_filename
 # Get and return measurement as a table or something.
 from warnings import warn
@@ -250,6 +250,7 @@ def run_measurement(source_configfile,measr_configfile,
         g_speed                         =    measr_config['g_speed']
         window_params                   =    {}
         window_params['hw']             =    measr_config['window_params_hw']
+        
         window_params['sep_noise']      =    measr_config['window_params_sep_noise']
         window_params['win_overlap']    =    measr_config['window_params_win_overlap']
         window_params['wtype']          =    measr_config['window_params_wtype']
@@ -262,6 +263,12 @@ def run_measurement(source_configfile,measr_configfile,
     if type(bandpass[0]) != list and bandpass[0] != None:
             bandpass = [bandpass]
             warn('\'Bandpass\' should be defined as list of filters.')
+    if measr_config['mtype'] in ['ln_energy_ratio','energy_diff','inst_phase']:
+        if type(window_params['hw']) != list:
+            window_params['hw'] = [window_params['hw']]
+        if len(window_params['hw']) != len(bandpass):
+            warn('Using the same window length for all measurements.')
+            window_params['hw'] = len(bandpass)*[window_params['hw'][0]]
             
 
     #if bandpass is None or type(bandpass[0]) != list:
@@ -272,8 +279,12 @@ def run_measurement(source_configfile,measr_configfile,
     #    ms.to_csv(os.path.join(step_dir,filename),index=None)
     
     #else:
+
+    hws = window_params['hw'][:]
+
     for i in range(len(bandpass)):
 
+        window_params['hw'] = hws[i]
         ms = measurement(source_config,mtype,step,ignore_network,bandpass=bandpass[i],
         step_test=step_test,g_speed=g_speed,window_params=window_params)
 
