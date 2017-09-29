@@ -16,7 +16,7 @@ def test_gradient():
 	# assert the results are the same
 	# ToDo: path
 	
-	g1 = np.load('test/testdata/testsrc/step_0/grad_archived/grad_all.npy')[0,:]
+	g1 = np.load('test/testdata/testsrc/step_0/grad_archived/grad_all.npy')
 	g2 = np.load('test/testdata/testsrc/step_0/grad/grad_all.npy')[0,:]
 
 	assert (g1 == g2).sum() == len(g1)
