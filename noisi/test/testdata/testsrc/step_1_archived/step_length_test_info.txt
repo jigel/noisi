@@ -1,0 +1,12 @@
+Parameters:
+source_model: test/testdata/testsrc/source_config.json
+old step: 0
+min_snr 0
+min_stck 0
+step_length 1e+10
+----------------------------------------
+Station pairs to be used for step lenght test:
+NET STA1, NET STA2 L2 misfit: 2.75006304432e-16
+----------------------------------------
+Cumulative misfit: 2.75006e-16
+----------------------------------------
