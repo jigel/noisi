@@ -91,12 +91,14 @@ def _update_conjugategrad(
 
 	# determine beta
 	norm_neggrad = np.linalg.norm(-1.*neg_grad,ord=2,axis=(1))
-	norm_oldgrad = np.linalg.norm(old_grad,ord=2,axis=(2))
+	norm_oldgrad = np.linalg.norm(old_grad,ord=2,axis=(1))
 
 	beta = np.power(norm_neggrad,2) / np.power(norm_oldgrad,2)
+	print(beta)
+	beta_update = np.dot(beta,old_upd)
+	print old_upd.shape
 
-
-	upd = neg_grad + beta * old_upd
+	upd = neg_grad + beta_update
 
 
 	# save the update so it can be used to determine the next step
@@ -114,8 +116,16 @@ def _prepare_test_steplength(msrfile,source_config,newdir):
 	
 	obs_dir = os.path.join(source_config['source_path'],'observed_correlations')
 
+
 	# Read in the csv files of measurement.
-	data = pd.read_csv(msrfile)
+	for mfile in msrfile:
+		if 'data' not in locals():
+			data = pd.read_csv(mfile)
+		else:
+			# We get the addition of both datasets, which means that l2_norms of all
+			# measurements are added up and the stations pairs with max overall misfit are chosen
+			data += pd.read_csv(mfile)
+
 	# Get a set of n randomly chosen station pairs. Criteria: minimum SNR, 
 	# ---> prelim_stations.txt
 	data_accept = data[(data.snr > min_snr)]
@@ -138,8 +148,8 @@ def _prepare_test_steplength(msrfile,source_config,newdir):
 
 	#data_select = pd.concat([data_select1,data_select2])
 	
-	stafile = open(os.path.join(newdir,'stations_slt.txt'),'w')
-	stafile.write("Station pairs to be used for step lenght test:\n")
+	#stafile = open(os.path.join(newdir,'stations_slt.txt'),'w')
+	#stafile.write("Station pairs to be used for step lenght test:\n")
 
 	inffile = open(os.path.join(newdir,'step_length_test_info.txt'),'w')
 	inffile.write('Parameters:\n')
@@ -160,13 +170,13 @@ def _prepare_test_steplength(msrfile,source_config,newdir):
 	
 	for i in data_select.index:
 		
-		sta1 = data_select.at[i,'sta1']
-		sta2 = data_select.at[i,'sta2']
+		sta1 = data_select.at[i,'sta1'].split('.')[0:2]
+		sta2 = data_select.at[i,'sta2'].split('.')[0:2]
 		
-		lat1 = data_select.at[i,'lat1']
-		lat2 = data_select.at[i,'lat2']
-		lon1 = data_select.at[i,'lon1']
-		lon2 = data_select.at[i,'lon2']
+		#lat1 = data_select.at[i,'lat1']
+		#lat2 = data_select.at[i,'lat2']
+		#lon1 = data_select.at[i,'lon1']
+		#lon2 = data_select.at[i,'lon2']
 
 		misf = data_select.at[i,'l2_norm']
 
@@ -185,13 +195,13 @@ def _prepare_test_steplength(msrfile,source_config,newdir):
 			obs_correlations.sort()
 			corr = obs_correlations[0]
 
-			sta1 = sta1.split('.')
-			sta2 = sta2.split('.')
-			stafile.write('{} {} {} {}\n'.format(*(sta1[0:2]+[lat1]+[lon1])))
-			stafile.write('{} {} {} {}\n'.format(*(sta2[0:2]+[lat2]+[lon2])))
+			#sta1 = sta1.split('.')
+			#sta2 = sta2.split('.')
+			#stafile.write('{} {} {} {}\n'.format(*(sta1[0:2]+[lat1]+[lon1])))
+			#stafile.write('{} {} {} {}\n'.format(*(sta2[0:2]+[lat2]+[lon2])))
 
-			inffile.write('{} {}, {} {} L2 misfit: {}\n'.format(*(sta1[0:2]+sta2[0:2]+[misf])))
-			
+			#inffile.write('{} {}, {} {} L2 misfit: {}\n'.format(*(sta1[0:2]+sta2[0:2]+[misf])))
+			inffile.write('{}, {} L2 misfit: {}\n'.format(sta1,sta2,misf))
 
 			os.system('cp {} {}'.format(corr,os.path.join(newdir,'obs_slt')))
 		
@@ -201,7 +211,7 @@ def _prepare_test_steplength(msrfile,source_config,newdir):
 	inffile.write('\nCumulative misfit: %g\n' %cum_misf)
 	inffile.write('-'*40)
 	inffile.close()
-	stafile.close()
+	#stafile.close()
 
 	return()
 
@@ -211,7 +221,8 @@ def _prepare_test_steplength(msrfile,source_config,newdir):
 source_model = os.path.join(source_model,'source_config.json')
 source_config=json.load(open(source_model))
 datadir = os.path.join(source_config['source_path'],'step_' + str(oldstep))
-msrfile = os.path.join(datadir,"{}.measurement.csv".format(source_config['mtype']))
+msrfile = os.path.join(datadir,"{}.*.measurement.csv".format(source_config['mtype']))
+msrfile = glob(msrfile)
 
 # Initialize the new step directory
 newstep = int(oldstep) + 1
@@ -225,7 +236,7 @@ if not os.path.exists(newdir):
 	os.mkdir(os.path.join(newdir,'adjt'))
 	os.mkdir(os.path.join(newdir,'grad'))
 	os.mkdir(os.path.join(newdir,'kern'))
-	_prepare_test_steplength(source_config,msrfile,newdir)
+	_prepare_test_steplength(msrfile,source_config,newdir)
 
 os.system('cp {} {}'.format(os.path.join(datadir,'base_model.h5'),newdir))
 os.system('cp {} {}'.format(os.path.join(datadir,'starting_model.h5'),newdir))
@@ -235,8 +246,13 @@ os.system('cp {} {}'.format(os.path.join(datadir,'starting_model.h5'),newdir))
 # Contains starting model + step length * (-grad) for steepest descent
 # This would be the point to project to some lovely basis functions..
 grad = grad_file
+
 neg_grad = -1. * np.load(grad)
 old_grad = np.load(grad_old)
+
+neg_grad = np.array(neg_grad,ndmin=2)
+old_grad = np.array(old_grad,ndmin=2)
+
 new_sourcemodel = os.path.join(newdir,'starting_model.h5')
 new_update = os.path.join(newdir,'grad','update.npy')
 old_upd = os.path.join(datadir,'grad','update.npy')
@@ -256,10 +272,10 @@ if update_mode == 'steepest':
 elif update_mode == 'conjgrad':
 	descent_direction, update = _update_conjugategrad(new_sourcemodel,neg_grad,old_grad,
 	old_upd,new_update,step_length)
-	np.save(updatename,update)
+	np.save(new_update,update)
 
 
-
+src_model.model['distr_basis'][:] += descent_direction
 
 
 if src_model.model['distr_basis'][:].min() < 0.:
