@@ -255,22 +255,22 @@ def g1g2_corr(wf1,wf2,corr_file,kernel,adjt,
             wf1 = WaveField(wf1)
             wf2 = WaveField(wf2)
 
-        if kernelrun:
+       # if kernelrun:
             
             #if not os.path.exists(adjt):
             #    print('Adjoint source %s not found, skipping kernel.')
             #    return()
 
-            kern = np.zeros((ntraces,len(adjt)))
+        #    kern = np.zeros((ntraces,len(adjt)))
             
 
 
-            f = Stream()
-            for adjtfile in adjt:
-                if adjtfile == '-':
-                    return
-                f += read(adjtfile)[0]
-                f[-1].data = my_centered(f[-1].data,n_corr)
+         #   f = Stream()
+         #   for adjtfile in adjt:
+         #       if adjtfile == '-':
+         #           return
+         #       f += read(adjtfile)[0]
+         #       f[-1].data = my_centered(f[-1].data,n_corr)
             
         # Loop over source locations
         #with click.progressbar(range(wf1.stats['ntraces']),\
@@ -317,37 +317,37 @@ def g1g2_corr(wf1,wf2,corr_file,kernel,adjt,
             #     print(c[0:10],file=None)
             #     print(c.max(),file=None)
 
-            if kernelrun:
-                
-                corr_temp = my_centered(np.fft.ifftshift(np.fft.irfft(c,n)),n_corr)
+            #if kernelrun:
+            #    
+            #    corr_temp = my_centered(np.fft.ifftshift(np.fft.irfft(c,n)),n_corr)
                 ##if i%50000 == 0:
                 #    ##print(corr_temp[0:10],file=None)
                     #print(corr_temp.max(),file=None)
                 # A Riemann sum
-                for j in range(len(adjt)):
-                    kern[i,j] = np.dot(corr_temp,f[j].data) * f[j].stats.delta
+            #    for j in range(len(adjt)):
+            #        kern[i,j] = np.dot(corr_temp,f[j].data) * f[j].stats.delta
                 
             
-            else:
+            #else:
                                 
-                correlation += my_centered(np.fft.ifftshift(np.fft.irfft(c,n)),n_corr)
+            correlation += my_centered(np.fft.ifftshift(np.fft.irfft(c,n)),n_corr)
             
-            if i%50000 == 0:
-                print("Finished {} source locations.".format(i))
+            #if i%50000 == 0:
+            print("Finished {} source locations.".format(i))
     
 
         if not insta:
             wf1.file.close()
             wf2.file.close()
 
-        if kernelrun:
-            np.save(kernel,kern) 
+        #if kernelrun:
+        #    np.save(kernel,kern) 
 
-        else:
-            trace = Trace()
-            trace.stats.sampling_rate = Fs
-            trace.data = correlation
-            trace.write(filename=corr_file,format='SAC')
+        #else:
+        trace = Trace()
+        trace.stats.sampling_rate = Fs
+        trace.data = correlation
+        trace.write(filename=corr_file,format='SAC')
             
         
 

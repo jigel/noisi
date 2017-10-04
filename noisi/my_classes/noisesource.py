@@ -34,8 +34,7 @@ class NoiseSource(object):
             # discontinued: (the distribution yields the spectral weights)
             #self.spect_weights = self.model['spect_weights'][:]
             
-            # The 'max amplitude' is probably needed often, and the distribution should not be too heavy to hold in memory, it has dimension 1 x number of sources
-            self.source_distribution = self.expand_distr()
+            self.spatial_source_model = self.expand_distr()
             
         except IOError:
             msg = 'Unable to open model file '+model
@@ -66,7 +65,7 @@ class NoiseSource(object):
         # The reason this function is for one spectrum only is that the entire gridded matrix of spectra by location is most probably pretty big.
         
 
-        weights = np.array(self.expand_distr()[:,iloc])
+        weights = self.spatial_source_model[:,iloc]#np.array(self.expand_distr()[:,iloc])
         
         
         return np.dot(weights, self.spect_basis)
@@ -75,8 +74,8 @@ class NoiseSource(object):
     def plot(self,**options):
         
         # plot the distribution
-        ms = self.expand_distr()
-        for m in ms: 
+       
+        for m in self.spatial_source_model: 
             plot_grid(self.src_loc[0],self.src_loc[1],m,**options)
 
 
