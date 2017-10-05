@@ -86,6 +86,9 @@ def adjointsrcs(source_config,mtype,step,ignore_network,bandpass,**options):
         raise ValueError(msg)
     
     #i = 0
+    hws = options['window_params']['hw'][:]
+
+    
     with click.progressbar(files,label='Determining adjoint sources...') as bar:
         
         for f in bar:
@@ -130,8 +133,7 @@ def adjointsrcs(source_config,mtype,step,ignore_network,bandpass,**options):
             func = af.get_adj_func(mtype)
 
             # ugly...sorry
-            hws = options['window_params']['hw'][:]
-
+            
             # Bandpasses
             for j in range(len(bandpass)):
 

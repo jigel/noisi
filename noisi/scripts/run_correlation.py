@@ -332,8 +332,8 @@ def g1g2_corr(wf1,wf2,corr_file,kernel,adjt,
                                 
             correlation += my_centered(np.fft.ifftshift(np.fft.irfft(c,n)),n_corr)
             
-            #if i%50000 == 0:
-            print("Finished {} source locations.".format(i))
+            if i%50000 == 0:
+                print("Finished {} source locations.".format(i))
     
 
         if not insta:
