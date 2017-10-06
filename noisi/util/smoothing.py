@@ -38,23 +38,27 @@ def smooth_gaussian(coords,values,rank,size,sigma,r=6371000.,threshold=1e-9):
 	a = 1./(sigma*sqrt(2.*pi))
 	
 	for i in range(rank,len(values),size):
-		print(i)
+		
 		xp,yp,zp = (x[i],y[i],z[i])
 		dist = get_distance(x,y,z,xp,yp,zp)
 		weight = a * np.exp(-(dist)**2/(2*sigma**2))
 		# I just had an idea for 'sparsity' here; test this:
 
 		idx = weight >= threshold
+		if len(idx) == 0:
+			raise ValueError('No weights above threshold, reset threshold.')
 		v_smooth[i] = np.sum(np.multiply(weight[idx],values[idx])) / len(idx)
+
 
 	return v_smooth
 
 
-def apply_smoothing_sphere(values,coords,sigma,cap=95):
+def apply_smoothing_sphere(values,coords,sigma,cap=95,threshold=1.e-12):
 
 
 	sigma = float(sigma)
 	cap = float(cap)
+	threshold = float(threshold)
 
 	# clip
 	perc_up = np.percentile(values,cap,overwrite_input=False)
@@ -67,7 +71,7 @@ def apply_smoothing_sphere(values,coords,sigma,cap=95):
 	rank = comm.Get_rank()
 
 	# get the smoothed map; could use other functions than Gaussian here
-	v_s = smooth_gaussian(coords,values,rank,size,sigma)
+	v_s = smooth_gaussian(coords,values,rank,size,sigma,threshold)
 
 	
 	comm.barrier()
@@ -112,12 +116,18 @@ if __name__=='__main__':
 	coordfile = sys.argv[3]
 	sigma = float(sys.argv[4])
 	cap = float(sys.argv[5])
+	
+	try:
+		thresh = float(sys.argv[6])
+	except IndexError:
+		thresh = 1.e-12
+
 	coords = np.load(coordfile)
 	values = np.load(inputfile)
 	smoothed_values = np.zeros(values.shape)
 	for i in range(values.shape[0]):
 		array_in = values[i,:]
-		smoothed_values[i,:] = apply_smoothing_sphere(array_in,coords,sigma,cap)
+		smoothed_values[i,:] = apply_smoothing_sphere(array_in,coords,sigma,cap,thresh)
 
 	np.save(outputfile,smoothed_values)
 

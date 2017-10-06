@@ -133,12 +133,28 @@ def _prepare_test_steplength(msrfile,source_config,newdir):
 	# Get a set of n randomly chosen station pairs. Criteria: minimum SNR, 
 	# ---> prelim_stations.txt
 	data_accept = data[(data.snr > min_snr)]
+	if len(data_accept) == 0:
+		raise ValueError('No data match selection criteria.')
+
 	data_accept = data_accept[(data_accept.snr_a > min_snr)]
+	if len(data_accept) == 0:
+		raise ValueError('No data match selection criteria.')
+
 	data_accept = data_accept[(data_accept.nstack > min_stck)]
+	if len(data_accept) == 0:
+		raise ValueError('No data match selection criteria.')
 	
 	data_accept = data_accept[~(data_accept.l2_norm.apply(np.isnan))]
+	if len(data_accept) == 0:
+		raise ValueError('No data match selection criteria.')
+
 	data_accept = data_accept[~(data_accept.snr.apply(np.isnan))]
+	if len(data_accept) == 0:
+		raise ValueError('No data match selection criteria.')
+
 	data_accept = data_accept[~(data_accept.snr_a.apply(np.isnan))]
+	if len(data_accept) == 0:
+		raise ValueError('No data match selection criteria.')
 	
 
 	# select data...
