@@ -50,7 +50,7 @@ def smooth_gaussian(coords,values,rank,size,sigma,r=6371000.,threshold=1e-9):
 	return v_smooth
 
 
-def apply_smoothing_sphere(array_in,coords,sigma,cap=95):
+def apply_smoothing_sphere(values,coords,sigma,cap=95):
 
 
 	sigma = float(sigma)
