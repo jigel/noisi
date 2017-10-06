@@ -50,12 +50,9 @@ def smooth_gaussian(coords,values,rank,size,sigma,r=6371000.,threshold=1e-9):
 	return v_smooth
 
 
-def apply_smoothing_sphere(inputfile,outputfile,coordfile,sigma,cap=95):
+def apply_smoothing_sphere(array_in,coords,sigma,cap=95):
 
 
-	# open the files
-	coords = np.load(coordfile)
-	values = np.load(inputfile)
 	sigma = float(sigma)
 	cap = float(cap)
 
@@ -86,7 +83,7 @@ def apply_smoothing_sphere(inputfile,outputfile,coordfile,sigma,cap=95):
 		for i in range(size):
 			v_s += v_s_all[i]
 
-		np.save(outputfile,v_s)
+		return(v_s)
 
 def test_gauss_smoothing(sourcegrid,map):
 	#
@@ -107,6 +104,21 @@ def test_gauss_smoothing(sourcegrid,map):
 
 if __name__=='__main__':
 	# pass in: input_file, output_file, coord_file, sigma
-	apply_smoothing_sphere(*sys.argv[1:])
+
+	# open the files
+
+	inputfile = sys.argv[1]
+	outputfile = sys.argv[2]
+	coordfile = sys.argv[3]
+	sigma = float(sys.argv[4])
+	cap = float(sys.argv[5])
+	coords = np.load(coordfile)
+	values = np.load(inputfile)
+	smoothed_values = np.zeros(values.shape)
+	for i in range(values.shape[0]):
+		array_in = values[i,:]
+		smoothed_values[i,:] = apply_smoothing_sphere(array_in,coords,sigma,cap)
+
+	np.save(outputfile,smoothed_values)
 
 	
