@@ -19,7 +19,7 @@ def get_distance(gridx,gridy,gridz,x,y,z):
 
 
 
-def smooth_gaussian(coords,values,rank,size,sigma,r=6371000.,threshold=1e-9):
+def smooth_gaussian(values,coords,rank,size,sigma,r=6371000.,threshold=1e-9):
 
 	# coords format: (lon,lat)
 
