@@ -43,7 +43,7 @@ def smooth_gaussian(values,coords,rank,size,sigma,r=6371000.,threshold=1e-9):
 		xp,yp,zp = (x[i],y[i],z[i])
 		dist = get_distance(x,y,z,xp,yp,zp)
 		weight = a * np.exp(-(dist)**2/(2*sigma**2))
-		print(weight)
+		print(weight.max())
 		# I just had an idea for 'sparsity' here; test this:
 
 		idx = weight >= threshold
@@ -53,8 +53,8 @@ def smooth_gaussian(values,coords,rank,size,sigma,r=6371000.,threshold=1e-9):
 			v_smooth[i] = 0.
 
 		else:
-			v_smooth[i] = np.sum(np.multiply(weight[idx],values[idx])) / len(idx)
-		print(v_smooth[i])
+			v_smooth[i] = np.sum(np.multiply(weight[idx],values[idx])) / idx.sum()
+		
 
 	return v_smooth
 
