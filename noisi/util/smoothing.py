@@ -59,7 +59,7 @@ def smooth_gaussian(values,coords,rank,size,sigma,r=6371000.,threshold=1e-9):
 	return v_smooth
 
 
-def apply_smoothing_sphere(values,coords,sigma,cap=95,threshold=1.e-12):
+def apply_smoothing_sphere(rank,size,values,coords,sigma,cap=95,threshold=1.e-12):
 
 
 	sigma = float(sigma)
@@ -71,10 +71,7 @@ def apply_smoothing_sphere(values,coords,sigma,cap=95,threshold=1.e-12):
 	perc_dw = np.percentile(values,100-cap,overwrite_input=False)
 	values = np.clip(values,perc_dw,perc_up)
 
-	# initialize parallel comm
-	comm = MPI.COMM_WORLD
-	size = comm.Get_size()
-	rank = comm.Get_rank()
+	
 
 	# get the smoothed map; could use other functions than Gaussian here
 	v_s = smooth_gaussian(values,coords,rank,size,sigma,threshold=threshold)
@@ -94,11 +91,7 @@ def apply_smoothing_sphere(values,coords,sigma,cap=95,threshold=1.e-12):
 		for i in range(size):
 
 			v_s += v_s_all[i]
-			print(v_s.min())
-			print(v_s.max())
-			print(np.isnan(v_s).sum())
-
-
+		
 		return(v_s)
 
 def test_gauss_smoothing(sourcegrid,map):
@@ -119,10 +112,14 @@ def test_gauss_smoothing(sourcegrid,map):
 
 
 if __name__=='__main__':
+
+	# initialize parallel comm
+	comm = MPI.COMM_WORLD
+	size = comm.Get_size()
+	rank = comm.Get_rank()
+
 	# pass in: input_file, output_file, coord_file, sigma
-
 	# open the files
-
 	inputfile = sys.argv[1]
 	outputfile = sys.argv[2]
 	coordfile = sys.argv[3]
@@ -137,11 +134,18 @@ if __name__=='__main__':
 	coords = np.load(coordfile)
 	values = np.array(np.load(inputfile),ndmin=2)
 	smoothed_values = np.zeros(values.shape)
-	print(values.shape)
-	for i in range(values.shape[0]):
-		array_in = values[i,:]
-		smoothed_values[i,:] = apply_smoothing_sphere(array_in,coords,sigma,cap,threshold=thresh)
+	
 
-	np.save(outputfile,smoothed_values)
+	for i in range(values.shape[0]):
+
+		array_in = values[i,:]
+		v = apply_smoothing_sphere(rank,size,array_in,\
+			coords,sigma,cap,threshold=thresh)
+		if rank == 0:
+			smoothed_values[i,:] = v
+			print(np.isnan(smoothed_values).sum())
+
+	if rank == 0:
+		np.save(outputfile,smoothed_values)
 
 	
