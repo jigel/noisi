@@ -92,10 +92,11 @@ def apply_smoothing_sphere(values,coords,sigma,cap=95,threshold=1.e-12):
 		print('Gathered.')
 		v_s = np.zeros(v_s.shape)
 		for i in range(size):
-			print(v_s_all[i].min())
-			print(v_s_all[i].max())
-			print(np.isnan(v_s_all[i]).sum())
+
 			v_s += v_s_all[i]
+			print(v_s.min())
+			print(v_s.max())
+			print(np.isnan(v_s).sum())
 
 
 		return(v_s)
