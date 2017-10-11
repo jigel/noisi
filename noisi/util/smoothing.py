@@ -78,9 +78,7 @@ def apply_smoothing_sphere(values,coords,sigma,cap=95,threshold=1.e-12):
 
 	# get the smoothed map; could use other functions than Gaussian here
 	v_s = smooth_gaussian(values,coords,rank,size,sigma,threshold=threshold)
-	print(v_s.max())
-	print(v_s.min())
-	print(np.isnan(v_s).sum())
+	
 
 	
 	comm.barrier()
@@ -94,7 +92,11 @@ def apply_smoothing_sphere(values,coords,sigma,cap=95,threshold=1.e-12):
 		print('Gathered.')
 		v_s = np.zeros(v_s.shape)
 		for i in range(size):
+			print(v_s_all[i].min())
+			print(v_s_all[i].max())
+			print(np.isnan(v_s_all[i]).sum())
 			v_s += v_s_all[i]
+
 
 		return(v_s)
 
