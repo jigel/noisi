@@ -43,7 +43,7 @@ def smooth_gaussian(values,coords,rank,size,sigma,r=6371000.,threshold=1e-9):
 		xp,yp,zp = (x[i],y[i],z[i])
 		dist = get_distance(x,y,z,xp,yp,zp)
 		weight = a * np.exp(-(dist)**2/(2*sigma**2))
-		print(weight.max())
+		#print(weight.max())
 		# I just had an idea for 'sparsity' here; test this:
 
 		idx = weight >= threshold
@@ -78,6 +78,9 @@ def apply_smoothing_sphere(values,coords,sigma,cap=95,threshold=1.e-12):
 
 	# get the smoothed map; could use other functions than Gaussian here
 	v_s = smooth_gaussian(values,coords,rank,size,sigma,threshold=threshold)
+	print(v_s.max())
+	print(v_s.min())
+	print(np.isnan(v_s).sum())
 
 	
 	comm.barrier()
