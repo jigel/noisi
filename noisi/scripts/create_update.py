@@ -128,19 +128,23 @@ def _prepare_test_steplength(msrfile,source_config,newdir):
 		else:
 			# We get the addition of both datasets, which means that l2_norms of all
 			# measurements are added up and the stations pairs with max overall misfit are chosen
-			data += pd.read_csv(mfile)
+			data.l2_norm += pd.read_csv(mfile).l2_norm
+			data.nstck += pd.read_csv(mfile).nstck
+
 
 	# Get a set of n randomly chosen station pairs. Criteria: minimum SNR, 
 	# ---> prelim_stations.txt
-	data_accept = data[(data.snr > min_snr)]
-	if len(data_accept) == 0:
-		raise ValueError('No data match selection criteria.')
+	
+	# this makes no sense for combined measure
+	#data_accept = data[(data.snr >= min_snr)]
+	#if len(data_accept) == 0:
+#		raise ValueError('No data match selection criteria.')
 
-	data_accept = data_accept[(data_accept.snr_a > min_snr)]
-	if len(data_accept) == 0:
-		raise ValueError('No data match selection criteria.')
+	#data_accept = data_accept[(data_accept.snr_a >= min_snr)]
+	#if len(data_accept) == 0:
+#		raise ValueError('No data match selection criteria.')
 
-	data_accept = data_accept[(data_accept.nstack > min_stck)]
+	data_accept = data_accept[(data_accept.nstack >= min_stck)]
 	if len(data_accept) == 0:
 		raise ValueError('No data match selection criteria.')
 	
