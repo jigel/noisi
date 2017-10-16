@@ -13,10 +13,10 @@ import matplotlib.pyplot as plt
 #ToDo plot if requested.
 from noisi.scripts import measurements as rm
 #from noisi.scripts import adjnt_functs as af
-from noisi.util.windows import get_window, my_centered, snratio
+from noisi.util.windows import my_centered, snratio
 from noisi.util.corr_pairs import get_synthetics_filename
 # Get and return measurement as a table or something.
-
+from warnings import warn
 
 def get_station_info(stats):
 
@@ -129,8 +129,8 @@ def measurement(source_config,mtype,step,ignore_network,bandpass,step_test,**opt
             #======================================================
             # Filtering
             #======================================================
-            
-            if bandpass is not None:
+            print(bandpass)
+            if bandpass != None:
                 tr_o.taper(0.05)
                 tr_o.filter('bandpass',freqmin=bandpass[0],
                     freqmax=bandpass[1],corners=bandpass[2],
@@ -225,9 +225,8 @@ def measurement(source_config,mtype,step,ignore_network,bandpass,step_test,**opt
 
             # step index
             i+=1
-    
-    filename = '{}.measurement.csv'.format(mtype)
-    measurements.to_csv(os.path.join(step_dir,filename),index=None)
+        
+        return measurements
 
 def run_measurement(source_configfile,measr_configfile,
     step,ignore_network,step_test):
@@ -238,6 +237,9 @@ def run_measurement(source_configfile,measr_configfile,
     measr_config=json.load(open(measr_configfile))
     mtype = measr_config['mtype']
     bandpass = measr_config['bandpass']
+    step_n = 'step_{}'.format(int(step))
+    step_dir = os.path.join(source_config['source_path'],
+    step_n)
     
     
 
@@ -248,12 +250,44 @@ def run_measurement(source_configfile,measr_configfile,
         g_speed                         =    measr_config['g_speed']
         window_params                   =    {}
         window_params['hw']             =    measr_config['window_params_hw']
+        
         window_params['sep_noise']      =    measr_config['window_params_sep_noise']
         window_params['win_overlap']    =    measr_config['window_params_win_overlap']
         window_params['wtype']          =    measr_config['window_params_wtype']
         window_params['causal_side']    =    measr_config['window_params_causal']
         window_params['plot']           =    measr_config['window_plot_measurements']
    
-    measurement(source_config,mtype,step,ignore_network,bandpass=bandpass,
-        step_test=step_test,g_speed=g_speed,window_params=window_params)
+
+    if bandpass == None:
+        bandpass = [None]
+    if type(bandpass[0]) != list and bandpass[0] != None:
+            bandpass = [bandpass]
+            warn('\'Bandpass\' should be defined as list of filters.')
+    if measr_config['mtype'] in ['ln_energy_ratio','energy_diff','inst_phase']:
+        if type(window_params['hw']) != list:
+            window_params['hw'] = [window_params['hw']]
+        if len(window_params['hw']) != len(bandpass):
+            warn('Using the same window length for all measurements.')
+            window_params['hw'] = len(bandpass)*[window_params['hw'][0]]
+            
+
+    #if bandpass is None or type(bandpass[0]) != list:
+    #    ms = measurement(source_config,mtype,step,ignore_network,bandpass=bandpass,
+    #        step_test=step_test,g_speed=g_speed,window_params=window_params)
+    #    
+    #    filename = '{}.0.measurement.csv'.format(mtype)
+    #    ms.to_csv(os.path.join(step_dir,filename),index=None)
     
+    #else:
+
+    hws = window_params['hw'][:]
+
+    for i in range(len(bandpass)):
+
+        window_params['hw'] = hws[i]
+        ms = measurement(source_config,mtype,step,ignore_network,bandpass=bandpass[i],
+        step_test=step_test,g_speed=g_speed,window_params=window_params)
+
+        filename = '{}.{}.measurement.csv'.format(mtype,i)
+        ms.to_csv(os.path.join(step_dir,filename),index=None)
+

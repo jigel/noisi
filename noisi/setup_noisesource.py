@@ -220,6 +220,8 @@ plt.savefig(os.path.join(sourcepath,'freq_distr_startingmodel.png'))
 ########################
 # Initial geographic 
 # weighting (unif)
+# This will not make sense anymore once
+# the weights matrix is adapted by updates
 ########################
 
 weights = np.eye(basis_spec.shape[0],num_bases)
@@ -236,6 +238,14 @@ with h5py.File(os.path.join(sourcepath,'step_0','starting_model.h5'),'w') as fh:
     fh.create_dataset('distr_weights',data=weights)
     fh.create_dataset('spect_basis',data=basis_spec.astype(np.float64))
     #fh.create_dataset('spect_weights',data=np.ones(min(basis_spec.shape)))
+
+basis1_b = np.ones(basis_geo.shape)
+with h5py.File(os.path.join(sourcepath,'step_0','base_model.h5'),'w') as fh:
+    fh.create_dataset('coordinates',data=grd.astype(np.float32))
+    fh.create_dataset('frequencies',data=freq.astype(np.float32))
+    fh.create_dataset('distr_basis',data=basis1_b.astype(np.float32))
+    fh.create_dataset('distr_weights',data=weights.astype(np.float32))
+    fh.create_dataset('spect_basis',data=basis_spec.astype(np.float32))
 
 print 'Done.'
 

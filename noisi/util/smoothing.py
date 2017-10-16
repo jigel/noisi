@@ -2,6 +2,7 @@ import numpy as np
 from math import sqrt, pi
 import sys
 from mpi4py import MPI
+from warnings import warn
 from noisi.util.plot import plot_grid
 # Try yet another: sort of Gaussian convolution, but determining the distance
 # in cartesian coordinates.
@@ -19,7 +20,7 @@ def get_distance(gridx,gridy,gridz,x,y,z):
 
 
 
-def smooth_gaussian(coords,values,rank,size,sigma,r=6371000.,threshold=1e-9):
+def smooth_gaussian(values,coords,rank,size,sigma,r=6371000.,threshold=1e-9):
 
 	# coords format: (lon,lat)
 
@@ -38,39 +39,43 @@ def smooth_gaussian(coords,values,rank,size,sigma,r=6371000.,threshold=1e-9):
 	a = 1./(sigma*sqrt(2.*pi))
 	
 	for i in range(rank,len(values),size):
-		print(i)
+		
 		xp,yp,zp = (x[i],y[i],z[i])
 		dist = get_distance(x,y,z,xp,yp,zp)
 		weight = a * np.exp(-(dist)**2/(2*sigma**2))
+		#print(weight.max())
 		# I just had an idea for 'sparsity' here; test this:
 
 		idx = weight >= threshold
-		v_smooth[i] = np.sum(np.multiply(weight[idx],values[idx])) / len(idx)
+
+		if idx.sum() == 0:
+			warn('No weights above threshold, reset threshold.')
+			v_smooth[i] = 0.
+
+		else:
+			v_smooth[i] = np.sum(np.multiply(weight[idx],values[idx])) / idx.sum()
+		
 
 	return v_smooth
 
 
-def apply_smoothing_sphere(inputfile,outputfile,coordfile,sigma,cap=95):
+def apply_smoothing_sphere(rank,size,values,coords,sigma,cap=95,threshold=1.e-12):
 
 
-	# open the files
-	coords = np.load(coordfile)
-	values = np.load(inputfile)
 	sigma = float(sigma)
 	cap = float(cap)
+	threshold = float(threshold)
 
 	# clip
 	perc_up = np.percentile(values,cap,overwrite_input=False)
 	perc_dw = np.percentile(values,100-cap,overwrite_input=False)
 	values = np.clip(values,perc_dw,perc_up)
 
-	# initialize parallel comm
-	comm = MPI.COMM_WORLD
-	size = comm.Get_size()
-	rank = comm.Get_rank()
+	
 
 	# get the smoothed map; could use other functions than Gaussian here
-	v_s = smooth_gaussian(coords,values,rank,size,sigma)
+	v_s = smooth_gaussian(values,coords,rank,size,sigma,threshold=threshold)
+	
 
 	
 	comm.barrier()
@@ -84,9 +89,10 @@ def apply_smoothing_sphere(inputfile,outputfile,coordfile,sigma,cap=95):
 		print('Gathered.')
 		v_s = np.zeros(v_s.shape)
 		for i in range(size):
-			v_s += v_s_all[i]
 
-		np.save(outputfile,v_s)
+			v_s += v_s_all[i]
+		
+		return(v_s)
 
 def test_gauss_smoothing(sourcegrid,map):
 	#
@@ -106,7 +112,40 @@ def test_gauss_smoothing(sourcegrid,map):
 
 
 if __name__=='__main__':
+
+	# initialize parallel comm
+	comm = MPI.COMM_WORLD
+	size = comm.Get_size()
+	rank = comm.Get_rank()
+
 	# pass in: input_file, output_file, coord_file, sigma
-	apply_smoothing_sphere(*sys.argv[1:])
+	# open the files
+	inputfile = sys.argv[1]
+	outputfile = sys.argv[2]
+	coordfile = sys.argv[3]
+	sigma = float(sys.argv[4])
+	cap = float(sys.argv[5])
+	
+	try:
+		thresh = float(sys.argv[6])
+	except IndexError:
+		thresh = 1.e-12
+
+	coords = np.load(coordfile)
+	values = np.array(np.load(inputfile),ndmin=2)
+	smoothed_values = np.zeros(values.shape)
+	
+
+	for i in range(values.shape[0]):
+
+		array_in = values[i,:]
+		v = apply_smoothing_sphere(rank,size,array_in,\
+			coords,sigma,cap,threshold=thresh)
+		if rank == 0:
+			smoothed_values[i,:] = v
+			print(np.isnan(smoothed_values).sum())
+
+	if rank == 0:
+		np.save(outputfile,smoothed_values)
 
 	
