@@ -8,7 +8,8 @@ from scipy.interpolate import griddata
     
 def plot_grid(map_x,map_y,map_z,stations=[],v=None,globe=False,
     outfile=None,title=None,shade='flat',cmap=None,
-    sequential=False,v_min=None,normalize=True,coastres='c',proj='cyl',
+    sequential=False,v_min=None,normalize=False,
+    coastres='c',proj='cyl',
     lat_0=None,lon_0=None,lonmin=None,lonmax=None,
     latmin=None,latmax=None,mode='interp',resol=1):
     

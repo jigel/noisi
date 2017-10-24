@@ -191,7 +191,7 @@ for i in range(num_bases):
 print 'Plotting...'
 from noisi.util import plot
 for i in range(num_bases):
-    plot.plot_grid(grd[0],grd[1],basis_geo[i,:],
+    plot.plot_grid(grd[0],grd[1],basis_geo[i,:],normalize=False,
     outfile = os.path.join(sourcepath,'geog_distr_basis{}.png'.format(i)))
 
 
