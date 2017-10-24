@@ -20,7 +20,7 @@ min_snr = float(sys.argv[6])#min_snr = 5.0
 min_stck = int(sys.argv[7])#min_stck = 320.
 nr_msr = int(sys.argv[8])#nr_msr = 300
 step_length = float(sys.argv[9])#step_length = 
-mode = 'max' # 'max', 'random'
+mode = sys.argv[10] # 'max', 'random'
 # Give as part per hundred, e.g 0.1 for 10%
 perc_step_length = None
 # include those data points in the test which are at or above this
