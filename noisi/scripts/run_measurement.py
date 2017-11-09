@@ -247,7 +247,7 @@ def run_measurement(source_configfile,measr_configfile,
     if measr_config['mtype'] in ['ln_energy_ratio','energy_diff','inst_phase']:
         
 
-        g_speed                         =    measr_config['g_speed']
+       #g_speed                         =    measr_config['g_speed']
         window_params                   =    {}
         window_params['hw']             =    measr_config['window_params_hw']
         
@@ -269,6 +269,14 @@ def run_measurement(source_configfile,measr_configfile,
         if len(window_params['hw']) != len(bandpass):
             warn('Using the same window length for all measurements.')
             window_params['hw'] = len(bandpass)*[window_params['hw'][0]]
+        if type(measr_config['g_speed']) in [float,int]:
+            warn('Using the same group velocity for all measurements.')
+            g_speeds = len(bandpass)*[measr_config['g_speed']]
+        # ToDo: This is ugly and should be sorted out beforehand but 
+        # I am too lazy.
+        elif type(measr_config['g_speed']) == list \
+        and len(measr_config['g_speed']) == len(bandpass):
+            g_speeds = measr_config['g_speed']
             
 
     #if bandpass is None or type(bandpass[0]) != list:
@@ -283,6 +291,8 @@ def run_measurement(source_configfile,measr_configfile,
     hws = window_params['hw'][:]
 
     for i in range(len(bandpass)):
+
+        g_speed = g_speeds[i]
 
         window_params['hw'] = hws[i]
         ms = measurement(source_config,mtype,step,ignore_network,bandpass=bandpass[i],

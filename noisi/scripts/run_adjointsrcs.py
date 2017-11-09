@@ -87,7 +87,7 @@ def adjointsrcs(source_config,mtype,step,ignore_network,bandpass,**options):
     
     #i = 0
     hws = options['window_params']['hw'][:]
-
+    g_speed = options['g_speed'][:]
     
     with click.progressbar(files,label='Determining adjoint sources...') as bar:
         
@@ -138,7 +138,7 @@ def adjointsrcs(source_config,mtype,step,ignore_network,bandpass,**options):
             for j in range(len(bandpass)):
 
                 options['window_params']['hw'] = hws[j]
-                
+                options['g_speed'] = g_speed[j]
 
                 tr_o_filt = tr_o.copy()
                 tr_s_filt = tr_s.copy()
@@ -220,6 +220,14 @@ def run_adjointsrcs(source_configfile,measr_configfile,step,ignore_network):
         if len(window_params['hw']) != len(bandpass):
             warn('Using the same window length for all measurements.')
             window_params['hw'] = len(bandpass)*[window_params['hw'][0]]
+        if type(measr_config['g_speed']) in [float,int]:
+            warn('Using the same group velocity for all measurements.')
+            g_speed = len(bandpass)*[measr_config['g_speed']]
+        # ToDo: This is ugly and should be sorted out beforehand but 
+        # I am too lazy.
+        elif type(measr_config['g_speed']) == list \
+        and len(measr_config['g_speed']) == len(bandpass):
+            g_speed = measr_config['g_speed']
 
         window_params['sep_noise'] = measr_config['window_params_sep_noise']
         window_params['win_overlap'] = measr_config['window_params_win_overlap']
