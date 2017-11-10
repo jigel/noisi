@@ -123,7 +123,13 @@ if __name__=='__main__':
 	inputfile = sys.argv[1]
 	outputfile = sys.argv[2]
 	coordfile = sys.argv[3]
-	sigma = float(sys.argv[4])
+	
+
+	#sigma = float(sys.argv[4])
+	sigma = sys.argv[4].split(',')
+	for ixs in range(len(sigma)):
+		sigma[ixs] = float(sigma[ixs])
+
 	cap = float(sys.argv[5])
 	
 	try:
@@ -139,8 +145,13 @@ if __name__=='__main__':
 	for i in range(values.shape[0]):
 
 		array_in = values[i,:]
+		try:
+			sig = sigma[i]
+		except IndexError:
+			sig = sigma[-1]
+
 		v = apply_smoothing_sphere(rank,size,array_in,\
-			coords,sigma,cap,threshold=thresh)
+			coords,sig,cap,threshold=thresh)
 		if rank == 0:
 			smoothed_values[i,:] = v
 			print(np.isnan(smoothed_values).sum())
