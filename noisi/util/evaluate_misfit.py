@@ -35,5 +35,5 @@ for i in range(len(step_tests)):
 		result[i,1] += dat.l2_norm.mean()/len(weights) * weights[j]
 
 
-np.save('evaluation_step_length_test.npy',result)
+np.save('result_step_length_test.npy',result)
 

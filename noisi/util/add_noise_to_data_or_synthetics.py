@@ -7,21 +7,29 @@ import sys
 if __name__ == '__main__':
 
 	directory = sys.argv[1]
+
+	perc_of_max = float(sys.argv[2])
+
 	try:
-		format = sys.argv[2]
+		format = sys.argv[3]
 	except IndexError:
 		format = 'sac'
+
+	try:
+		o = sys.argv[4]
+	except IndexError:
+		o = input('Are you sure you want to add noise? [n]/yes:\n')
+
+
 
 	traces = glob(directory +'/*.'+format.upper())
 	traces += glob(directory + '/*.'+format.lower())
 	
-	o = input('Are you sure you want to add noise? [n]/yes:\n')
-	
 	if o != 'yes':
-		sys.exit("You changed your mind.")
+		sys.exit("Nothing added.")
 	else:
 		for t in traces:
 			tr = read(t)[0]
-			tr.data += np.random.randn(len(tr.data))*tr.data.max()*0.3
+			tr.data += np.random.randn(len(tr.data))*tr.data.max()*perc_of_max
 			tr.write(t,format=format)
 
