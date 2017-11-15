@@ -2,6 +2,7 @@ import sys
 from pandas import read_csv
 import json
 import os
+import numpy as np
 from glob import glob
 
 # evaluate measurement
@@ -22,7 +23,7 @@ result = np.zeros((len(step_tests),2))
 for i in range(len(step_tests)):
 	for j in range(len(weights)):
 		# what step length?
-		result[i,0](float(step_tests.split('_')[-1]))
+		result[i,0]=(float(step_tests[i].split('_')[-1]))
 
 		# load the measurements
 		filename = '{}.{}.measurement.csv'.format(mtype,j)
