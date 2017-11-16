@@ -1,7 +1,6 @@
 import numpy as np
 from glob import glob
 from obspy import read
-from pathlib import Path
 import sys
 
 if __name__ == '__main__':

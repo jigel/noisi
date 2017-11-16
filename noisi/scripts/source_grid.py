@@ -36,7 +36,7 @@ radius=None):
             
             if c_centr and radius:
                 if gps2dist_azimuth(lat,lon,c_centr[0],c_centr[1])[0] > radius:
-                    print lat, lon, gps2dist_azimuth(lat,lon,c_centr[0],c_centr[1])[0]
+                    print(lat,lon,gps2dist_azimuth(lat,lon,c_centr[0],c_centr[1])[0])
                     if abs(lat) != 90.:
                         d_lon = dx / len_deg_lon(lat)
                         lon += d_lon

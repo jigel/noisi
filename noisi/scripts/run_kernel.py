@@ -123,7 +123,9 @@ def get_ns(wf1,source_conf,insta):
         # open 
         db = instaseis.open_db(dbpath)
         # get a test seismogram to determine...
-        stest = db.get_seismograms(source=instaseis.ForceSource(latitude=0.0,longitude=0.0),receiver=instaseis.Receiver(latitude=10.,longitude=0.0))[0]
+        stest = db.get_seismograms(source=instaseis.ForceSource(latitude=0.0,
+            longitude=0.0),receiver=instaseis.Receiver(latitude=10.,
+            longitude=0.0),dt=1./source_conf['sampling_rate'])[0]
         
         nt = stest.stats.npts
         Fs = stest.stats.sampling_rate
@@ -242,7 +244,9 @@ def g1g2_kern(wf1str,wf2str,kernel,adjt,
                 # get source locations
                     lat_src = geograph_to_geocent(nsrc.src_loc[1,i])
                     lon_src = nsrc.src_loc[0,i]
-                    fsrc = instaseis.ForceSource(latitude=lat_src,longitude=lon_src,f_r=1.e12)
+                    fsrc = instaseis.ForceSource(latitude=lat_src,
+                        longitude=lon_src,f_r=1.e12,
+                        dt=1./source_conf['sampling_rate'])
                     
                     s1 = np.ascontiguousarray(db.get_seismograms(source=fsrc,receiver=rec1)[0].data*taper)
                     s2 = np.ascontiguousarray(db.get_seismograms(source=fsrc,receiver=rec2)[0].data*taper)
@@ -302,7 +306,8 @@ def run_kern(source_configfile,step,ignore_network=False):
     source_config=json.load(open(source_configfile))
     obs_only = source_config['model_observed_only']
     #ToDo: ugly.
-    insta = json.load(open(os.path.join(source_config['project_path'],'config.json')))['instaseis']
+    insta = json.load(open(os.path.join(source_config['project_path'],
+        'config.json')))['instaseis']
 
     #conf = json.load(open(os.path.join(source_conf['project_path'],'config.json')))
     

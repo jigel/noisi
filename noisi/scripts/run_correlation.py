@@ -179,11 +179,14 @@ def get_ns(wf1,source_conf,insta):
     if insta:
         # get path to instaseis db
         #ToDo: ugly.
-        dbpath = json.load(open(os.path.join(source_conf['project_path'],'config.json')))['wavefield_path']
+        dbpath = json.load(open(os.path.join(source_conf['project_path'],
+            'config.json')))['wavefield_path']
         # open 
         db = instaseis.open_db(dbpath)
         # get a test seismogram to determine...
-        stest = db.get_seismograms(source=instaseis.ForceSource(latitude=0.0,longitude=0.0),receiver=instaseis.Receiver(latitude=10.,longitude=0.0))[0]
+        stest = db.get_seismograms(source=instaseis.ForceSource(latitude=0.0,
+            longitude=0.0),receiver=instaseis.Receiver(latitude=10.,
+            longitude=0.0),dt=1./source_conf['sampling_rate'])[0]
         
         nt = stest.stats.npts
         Fs = stest.stats.sampling_rate
@@ -290,7 +293,9 @@ def g1g2_corr(wf1,wf2,corr_file,kernel,adjt,
             # get source locations
                 lat_src = geograph_to_geocent(nsrc.src_loc[1,i])
                 lon_src = nsrc.src_loc[0,i]
-                fsrc = instaseis.ForceSource(latitude=lat_src,longitude=lon_src,f_r=1.e12)
+                fsrc = instaseis.ForceSource(latitude=lat_src,
+                    longitude=lon_src,f_r=1.e12,
+                    dt=1./source_conf['sampling_rate'])
                 
                 s1 = np.ascontiguousarray(db.get_seismograms(source=fsrc,receiver=rec1)[0].data*taper)
                 s2 = np.ascontiguousarray(db.get_seismograms(source=fsrc,receiver=rec2)[0].data*taper)
@@ -534,7 +539,8 @@ def run_corr(source_configfile,step,kernelrun=False,
     source_config=json.load(open(source_configfile))
     obs_only = source_config['model_observed_only']
     #ToDo: ugly.
-    insta = json.load(open(os.path.join(source_config['project_path'],'config.json')))['instaseis']
+    insta = json.load(open(os.path.join(source_config['project_path'],
+        'config.json')))['instaseis']
 
     #conf = json.load(open(os.path.join(source_conf['project_path'],'config.json')))
     
@@ -586,7 +592,8 @@ def run_corr(source_configfile,step,kernelrun=False,
     for cp in p_p:
         
         try:
-            wf1,wf2,src,adjt = paths_input(cp,source_config,step,kernelrun,ignore_network,insta)
+            wf1,wf2,src,adjt = paths_input(cp,source_config,
+                step,kernelrun,ignore_network,insta)
             print(wf1,wf2,src)
             kernel,corr = paths_output(cp,source_config,step)
             print(kernel)
@@ -617,7 +624,8 @@ def run_corr(source_configfile,step,kernelrun=False,
                # if source_config['ktype'] == 'td':
 
                     #print('Time domain preliminary kernel...')
-        g1g2_corr(wf1,wf2,corr,kernel,adjt,src,source_config,kernelrun=kernelrun,insta=insta)
+        g1g2_corr(wf1,wf2,corr,kernel,adjt,src,source_config,
+            kernelrun=kernelrun,insta=insta)
 
             #     elif source_config['ktype'] == 'fd':
             #         print('Frequency domain preliminary kernel...')
