@@ -294,11 +294,14 @@ def g1g2_corr(wf1,wf2,corr_file,kernel,adjt,
                 lat_src = geograph_to_geocent(nsrc.src_loc[1,i])
                 lon_src = nsrc.src_loc[0,i]
                 fsrc = instaseis.ForceSource(latitude=lat_src,
-                    longitude=lon_src,f_r=1.e12,
-                    dt=1./source_conf['sampling_rate'])
+                    longitude=lon_src,f_r=1.e12)
                 
-                s1 = np.ascontiguousarray(db.get_seismograms(source=fsrc,receiver=rec1)[0].data*taper)
-                s2 = np.ascontiguousarray(db.get_seismograms(source=fsrc,receiver=rec2)[0].data*taper)
+                s1 = np.ascontiguousarray(db.get_seismograms(source=fsrc,
+                    receiver=rec1,
+                    dt=1./source_conf['sampling_rate'])[0].data*taper)
+                s2 = np.ascontiguousarray(db.get_seismograms(source=fsrc,
+                    receiver=rec2,
+                    dt=1./source_conf['sampling_rate'])[0].data*taper)
                 
 
             else:
