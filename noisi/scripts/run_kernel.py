@@ -212,11 +212,11 @@ def g1g2_kern(wf1str,wf2str,kernel,adjt,
             f = Stream()
             for a in adjt:
                 
-                adjtfile = a + '.{}.sac'.format(ix_f)
+                adjtfile = a + '*.{}.sac'.format(ix_f)
                 
                 adjtfile = glob(adjtfile)
                 if len(adjtfile) == 0:
-                    print('No adjoint source found: {}\n'.format(adjtfile))
+                    print('No adjoint source found: {}\n'.format(a))
                     return
 
 
