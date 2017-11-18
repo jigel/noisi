@@ -74,10 +74,10 @@ def paths_input(cp,source_conf,step,ignore_network,instaseis):
     if measr_conf['mtype'] == 'energy_diff':
         adj_src_basicnames = [ os.path.join(source_conf['source_path'],
                  'step_'+str(step),
-                 'adjt',"{}--{}.c".format(sta2,sta1)),
+                 'adjt',"{}--{}.c".format(sta1,sta2)),
                  os.path.join(source_conf['source_path'],
                  'step_'+str(step),
-                 'adjt',"{}--{}.a".format(sta2,sta1))]
+                 'adjt',"{}--{}.a".format(sta1,sta2))]
     else:
         adj_src_basicnames = [os.path.join(source_conf['source_path'],
                  'step_'+str(step),
