@@ -8,7 +8,7 @@ from pandas import read_csv
 import numpy as np
 import json
 from noisi.util.geo import geograph_to_geocent
-
+from obspy.geodetics import gps2dist_azimuth
 
 comm = MPI.COMM_WORLD
 size = comm.Get_size()
@@ -47,7 +47,7 @@ print(net,sta,lat,lon)
 if rank == 0:
 	os.system('mkdir -p wavefield_processed')
 
-f_out_name = '{}.{}..MXZ.h5'.format(net,sta,channel)
+f_out_name = '{}.{}..{}.h5'.format(net,sta,channel)
 f_out_name = os.path.join('wavefield_processed',f_out_name)
 
 f_out = h5py.File(f_out_name, "w")
@@ -89,12 +89,19 @@ for i in range(ntraces):
    
     lat_src = geograph_to_geocent(f_sources[1,i])
     lon_src = f_sources[0,i]
-    fsrc = instaseis.ForceSource(latitude=lat_src,
-                    longitude=lon_src,f_r=1.e12)
+
+    ######### ToDo! Right now, only either horizontal or vertical component sources ##########
+    if c_index in [1,2]:
+        fsrc = instaseis.ForceSource(latitude=lat_src,
+                    longitude=lon_src,f_t=1.e09,f_p=1.e09)
+    elif c_index == 0:
+        fsrc = instaseis.ForceSource(latitude=lat_src,
+                    longitude=lon_src,f_r=1.e09)
 
     values =  db.get_seismograms(source=fsrc,receiver=rec1,dt=1./Fs)
+    
     if c_index in [1,2]:
-    	baz = gps2dist_azimuth(lat_src,lon_src,lat,lon)
+    	baz = gps2dist_azimuth(lat_src,lon_src,lat,lon)[2]
     	values.rotate('NE->RT',back_azimuth=baz)
 
     values = values[c_index]

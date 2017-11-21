@@ -8,7 +8,8 @@ from noisi import NoiseSource
 from noisi.util.plot import plot_grid
 from warnings import warn
 
-def assemble_ascent_dir(source_model,step,snr_min,n_min,save_all=False):
+def assemble_ascent_dir(source_model,step,snr_min,n_min,save_all=False,
+	normalize_gradient=False):
 
 # where is the measurement database located?
 	source_config=json.load(open(source_model))
@@ -158,6 +159,8 @@ def assemble_ascent_dir(source_model,step,snr_min,n_min,save_all=False):
 			available in the kern/ directory.')
 
 
+	if normalize_gradient:
+		gradient /= gradient.max()
 	
 	kernelfile = os.path.join(datadir,'grad','grad_all.npy')
 	np.save(kernelfile,gradient)
