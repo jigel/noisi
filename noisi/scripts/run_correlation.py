@@ -552,7 +552,7 @@ def run_corr(source_configfile,step,kernelrun=False,
         print('Nr all possible correlation pairs %g ' %len(p))
     
     # Remove pairs for which no observation is available
-    if obs_only:
+    if obs_only and not steplengthrun:
         directory = os.path.join(source_config['source_path'],'observed_correlations')
         p = rem_no_obs(p,source_config,directory=directory)
         if rank == 0:
