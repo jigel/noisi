@@ -37,3 +37,12 @@ for i in range(len(step_tests)):
 
 np.save('result_step_length_test.npy',result)
 
+# Read misfit of previous step and print that
+mf = 0
+for j in range(len(weights)):
+	filename = '{}.{}.measurement.csv'.format(mtype,j)
+	msr_file = os.path.join(source_dir,'step_'+step,filename)
+	dat = read_csv(msr_file)
+	mf += dat.l2_norm.mean()/len(weights) * weights[j]
+prinf mf
+

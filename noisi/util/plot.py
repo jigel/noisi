@@ -1,4 +1,6 @@
 # plotting on the map
+import matplotlib as mpl
+mpl.rcParams['font.size'] = 14
 from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
 
@@ -137,8 +139,8 @@ def plot_grid(map_x,map_y,map_z,stations=[],v=None,globe=False,
 
     #draw station locations
     for sta in stations:
-        #m.plot(sta[0],sta[1],'^',color='r',markersize=10,markeredgecolor='0.5',latlon=True)
-        m.plot(sta[0],sta[1],'^',color='lime',markersize=5,markeredgecolor='0.5',latlon=True)
+        m.plot(sta[0],sta[1],'^',color='r',markersize=15,markeredgecolor='0.5',latlon=True)
+        #m.plot(sta[0],sta[1],'^',color='lime',markersize=5,markeredgecolor='0.5',latlon=True)
     if outfile is None:
         plt.show()
     else:
