@@ -6,14 +6,14 @@ import matplotlib.pyplot as plt
 
 import matplotlib.tri as tri    
 import numpy as np
-from scipy.interpolate import griddata
+
     
 def plot_grid(map_x,map_y,map_z,stations=[],v=None,globe=False,
     outfile=None,title=None,shade='flat',cmap=None,
     sequential=False,v_min=None,normalize=False,
     coastres='c',proj='cyl',
     lat_0=None,lon_0=None,lonmin=None,lonmax=None,
-    latmin=None,latmax=None,mode='interp',resol=1):
+    latmin=None,latmax=None,mode='interp',resol=1,alpha=1.0):
     
     if lat_0 is None:
         lat_0  = 0.5*(map_y.max()-map_y.min())
@@ -71,6 +71,9 @@ def plot_grid(map_x,map_y,map_z,stations=[],v=None,globe=False,
     if cmap is not None:
         cm = cmap
     
+
+
+
     print('max. value on map: %g' %map_z.max())
     if mode == 'interp':
         pass
@@ -80,13 +83,16 @@ def plot_grid(map_x,map_y,map_z,stations=[],v=None,globe=False,
         (triangles.x,triangles.y) = m(triangles.x,triangles.y)
         #if it doesn't work, use pcolor mode
 
-        plt.tripcolor(triangles,map_z,shading=shade, vmin=v_min,vmax=v,cmap=cm)
+        plt.tripcolor(triangles,map_z,shading=shade, vmin=v_min,
+            vmax=v,cmap=cm,alpha=alpha,linewidth=0.0,edgecolor='none')
 
         cbar = m.colorbar(location='bottom',pad=0.3)
 
     elif mode == 'pcolor':
         mx, my = m(map_x,map_y)
-        m.pcolor(mx,my,map_z,cmap=cm,tri=True,shading=shade,vmin=v_min,vmax=v)
+        m.pcolor(mx,my,map_z,cmap=cm,
+            tri=True,shading=shade,vmin=v_min,
+            vmax=v,alpha=alpha,linewidth=0.,edgecolor='none')
         cbar = m.colorbar(location='bottom',pad=0.3)
 
 
