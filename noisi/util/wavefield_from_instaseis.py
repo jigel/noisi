@@ -50,39 +50,43 @@ if rank == 0:
 f_out_name = '{}.{}..{}.h5'.format(net,sta,channel)
 f_out_name = os.path.join('wavefield_processed',f_out_name)
 
-f_out = h5py.File(f_out_name, "w")
 
+if not os.path.exists(f_out_name):
 
-# DATASET NR 1: STATS
-stats = f_out.create_dataset('stats',data=(0,))
-stats.attrs['reference_station'] = '{}.{}'.format(net,sta)
-stats.attrs['data_quantity'] = config['synt_data']
-stats.attrs['ntraces'] = ntraces
-stats.attrs['Fs'] = Fs
-stats.attrs['nt'] = int(ntimesteps)
+    startindex = 0
 
-# DATASET NR 2: Source grid
-sources = f_out.create_dataset('sourcegrid',data=f_sources[0:2])
+    f_out = h5py.File(f_out_name, "w")
+    
+    # DATASET NR 1: STATS
+    stats = f_out.create_dataset('stats',data=(0,))
+    stats.attrs['reference_station'] = '{}.{}'.format(net,sta)
+    stats.attrs['data_quantity'] = config['synt_data']
+    stats.attrs['ntraces'] = ntraces
+    stats.attrs['Fs'] = Fs
+    stats.attrs['nt'] = int(ntimesteps)
+    
+    # DATASET NR 2: Source grid
+    sources = f_out.create_dataset('sourcegrid',data=f_sources[0:2])
+    lat1 = geograph_to_geocent(float(lat))
+    lon1 = float(lon)
+    rec1 = instaseis.Receiver(latitude=lat1,longitude=lon1)
+    
+    # DATASET Nr 3: Seismograms itself
+    traces = f_out.create_dataset('data',(ntraces,ntimesteps),dtype=np.float32)
+    if channel[-1] == 'Z':
+    	c_index = 0
+    elif channel[-1] == 'R':
+    	c_index = 1
+    elif channel[-1] == 'T':
+    	c_index = 2
 
-
-lat1 = geograph_to_geocent(float(lat))
-lon1 = float(lon)
-rec1 = instaseis.Receiver(latitude=lat1,longitude=lon1)
-
-# DATASET Nr 3: Seismograms itself
-traces = f_out.create_dataset('data',(ntraces,ntimesteps),dtype=np.float32)
-
-if channel[-1] == 'Z':
-	c_index = 0
-elif channel[-1] == 'R':
-	c_index = 1
-elif channel[-1] == 'T':
-	c_index = 2
-
+else:
+    f_out = h5py.File(f_out_name, "r+")
+    startindex = len(f_out['data'])  
 
 
 # jump to the beginning of the trace in the binary file
-for i in range(ntraces):
+for i in range(startindex,ntraces):
     if i%1000 == 1:
         print('Converted %g of %g traces' %(i,ntraces))
     # read station name, copy to output file
