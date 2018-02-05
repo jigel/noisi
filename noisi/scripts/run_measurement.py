@@ -35,8 +35,8 @@ def get_station_info(stats):
     lon2 = stats.sac.evlo
     dist = stats.sac.dist
     az,baz = gps2dist_azimuth(lat1,lon1,lat2,lon2)[1:]
-    
-    
+
+
     return([sta1,sta2,lat1,lon1,lat2,lon2,dist,az,baz])
 
 
@@ -46,17 +46,17 @@ def get_station_info(stats):
 
 
 def measurement(source_config,mtype,step,ignore_network,bandpass,step_test,**options):
-    
+
     """
-    Get measurements on noise correlation data and synthetics. 
+    Get measurements on noise correlation data and synthetics.
     options: g_speed,window_params (only needed if mtype is ln_energy_ratio or enery_diff)
     """
     step_n = 'step_{}'.format(int(step))
-    
-    
+
+
     step_dir = os.path.join(source_config['source_path'],
     step_n)
-    
+
     if step_test:
         corr_dir = os.path.join(step_dir,'obs_slt')
     else:
@@ -67,38 +67,38 @@ def measurement(source_config,mtype,step,ignore_network,bandpass,step_test,**opt
     files = [f for f in os.listdir(corr_dir) ]
 
     files = [os.path.join(corr_dir,f) for f in files]
-    
+
     synth_dir = os.path.join(step_dir,'corr')
-    
-    
+
+
     columns = ['sta1','sta2','lat1','lon1','lat2','lon2','dist','az','baz',
     'syn','syn_a','obs','obs_a','l2_norm','snr','snr_a','nstack']
     measurements = pd.DataFrame(columns=columns)
-    
+
     _options_ac = copy.deepcopy(options)
     _options_ac['window_params']['causal_side'] = not(options['window_params']['causal_side'])
-    
+
     # ToDo
     if mtype == 'inst_phase':
          _opt_inst = copy.deepcopy(options)
 
-    
+
     if files == []:
         msg = 'No input found!'
         raise ValueError(msg)
-    
+
     i = 0
     with click.progressbar(files,label='Taking measurements...') as bar:
-        
+
         for f in bar:
-            
+
 
 
             #======================================================
-            # Reading 
+            # Reading
             #======================================================
 
-            try: 
+            try:
                 tr_o = read(f)[0]
             except:
                 print('\nCould not read data: '+os.path.basename(f))
@@ -107,7 +107,7 @@ def measurement(source_config,mtype,step,ignore_network,bandpass,step_test,**opt
             try:
                 synth_filename = get_synthetics_filename(os.path.basename(f),
                     synth_dir,ignore_network=ignore_network)
-                
+
             except:
                 print('\nCould not obtain synthetics filename: ' + \
                     os.path.basename(f))
@@ -139,20 +139,20 @@ def measurement(source_config,mtype,step,ignore_network,bandpass,step_test,**opt
                 tr_s.filter('bandpass',freqmin=bandpass[0],
                     freqmax=bandpass[1],corners=bandpass[2],
                     zerophase=True)
-            
+
             #======================================================
             # Assigning stats to synthetics, cutting them to right length
             #======================================================
-            
+
             tr_s.stats.sac = tr_o.stats.sac.copy() #ToDo: Give the stats to this thing before!
-            tr_s.data = my_centered(tr_s.data,tr_o.stats.npts)    
+            tr_s.data = my_centered(tr_s.data,tr_o.stats.npts)
             # Get all the necessary information
             info = get_station_info(tr_o.stats)
-           
+
             #======================================================
-            # Weight observed stack by nstack 
+            # Weight observed stack by nstack
             #======================================================
-            
+
             tr_o.data /= tr_o.stats.sac.user0
 
 
@@ -160,7 +160,7 @@ def measurement(source_config,mtype,step,ignore_network,bandpass,step_test,**opt
             #======================================================
             # Measurement
             #======================================================
-            
+
             # Take the measurement
             func = rm.get_measure_func(mtype)
 
@@ -176,7 +176,7 @@ def measurement(source_config,mtype,step,ignore_network,bandpass,step_test,**opt
 
             else:
                 try:
-                    
+
                     msr_o = func(tr_o,**options)
                     msr_s = func(tr_s,**options)
 
@@ -184,7 +184,7 @@ def measurement(source_config,mtype,step,ignore_network,bandpass,step_test,**opt
                     print("** Could not take measurement")
                     print(f)
                     continue
-            
+
             # timeseries-like measurements:
             if mtype in ['envelope','windowed_envelope','waveform',\
             'windowed_waveform']:
@@ -219,20 +219,20 @@ def measurement(source_config,mtype,step,ignore_network,bandpass,step_test,**opt
                     msr,snr,snr_a,tr_o.stats.sac.user0])
 
 
-            
-            
+
+
             measurements.loc[i] = info
 
             # step index
             i+=1
-        
+
         return measurements
 
 def run_measurement(source_configfile,measr_configfile,
     step,ignore_network,step_test):
 
 
-    # get parameters    
+    # get parameters
     source_config=json.load(open(source_configfile))
     measr_config=json.load(open(measr_configfile))
     mtype = measr_config['mtype']
@@ -240,30 +240,32 @@ def run_measurement(source_configfile,measr_configfile,
     step_n = 'step_{}'.format(int(step))
     step_dir = os.path.join(source_config['source_path'],
     step_n)
-    
-    
+
+
 
     # TODo all available misfits --  what parameters do they need (if any.)
-    if measr_config['mtype'] in ['ln_energy_ratio','energy_diff','inst_phase']:
-        
+    if measr_config['mtype'] in ['ln_energy_ratio','energy_diff',
+    'inst_phase','windowed_waveform']:
+
 
        #g_speed                         =    measr_config['g_speed']
         window_params                   =    {}
         window_params['hw']             =    measr_config['window_params_hw']
-        
+
         window_params['sep_noise']      =    measr_config['window_params_sep_noise']
         window_params['win_overlap']    =    measr_config['window_params_win_overlap']
         window_params['wtype']          =    measr_config['window_params_wtype']
         window_params['causal_side']    =    measr_config['window_params_causal']
         window_params['plot']           =    measr_config['window_plot_measurements']
-   
+
 
     if bandpass == None:
         bandpass = [None]
     if type(bandpass[0]) != list and bandpass[0] != None:
             bandpass = [bandpass]
             warn('\'Bandpass\' should be defined as list of filters.')
-    if measr_config['mtype'] in ['ln_energy_ratio','energy_diff','inst_phase']:
+    if measr_config['mtype'] in ['ln_energy_ratio','energy_diff','inst_phase',
+    'windowed_waveform']:
         if type(window_params['hw']) != list:
             window_params['hw'] = [window_params['hw']]
         if len(window_params['hw']) != len(bandpass):
@@ -272,20 +274,20 @@ def run_measurement(source_configfile,measr_configfile,
         if type(measr_config['g_speed']) in [float,int]:
             warn('Using the same group velocity for all measurements.')
             g_speeds = len(bandpass)*[measr_config['g_speed']]
-        # ToDo: This is ugly and should be sorted out beforehand but 
+        # ToDo: This is ugly and should be sorted out beforehand but
         # I am too lazy.
         elif type(measr_config['g_speed']) == list \
         and len(measr_config['g_speed']) == len(bandpass):
             g_speeds = measr_config['g_speed']
-            
+
 
     #if bandpass is None or type(bandpass[0]) != list:
     #    ms = measurement(source_config,mtype,step,ignore_network,bandpass=bandpass,
     #        step_test=step_test,g_speed=g_speed,window_params=window_params)
-    #    
+    #
     #    filename = '{}.0.measurement.csv'.format(mtype)
     #    ms.to_csv(os.path.join(step_dir,filename),index=None)
-    
+
     #else:
 
     hws = window_params['hw'][:]
@@ -300,4 +302,3 @@ def run_measurement(source_configfile,measr_configfile,
 
         filename = '{}.{}.measurement.csv'.format(mtype,i)
         ms.to_csv(os.path.join(step_dir,filename),index=None)
-
