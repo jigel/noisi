@@ -189,7 +189,8 @@ def measurement(source_config,mtype,step,ignore_network,bandpass,step_test,**opt
             if mtype in ['envelope','windowed_envelope','waveform',\
             'windowed_waveform']:
                 l2_so = np.trapz(0.5*(msr_s-msr_o)**2) * tr_o.stats.delta
-
+                snr = snratio(tr_o,**options)
+                snr_a = snratio(tr_o,**_options_ac)
                 info.extend([np.nan,np.nan,np.nan,np.nan,
                 l2_so,snr,snr_a,tr_o.stats.sac.user0])
             # single value measurements:
