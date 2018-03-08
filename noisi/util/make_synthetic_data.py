@@ -1,9 +1,9 @@
-# # Make observed data from modelled data
+# # Make synthetic data from modelled data
 
 # NOTE: This Jupyter Notebook should be run in /project_name/source_name until arguments can be put in externally.
 # Expects stationlist.csv, modelled correlations
 
-# The aim is to calculate the kernels. To do this, observed correlation data is necessary. This script converts modelled data to observed data.
+# The aim is to calculate the kernels. To do this, observed correlation data is necessary. This script converts modelled data to synthetic data.
 
 import os
 import glob
