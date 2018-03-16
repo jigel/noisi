@@ -34,13 +34,12 @@ path_obs = ('./observed_correlations/')
 
 # ABOVE CAN BE CHANGED FOR PYTHON SCRIPT TO RUN WITH INPUT ARGUMENTS, see Laura's code
 
-
-# delete files in observed_correlations folder if necessary
-for files in glob(os.path.join(path_obs,'*')):
-    os.remove(files)
-
-# copy files from the synthetic correlations to the observed correlations '/Source_1/observed_correlations/'
-for files in glob(os.path.join(path_model,'*.sac')):
+if dataless:
+    # delete files in observed_correlations folder if necessary
+    for files in glob(os.path.join(path_obs,'*')):
+        os.remove(files)
+    # copy files from the synthetic correlations to the observed correlations '/Source_1/observed_correlations/'
+    for files in glob(os.path.join(path_model,'*.sac')):
         shutil.copy(files,path_obs)
         print 'Copied:',files
 
