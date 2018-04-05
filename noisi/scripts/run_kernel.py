@@ -68,7 +68,7 @@ def paths_input(cp,source_conf,step,ignore_network,instaseis):
         # But so far, so good.
     nsrc = os.path.join(source_conf['project_path'],
                  source_conf['source_name'],'step_'+str(step),
-                 'starting_model.h5')
+                 'base_model.h5')
   
     # Adjoint source
     if measr_conf['mtype'] == 'energy_diff':
@@ -345,7 +345,7 @@ def run_kern(source_configfile,step,ignore_network=False):
      
         except:
             print('Could not find input for: %s\
-             \nCheck if wavefield .h5 file and starting_model file are available.' %cp)
+             \nCheck if wavefield .h5 file and base_model file are available.' %cp)
             continue
 
         kern = g1g2_kern(wf1,wf2,kernel,adjt,src,source_config,insta=insta)
