@@ -24,7 +24,12 @@ setup(
     install_requires = [
         "obspy>=1.0.1",
         "geographiclib",
-        "mpi4py>=2.0.0"],
+        "mpi4py>=2.0.0",
+        "pandas",
+        "click",
+        "instaseis",
+        "basemap",
+        "h5py"],
     # ToDo: Use entry points in the future to handle two completely different approaches to the noise modeling: with delta-correlated sources or finite-correlation-length correlated sources
     # ToDo: Add entry points for test suite
     entry_points = {
