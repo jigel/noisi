@@ -28,15 +28,7 @@ setup(
         "pandas",
         "click",
         "instaseis",
-<<<<<<< HEAD
-        "h5py",
-        ],
-||||||| merged common ancestors
-        "basemap",
         "h5py"],
-=======
-        "h5py"],
->>>>>>> 8735a670d8225fea1cce9a56290d8936d1bbded1
     # ToDo: Use entry points in the future to handle two completely different approaches to the noise modeling: with delta-correlated sources or finite-correlation-length correlated sources
     # ToDo: Add entry points for test suite
     entry_points = {
