@@ -29,8 +29,8 @@ def run_preprocessing(source_config):
         newfile = os.path.join(processed_path, os.path.basename(file))
 
         if os.path.exists(newfile):
-            print "File {} was already processed, skipping.".format(os.path.basename(file))
-        print "Preprocessing {}".format(os.path.basename(file))
+            print("File {} was already processed, skipping.".format(os.path.basename(file)))
+        print("Preprocessing {}".format(os.path.basename(file)))
         
 
          

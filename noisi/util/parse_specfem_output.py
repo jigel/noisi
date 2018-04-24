@@ -102,7 +102,7 @@ nbytes_station = nbytes_trace * ncomponents
 
 # Number of records actually contained
 nstations = os.path.getsize(f_in) / nbytes_station
-print 'Number of station records: ',nstations
+print('Number of station records: '+nstations)
 
 
 # Open files:
@@ -113,8 +113,8 @@ f_in.seek(nbytes_stationname+8+4)
 examp_time = np.zeros(ntimesteps)
 examp_time = np.fromfile(f_in,dtype='f',count=ntimesteps)
    
-print 'Prescribed duration: ', duration
-print 'Inferred duration: ', examp_time[-1]-examp_time[0]
+print('Prescribed duration: '+ duration)
+print('Inferred duration: ', examp_time[-1]-examp_time[0])
 #dt = np.sum(np.abs(examp_time[:-1])) / (ntimesteps-1)
 dt = duration / ntimesteps
 dt_test = abs(examp_time[-1]-examp_time[0]) / ntimesteps
@@ -122,8 +122,8 @@ dt_test = abs(examp_time[-1]-examp_time[0]) / ntimesteps
 if dt_test != dt and rank == 0:
     msg = 'Small discrepancy between inferred and prescribed sampling rate:' 
     warn(msg)
-    print dt
-    print dt_test
+    print(dt)
+    print(dt_test)
     
 # Determine the sampling rate
 fs_old = 1./dt
@@ -212,7 +212,7 @@ for ns in range(rank,nstations,size):
         infnr.tofile(f_out)
         tr.data.tofile(f_out)
         counter +=1
-print 'New nr. of time steps after interpolation: ', tr.stats.npts
+print('New nr. of time steps after interpolation: '+ tr.stats.npts)
 f_out.close()
         
 

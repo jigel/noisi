@@ -4,17 +4,17 @@ mpl.rcParams['font.size'] = 14
 from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
 
-import matplotlib.tri as tri    
+import matplotlib.tri as tri
 import numpy as np
 
-    
+
 def plot_grid(map_x,map_y,map_z,stations=[],v=None,globe=False,
     outfile=None,title=None,shade='flat',cmap=None,
     sequential=False,v_min=None,normalize=False,
     coastres='c',proj='cyl',
     lat_0=None,lon_0=None,lonmin=None,lonmax=None,
     latmin=None,latmax=None,mode='interp',resol=1,alpha=1.0):
-    
+
     if lat_0 is None:
         lat_0  = 0.5*(map_y.max()-map_y.min())
     if lon_0 is None:
@@ -47,16 +47,16 @@ def plot_grid(map_x,map_y,map_z,stations=[],v=None,globe=False,
 
     plt.figure(figsize=(11,9))
     plt.subplot(111)
-    
+
     if title is not None:
         plt.title(title)
 
-    
+
 
     if normalize:
         map_z /= np.max(np.abs(map_z))
-    
-    
+
+
     if v is None:
         v = np.max(map_z)
 
@@ -70,14 +70,14 @@ def plot_grid(map_x,map_y,map_z,stations=[],v=None,globe=False,
 
     if cmap is not None:
         cm = cmap
-    
+
 
 
 
     print('max. value on map: %g' %map_z.max())
     if mode == 'interp':
         pass
-        # triangulate first, then project, 
+        # triangulate first, then project,
         # and use plt.tripcolor to put it on the map.
         triangles = tri.Triangulation(map_x,map_y)
         (triangles.x,triangles.y) = m(triangles.x,triangles.y)
@@ -108,8 +108,8 @@ def plot_grid(map_x,map_y,map_z,stations=[],v=None,globe=False,
         m.scatter(mx,my,marker='o',c='0.5',lw=1.,s=np.ones(len(mx))*0.2)
 
     elif mode == 'srcdots':
-        
-        
+
+
         colors = cm(map_z)
         indx = abs(map_z) > 0.4*np.max(map_z)
         sizes = np.ones(len(map_x))*1
@@ -118,21 +118,21 @@ def plot_grid(map_x,map_y,map_z,stations=[],v=None,globe=False,
 
 
         m.scatter(mx[indx],my[indx],marker='o',c=colors[indx],s=sizes[indx])
-        
+
     if normalize:
         cbar.set_ticks([-1.0,0.,1.0])
-    
-    
+
+
     if globe:
        m.drawcoastlines(linewidth=1.,color='0.5')
     else:
        m.drawcoastlines(linewidth=1.0)
-    
-    
+
+
     if globe:
-       pass
-       #m.drawparallels(np.arange(-90.,120.,30.),labels=[1,0,0,0],color='0.7') # draw parallels
-       #m.drawmeridians(np.arange(-180,210,60.),labels=[0,0,0,1],color='0.7') # draw meridians
+       #pass
+       m.drawparallels(np.arange(-90.,120.,30.),labels=[1,0,0,0],color='0.5') # draw parallels
+       m.drawmeridians(np.arange(-180,210,60.),labels=[0,0,0,1],color='0.5') # draw meridians
 
     else:
         if not proj == 'ortho':
@@ -152,29 +152,29 @@ def plot_grid(map_x,map_y,map_z,stations=[],v=None,globe=False,
     else:
         plt.savefig(outfile,dpi=300.)
         plt.close()
-    
+
 def plot_sourcegrid(gridpoints,**kwargs):
 
     plt.figure()
     plt.subplot(111)
     m = Basemap(rsphere=6378137,**kwargs)
     m.drawcoastlines()
-    
+
     m.plot(gridpoints[0],gridpoints[1],marker='+',markersize=10.,latlon=True)
     plt.show()
-    
+
 
 def plot_window(correlation, window, measurement):
-    
-    
+
+
     maxlag = correlation.stats.npts * correlation.stats.delta
     lag = np.linspace(-maxlag,maxlag,correlation.stats.npts)
-    
+
     plt.plot(lag,correlation.data/np.max(np.abs(correlation.data)))
     plt.plot(lag,window/np.max(np.abs(window)),'--')
     plt.title(correlation.id)
     plt.text(0,-0.75,'Measurement value: %g' %measurement)
     plt.xlabel('Correlation Lag in seconds.')
     plt.ylabel('Normalized correlation and window.')
-    
+
     plt.show()

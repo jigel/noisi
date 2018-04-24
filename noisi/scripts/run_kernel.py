@@ -1,4 +1,3 @@
-#!/Users/lermert/anaconda2/bin/python
 from __future__ import print_function
 from mpi4py import MPI
 import numpy as np

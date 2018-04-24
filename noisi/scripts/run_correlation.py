@@ -1,4 +1,3 @@
-#!/Users/lermert/anaconda2/bin/python
 from __future__ import print_function
 from mpi4py import MPI
 import numpy as np
@@ -18,13 +17,13 @@ from noisi import filter
 from scipy.signal import sosfilt
 from noisi.util.windows import my_centered, zero_buddy
 from noisi.util.geo import geograph_to_geocent
-from noisi.util.corr_pairs import define_correlationpairs, rem_fin_prs, rem_no_obs
+from noisi.util.corr_pairs import define_correlationpairs,rem_fin_prs,rem_no_obs
 import matplotlib.pyplot as plt
 import instaseis
 
 
 #ToDo: put in the possibility to run on mixed channel pairs
-def paths_input(cp,source_conf,step,kernelrun,ignore_network,instaseis):
+def paths_input(cp,source_conf,step,ignore_network,instaseis):
     
     inf1 = cp[0].split()
     inf2 = cp[1].split()
@@ -62,7 +61,7 @@ def paths_input(cp,source_conf,step,kernelrun,ignore_network,instaseis):
     
     # Starting model for the noise source
     if kernelrun:
-        # this is a bit of an odd construction. The base model contains no spatial weights if the gradient is for spatial weights.
+        # The base model contains no spatial or spectral weights if the gradient is for spatial weights.
         # If even the spectral weights get updated, then it should not even contain spectral weights. 
         # But so far, so good.
         nsrc = os.path.join(source_conf['project_path'],
@@ -143,34 +142,17 @@ def paths_output(cp,source_conf,step):
     sta1 = "{}.{}..{}".format(*(inf1[0:2]+[channel]))
     sta2 = "{}.{}..{}".format(*(inf2[0:2]+[channel]))
     
-    # Correlation file
-    #corr_name = "{}--{}.h5".format(sta1,sta2)
      # Kernel (without measurement) file
     kern_name = "{}--{}.npy".format(sta1,sta2)
     kern_name = os.path.join(source_conf['source_path'],
         'step_'+str(step), 'kern',
         kern_name)
-
-   
-    
-    # ktype = source_conf['ktype']
-    # print(ktype)
-    # if ktype == 'fd':
-    #     corr_name = os.path.join(source_conf['source_path'],
-    #     'green_c_fd',
-    #     corr_name)
-    # elif ktype == 'td':
-    #     corr_name = os.path.join(source_conf['source_path'],
-    #     'green_c',
-    #     corr_name)
-    # else:
-    #     msg = ('ktype parameter must be fd or td.')
-    #     raise NotImplementedError(msg)
         
     corr_trace_name = "{}--{}.sac".format(sta1,sta2)    
     corr_trace_name =  os.path.join(source_conf['source_path'],
         'step_'+str(step),'corr',
-        corr_trace_name)   
+        corr_trace_name)  
+
     return (kern_name,corr_trace_name)
     
 def get_ns(wf1,source_conf,insta):
@@ -210,27 +192,24 @@ def get_ns(wf1,source_conf,insta):
     return nt,n,n_corr,Fs
         
     
-
-
 def g1g2_corr(wf1,wf2,corr_file,kernel,adjt,
-    src,source_conf,kernelrun,insta):
+    src,source_conf,insta):
+"""
+Compute noise cross-correlations from two .h5 'wavefield' files.
+Noise source distribution and spectrum is given by starting_model.h5
+It is assumed that noise sources are delta-correlated in space.
+"""
     
-    #ToDo: Take care of saving metainformation
-    #ToDo: Think about how to manage different types of sources (numpy array vs. get from configuration -- i.e. read source from file as option)
+    
     #ToDo: check whether to include autocorrs from user (now hardcoded off)
     #ToDo: Parallel loop(s)
     #ToDo tests
     
-    
-    
-    # change to: open both and then close the files lower down. if instaseis, change to getting from instaseis db
-    # with WaveField(wf1) as wf1, WaveField(wf2) as wf2:
-        
-        
-    #     if wf1.stats['Fs'] != wf2.stats['Fs']:
-    #         msg = 'Sampling rates of synthetic green\'s functions must match.'
-    #         raise ValueError(msg)
-        
+
+    # Metainformation: Include the reference station names for both stations
+    # from wavefield files, if possible. Do not include geographic information
+    # from .csv file as this might be error-prone. Just add the geographic 
+    # info later if needed.
 
     with NoiseSource(src) as nsrc:
 
@@ -243,7 +222,8 @@ def g1g2_corr(wf1,wf2,corr_file,kernel,adjt,
 
         if insta:
             # open database
-            dbpath = json.load(open(os.path.join(source_conf['project_path'],'config.json')))['wavefield_path']
+            dbpath = json.load(open(os.path.join(source_conf['project_path'],
+                'config.json')))['wavefield_path']
             # open and determine Fs, nt
             db = instaseis.open_db(dbpath)
             # get receiver locations
@@ -258,34 +238,16 @@ def g1g2_corr(wf1,wf2,corr_file,kernel,adjt,
             wf1 = WaveField(wf1)
             wf2 = WaveField(wf2)
 
-       # if kernelrun:
-            
-            #if not os.path.exists(adjt):
-            #    print('Adjoint source %s not found, skipping kernel.')
-            #    return()
-
-        #    kern = np.zeros((ntraces,len(adjt)))
-            
-
-
-         #   f = Stream()
-         #   for adjtfile in adjt:
-         #       if adjtfile == '-':
-         #           return
-         #       f += read(adjtfile)[0]
-         #       f[-1].data = my_centered(f[-1].data,n_corr)
             
         # Loop over source locations
-        #with click.progressbar(range(wf1.stats['ntraces']),\
-        #label='Correlating...' ) as ind:
         for i in range(ntraces):
 
             # noise source spectrum at this location
-            # if calculating kernel, the spectrum is location independent.
             S = nsrc.get_spect(i)
             
 
-            if S.sum() == 0.: # The spectrum has 0 phase so only checking absolute value here
+            if S.sum() == 0.: 
+            #If amplitude is 0, continue. (Spectrum has 0 phase anyway. )
                 continue
 
            
@@ -305,224 +267,56 @@ def g1g2_corr(wf1,wf2,corr_file,kernel,adjt,
                 
 
             else:
+            # read Green's functions
                 s1 = np.ascontiguousarray(wf1.data[i,:]*taper)
                 s2 = np.ascontiguousarray(wf2.data[i,:]*taper)
             
             
-
+            # Fourier transform for greater ease of convolution
             spec1 = np.fft.rfft(s1,n)
             spec2 = np.fft.rfft(s2,n)
             
-          
+            # convolve G1G2
             g1g2_tr = np.multiply(np.conjugate(spec1),spec2)
-            # if i%50000 == 0:
-            #     print(g1g2_tr[0:10],file=None)
-            #     print(g1g2_tr.max(),file=None)
-
+            
+            # convolve noise source
             c = np.multiply(g1g2_tr,S)
-
-            # if i%50000==0:
-            #     print(c[0:10],file=None)
-            #     print(c.max(),file=None)
-
-            #if kernelrun:
-            #    
-            #    corr_temp = my_centered(np.fft.ifftshift(np.fft.irfft(c,n)),n_corr)
-                ##if i%50000 == 0:
-                #    ##print(corr_temp[0:10],file=None)
-                    #print(corr_temp.max(),file=None)
-                # A Riemann sum
-            #    for j in range(len(adjt)):
-            #        kern[i,j] = np.dot(corr_temp,f[j].data) * f[j].stats.delta
-                
             
-            #else:
-                                
-            correlation += my_centered(np.fft.ifftshift(np.fft.irfft(c,n)),n_corr)
+            # transform back    
+            correlation += my_centered(np.fft.ifftshift(np.fft.irfft(c,n)),
+                n_corr)
             
+            # occasional info
             if i%50000 == 0:
                 print("Finished {} source locations.".format(i))
-    
+###################### end of loop over all source locations ###################
 
         if not insta:
             wf1.file.close()
             wf2.file.close()
 
-        #if kernelrun:
-        #    np.save(kernel,kern) 
-
-        #else:
+        # save output
         trace = Trace()
         trace.stats.sampling_rate = Fs
         trace.data = correlation
+# try to add some meta data
+        try:
+            sta1 = wf1.stats['reference_station']
+            sta2 = wf2.stats['reference_station']
+            trace.stats.station = sta1.split('.')[1]
+            trace.stats.network = sta1.split('.')[0]
+            trace.stats.location = sta1.split('.')[2]
+            trace.stats.channel = sta1.split('.')[3]
+            trace.stats.sac = {}
+            trace.stats.sac['kuser0']  =   sta2.split('.')[1]
+            trace.stats.sac['kuser1']  =   sta2.split('.')[0]
+            trace.stats.sac['kuser2']  =  sta2.split('.')[2]
+            trace.stats.sac['kevnm']   =   sta2.split('.')[3]
+        except:
+            pass
+
         trace.write(filename=corr_file,format='SAC')
-            
         
-
-def g1g2_kern(wf1,wf2,corr_file,kernel,adjt,
-    src,source_conf,scale=1.0):
-    
-    #ToDo: Take care of saving metainformation
-    #ToDo: Think about how to manage different types of sources (numpy array vs. get from configuration -- i.e. read source from file as option)
-    #ToDo: check whether to include autocorrs from user (now hardcoded off)
-    #ToDo: Parallel loop(s)
-    #ToDo tests
-    
-    ntime, n, n_corr = get_ns(wf1,source_conf)
-    
-    
-    taper = cosine_taper(ntime,p=0.05)
-
-
-    with WaveField(wf1) as wf1, WaveField(wf2) as wf2:
-        
-        
-        if wf1.stats['Fs'] != wf2.stats['Fs']:
-            msg = 'Sampling rates of synthetic green\'s functions must match.'
-            raise ValueError(msg)
-        
-        # initialize new hdf5 files for correlation and green's function correlation
-        #with wf1.copy_setup(corr_file,nt=n_corr) as correl, NoiseSource(src) as nsrc:
-        #with wf1.copy_setup(corr_file,nt=n_corr) as correl:
-        
-
-        with NoiseSource(src) as nsrc:
-
-            correlation = np.zeros(n_corr)
-            
-
-            kern = np.zeros(wf1.stats['ntraces'])
-
-            # Try to use a trick: Use causal and acausal part of f separately.
-            f = read(adjt)[0]
-            f.data = my_centered(f.data,n_corr)
-            
-            n_acausal_samples = (f.stats.npts-1)/2
-            specf = np.fft.rfft(f[n_acausal_samples:],n)
-
-            # Loop over source locations
-            #with click.progressbar(range(wf1.stats['ntraces']),\
-            #label='Correlating...' ) as ind:
-            for i in range(wf1.stats['ntraces']):
-
-                #print(i)
-                s1 = np.ascontiguousarray(wf1.data[i,:]*taper) * scale
-                #print(s1.sum())
-                spec1 = np.fft.rfft(s1,n)
-                #print(spec1.sum())
-                T = np.multiply(np.conj(spec1),nsrc.get_spect(i))
-                # plt.plot(np.abs(spec1)/np.max(np.abs(spec1)))
-                # plt.plot(np.abs(T)/np.max(np.abs(T)))
-                # plt.show()
-
-                 # it would be cleaner to use ifftshift here!
-                T = np.fft.ifftshift(np.fft.irfft(T,n))[0:len(s1)]#[-len(s1):]
-                # if i in [1,2,3,4,5]:
-                #     plt.plot(T[::-1]/np.max(np.abs(T)))
-                #     plt.plot(s1/np.max(np.abs(s1)),'--')
-                #     plt.show()                
-                # Get s2 in the shape of f
-                # we need to add half of the length of f before G to replace the
-                # acausal part that G does not have to start with:
-                
-                #s2 = np.zeros(n)
-                s2 = np.ascontiguousarray(wf2.data[i,:]*taper) * scale
-                #print(s2.sum())
-                #s2[n_acausal_samples:n_acausal_samples+ntime] = s2_caus
-                spec2 = np.fft.rfft(s2,n)
-                # plt.plot(s2_caus/np.max(np.abs(s2_caus)))
-                # plt.plot(f.data/np.max(np.abs(f.data)))
-                # plt.plot(s2/np.max(np.abs(s2)))
-                # plt.plot(n_acausal_samples,0.5,'rd')
-
-                # plt.show()
-
-                # transform both f and s2 to fourier d 
-                # (again, zeropadding but just to avoid circular convolution)
-                
-                
-                
-                # plt.plot(np.abs(spec2)/np.max(np.abs(spec2)))
-                # plt.plot(np.abs(specf)/np.max(np.abs(specf)))
-                # plt.show()
-                g2f_tr = np.multiply(np.conj(spec2),specf)
-                #print(specf.sum())
-                #plt.plot(n_acausal_samples,0.5,'rd')
-                #plt.plot(n,0.5,'gd')
-
-                # it would be cleaner to use ifftshift here!
-                u_dagger = np.fft.ifftshift(np.fft.irfft(g2f_tr,n))[0:len(s1)]#[-len(s1):]
-                # plt.plot(u_dagger/np.max(np.abs(u_dagger)))
-                # plt.plot(T/np.max(np.abs(T)))
-
-                # plt.show()
-
-            
-                # The frequency spectrum of the noise source is included here
-               ## corr_temp = my_centered(np.fft.ifftshift(np.fft.irfft(c,n)),n_corr)
-                # A Riemann sum -- one could actually build in a more fancy integration here
-                #print(f.stats.delta)
-                kern[i] = np.dot(u_dagger,T) * f.stats.delta
-                #print(kern[i])
-
-                if i%50000 == 0:
-                    print("Finished {} source locations.".format(i))
-
-                #np.save(kernel,kern) 
-            return(kern)
-
-            
-
-#def corr(c,src,c_int,source_conf):
-#    """
-#    Obtain a 'noise correlation' from a correlation of Green's functions by factoring in the space-frequency dependent noise source.
-#    
-#    :type c: String 
-#    :param c: Path to the h5-file containing the correlation of Green's functions in time domain
-#    :type src: String
-#    :param src:  Path to the h5-file containing the time-frequency dependent source model
-#    :type c_int: String
-#    :param c_int: Path to the output file
-#    """
-#    
-#    
-#    
-#    with WaveField(c) as c, NoiseSource(src) as src:
-#
-#        nt = c.stats['nt']
-#        #n_lag = 2 * int(source_conf['max_lag'] * c.stats['Fs']) + 1 
-#        correlation = np.zeros(nt)
-#        n = _next_regular(2*nt-1)
-#        
-#        i0 = zero_buddy(nt,n,causal_function=False)
-#        
-#        with click.progressbar(range(c.stats['ntraces']),\
-#        label='Convolving source...' ) as ind:
-#            for i in ind:
-#                
-#                
-#                
-#                #spec = np.fft.rfft(c)
-#                #c = np.multiply(g1g2_tr,nsrc.get_spect(i))                
-#                #                corr = my_centered(np.fft.ifftshift(np.fft.\
-#                #                irfft(g1g2_tr,n)),nt)
-#                #corr = fftconvolve(src.get_spect(i),c.data[i,:],mode='same')
-#                data = np.zeros(n)
-#                data[i0:i0+nt] = c.data[i,:]
-#                spec = np.fft.rfft(data)
-#                
-#                # also the source has to be zeropadded...it is shorter than here
-#                
-#                corr = np.multiply(spec,src.get_spect(i))
-#                
-#                correlation += my_centered(np.fft.ifftshift(np.fft.irfft(corr,n)),nt)
-#        
-#        trace = Trace()
-#        trace.stats.sampling_rate = c.stats['Fs']
-#        trace.data = correlation
-#        trace.write(filename=c_int,format='SAC')
-
-
 
 
 def run_corr(source_configfile,step,kernelrun=False,
@@ -537,16 +331,13 @@ def run_corr(source_configfile,step,kernelrun=False,
 
     step = int(step)
 
-
-    #ToDo think about that configuration decorator
+    # get configuration
     source_config=json.load(open(source_configfile))
     obs_only = source_config['model_observed_only']
-    #ToDo: ugly.
     insta = json.load(open(os.path.join(source_config['project_path'],
         'config.json')))['instaseis']
 
-    #conf = json.load(open(os.path.join(source_conf['project_path'],'config.json')))
-    
+    # get possible station pairs
     p = define_correlationpairs(source_config['project_path'])
     if rank == 0:
         print('Nr all possible correlation pairs %g ' %len(p))
@@ -569,219 +360,40 @@ def run_corr(source_configfile,step,kernelrun=False,
     if rank == 0:
         print('Nr correlation pairs after checking already calculated ones %g ' %len(p))
         print(16*'*')    
-    # for each pair:
-    
-    #TRY
-    # get the paths to the wavefield files and the noise source file and the output (preliminary correlation and or integrated correlation)
-    # is the 'preliminary run' necessary?
-    # combine the preliminary correlation with the source spectrum
-    #EXCEPT
-    # - files not found?
-
-
-    
     
 
-    # The assignment of station pairs should be such that one core has as many occurrences of the same station as possible; 
-    # this will prevent that many processes try to access the same hdf5 file all at once.
+    # The assignment of station pairs should be such that one core has as
+    # many occurrences of the same station as possible; 
+    # this will prevent that many processes try to access the same hdf5 
+    # file all at once.
     num_pairs = int( ceil(float(len(p))/float(size)) )
     p_p = p[ rank*num_pairs : rank*num_pairs + num_pairs] 
     
     print('Rank number %g' %rank)
-    print('working on pair nr. %g to %g of %g.' %(rank*num_pairs,rank*num_pairs+num_pairs,len(p)))
+    print('working on pair nr. %g to %g of %g.' %(rank*num_pairs,
+        rank*num_pairs+num_pairs,len(p)))
 
-
-    
     for cp in p_p:
         
+        # try except is used here because of the massively parallel loop. 
+        # it needs to tolerate a couple of messups (e.g. a wavefield is 
+        # requested that isn't in the database)
+        # if unknown errors occur and no correlations are computed, comment try-
+        # except to see the error messages.
         try:
             wf1,wf2,src,adjt = paths_input(cp,source_config,
-                step,kernelrun,ignore_network,insta)
+                step,ignore_network,insta)
             print(wf1,wf2,src)
             kernel,corr = paths_output(cp,source_config,step)
-            print(kernel)
-        
-        
-            
-            
+            print(corr) 
         except:
             print('Could not determine correlation for: %s\
              \nCheck if wavefield .h5 file is available.' %cp)
             continue
             
-        if os.path.exists(corr) and not kernelrun:
+        if os.path.exists(corr):
             continue
 
-        if os.path.exists(kernel) and kernelrun:
-            continue
+        g1g2_corr(wf1,wf2,corr,kernel,adjt,src,source_config,insta=insta)
 
-        for asr in adjt:
-            # This is only a checking loop ... really needed?
-            if not os.path.exists(asr) and kernelrun:
-                print('No adjoint source found for:')
-                print(os.path.basename(asr))
-                continue
-
-        
-            #if int(step) == 0:
-               # if source_config['ktype'] == 'td':
-
-                    #print('Time domain preliminary kernel...')
-        g1g2_corr(wf1,wf2,corr,kernel,adjt,src,source_config,
-            kernelrun=kernelrun,insta=insta)
-
-            #     elif source_config['ktype'] == 'fd':
-            #         print('Frequency domain preliminary kernel...')
-            #         g1g2_corr_fd(wf1,wf2,c,c_int,src,source_config)
-            # #else:
-            #     corr(wf1,wf2,c,c_int,src,source_config,kernelrun=kernelrun)
-        #
-        #corr(c,src,c_int)
-                
-            
-            
-        #except:
-        #    print('Could not determine correlation for: ')
-        ##    print(cp)
-                
-                #nsrc = os.path.join(source_conf['project_path'],
-                #    source_conf['source_name'],
-                #    'sourcemodel.h5')
-                #
-                
-                
-                
-# def g1g2_corr_fd(wf1,wf2,corr_file,corr_int_file,src,source_conf):
-    
-#     #ToDo: Take care of saving metainformation
-#     #ToDo: Think about how to manage different types of sources (numpy array vs. get from configuration -- i.e. read source from file as option)
-#     #ToDo: check whether to include autocorrs from user (now hardcoded off)
-#     #ToDo: Parallel loop(s)
-#     #ToDo tests
-
-#     ntimes, n, n_corr = get_ns(wf1,source_conf)
-#     print('------')
-#     print('ntimes: '+str(ntimes))
-#     if n%2 == 0:
-#         n_freq = n / 2 + 1
-#     else:
-#         n_freq = (n+1) / 2 
-#     print('n_freq: '+str(n_freq))
-#     print('n: '+str(n))
-#     print('------')
-#     taper = cosine_taper(ntimes,p=0.05)
-    
-#     print('got time lengths, taper')
-    
-    
-#     # N needs to be saved for future zero padding.
-#     save_n = open(os.path.join(source_conf['project_path'],source_conf['source_name'],
-#     'n.txt'),'w')
-#     print(str(n),file=save_n)
-#     save_n.close()
-#     # Zero padding should add an acausal part to the Green's function
-#     mid_index = zero_buddy(ntimes,n,causal_function=True)
-    
-    
-    
-#     with WaveField(wf1) as wf1, WaveField(wf2) as wf2:
-        
-#         print('opened wave field files')
-        
-#         if wf1.stats['Fs'] != wf2.stats['Fs']:
-#             msg = 'Sampling rates of synthetic green\'s functions must match.'
-#             raise ValueError(msg)
-        
-#         # initialize new hdf5 files for correlation and green's function correlation
-#         #with wf1.copy_setup(corr_file,nt=n_freq,complex=True) as correl,\
-#         #NoiseSource(src) as nsrc:
-#         correl = wf1.copy_setup(corr_file,nt=n_freq,complex=True)
-#         nsrc = NoiseSource(src)
-#         print('opened noise source and output file.')
-        
-#         correlation = np.zeros(n_corr)
-#         print('initialized correlations.')
-        
-        
-        
-#         # Loop over source locations
-#         with click.progressbar(range(wf1.stats['ntraces']),\
-#         label='Correlating...' ) as ind:
-#             for i in ind:
-                
-#                 s1 = np.ascontiguousarray(wf1.data[i,:]*taper)
-#                 s2 = np.ascontiguousarray(wf2.data[i,:]*taper)
-                
-#                 #s1[mid_index:mid_index+ntimes] = wf1.data[i,:]*taper
-#                 #s2[mid_index:mid_index+ntimes] = wf2.data[i,:]*taper
-                
-#                 spec1 = np.fft.rfft(s1,n)
-#                 spec2 = np.fft.rfft(s2,n)
-                
-              
-#                 g1g2_tr = np.multiply(spec1,np.conjugate(spec2))
-                
-#                 # extract Green's function correlation here
-#                 # Save only as much as the adjoint source will be long.
-#                 # This has to be done only once.
-#                 correl.data_i[i,:] = np.imag(g1g2_tr).astype(np.float32)
-#                 correl.data_r[i,:] = np.real(g1g2_tr).astype(np.float32)
-#                 correl.file.flush()
-                
-#                 c = np.multiply(spec1,np.conjugate(spec2))
-#                 c = np.multiply(c,nsrc.get_spect(i))                
-#                 correlation += my_centered(np.fft.ifftshift(np.fft.irfft(c,n)),n_corr)
-                
-#         trace = Trace()
-#         trace.stats.sampling_rate = wf1.stats['Fs']
-#         trace.data = correlation
-#         trace.write(filename=corr_int_file,format='SAC')    
-#         correlation = correl.space_integral()
-     
-                
-
-# def corr(wf1,wf2,corr_file,corr_int_file,src,source_conf):
-    
-#     #ToDo: Take care of saving metainformation
-#     #ToDo: Think about how to manage different types of sources (numpy array vs. get from configuration -- i.e. read source from file as option)
-#     #ToDo: check whether to include autocorrs from user (now hardcoded off)
-#     #ToDo: Parallel loop(s)
-#     #ToDo tests
-    
-#     nt, n, n_corr = get_ns(wf1,source_conf)
-#     if source_config['ktype'] == 'fd':
-#         n_corr = nt
-#     taper = cosine_taper(nt,p=0.05)
-    
-#     with WaveField(wf1) as wf1, WaveField(wf2) as wf2:
-        
-        
-#         if wf1.stats['Fs'] != wf2.stats['Fs']:
-#             msg = 'Sampling rates of synthetic green\'s functions must match.'
-#             raise ValueError(msg)
-        
-        
-#         # initialize new hdf5 files for correlation and green's function correlation
-#         with NoiseSource(src) as nsrc:
-#             correlation = np.zeros(n_corr)
-#             # Loop over source locations
-            
-#             for i in range(wf1.stats['ntraces']):
-               
-#                 s1 = np.ascontiguousarray(wf1.data[i,:]*taper)
-#                 s2 = np.ascontiguousarray(wf2.data[i,:]*taper)
-                
-#                 spec1 = np.fft.rfft(s1,n)
-#                 spec2 = np.fft.rfft(s2,n)
-                
-              
-#                 g1g2_tr = np.multiply(spec1,np.conjugate(spec2))
-#                 c = np.multiply(g1g2_tr,nsrc.get_spect(i))             
-#                 correlation += my_centered(np.fft.ifftshift(np.fft.irfft(c,n)),n_corr)
-                    
-#             trace = Trace()
-#             trace.stats.sampling_rate = wf1.stats['Fs']
-#             trace.data = correlation
-#             trace.write(filename=corr_int_file,format='SAC')    
-#             correlation = correl.space_integral()
-             
+    return()

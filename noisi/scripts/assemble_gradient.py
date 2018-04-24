@@ -169,7 +169,6 @@ def assemble_ascent_dir(source_model,step,snr_min,n_min,save_all=False,
 		
 	with open(outfile,'a') as fh:
 
-		# print info
 		fh.write('Analyzed %g station pairs of %g successfully.\n' %(cnt_success,n))
 		fh.write('No data found for %g station pairs.\n' %cnt_unavail)
 		fh.write('No measurement taken for %g station pairs due to short interstation distance.\n' %cnt_overlap) 

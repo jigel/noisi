@@ -42,7 +42,7 @@ params_gaussian_blobs = [{'center':(-10.,0.),'sigma_radius_m':2000000.,
 'rel_weight':2.,'only_ocean':True}]
 
 
-# Parameters are pulled out of the measr_config file.
+# Further parameters are pulled out of the measr_config file.
 ###############################################################################
 
 grd  = np.load(os.path.join(projectpath,'sourcegrid.npy'))

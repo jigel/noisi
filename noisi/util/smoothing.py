@@ -106,7 +106,7 @@ def test_gauss_smoothing(sourcegrid,map):
 
 	smooth_map = apply_smoothing_sphere('temp_vals.npy',
 		'test','temp_coord.npy',500000)
-	print smooth_map.shape
+	print(smooth_map.shape)
 
 	plot_grid(grd[0],grd[1],smooth_map)
 

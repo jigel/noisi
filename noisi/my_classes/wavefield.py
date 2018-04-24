@@ -79,7 +79,7 @@ class WaveField(object):
        
         # Copy metadata
         stats = file.create_dataset('stats',data=(0,))
-        for (key,value) in self.stats.iteritems():
+        for (key,value) in self.stats.items():
             file['stats'].attrs[key] = value
         
         # Ensure that nt is kept as requested
@@ -111,7 +111,7 @@ class WaveField(object):
     #    #extend seismograms to spectra to fit the expected length of zero-padded FFT, and add real as well as imag. part
     #    file = h5py.File(newfile, 'w')
     #    file.create_dataset('stats',data=(0,))
-    #    for (key,value) in self.stats.iteritems():
+    #    for (key,value) in self.stats.items():
     #        file['stats'].attrs[key] = value
     #    nfft = _next_regular(2*self.stats['nt']-1)
     #    shape = (self.stats['ntraces'],nfft//2+1)
@@ -272,7 +272,7 @@ class WaveField(object):
             
             if 'stats' not in self.file.keys():
                 self.file.create_dataset('stats',data=(0,))
-            for (key,value) in self.stats.iteritems():
+            for (key,value) in self.stats.items():
                 self.file['stats'].attrs[key] = value
             
             #print(self.file['stats'])
