@@ -13,7 +13,7 @@ from obspy import Trace, read, Stream
 from noisi import NoiseSource, WaveField
 from noisi.util import geo, natural_keys
 from obspy.signal.invsim import cosine_taper
-from noisi import filter
+from noisi.util import filter
 from scipy.signal import sosfilt
 from noisi.util.windows import my_centered, zero_buddy
 from noisi.util.geo import geograph_to_geocent
@@ -60,72 +60,15 @@ def paths_input(cp,source_conf,step,ignore_network,instaseis):
 
     
     # Starting model for the noise source
-    if kernelrun:
-        # The base model contains no spatial or spectral weights if the gradient is for spatial weights.
-        # If even the spectral weights get updated, then it should not even contain spectral weights. 
-        # But so far, so good.
-        nsrc = os.path.join(source_conf['project_path'],
-                     source_conf['source_name'],'step_'+str(step),
-                     'base_model.h5')
-    else:
-        nsrc = os.path.join(source_conf['project_path'],
+    nsrc = os.path.join(source_conf['project_path'],
                      source_conf['source_name'],'step_'+str(step),
                      'starting_model.h5')
 
-    # Adjoint source
     
-    if kernelrun:
-
-        adjtf = os.path.join(source_conf['source_path'],
-                     'step_'+str(step),
-                     'adjt',"{}--{}.sac".format(sta1,sta2))
-        adjt = glob(adjtf)
-
-        if ignore_network:
-            adjtf = os.path.join(source_conf['source_path'],
-                     'step_'+str(step),
-                     'adjt',"{}--{}.sac".format(sta2,sta1))
-            adjt.extend(glob(adjtf))
-
-        adjtf = os.path.join(source_conf['source_path'],
-                     'step_'+str(step),
-                     'adjt',"{}--{}.c.sac".format(sta1,sta2))
-        adjt.extend(glob(adjtf))
-
-        if ignore_network:
-            adjtf = os.path.join(source_conf['source_path'],
-                     'step_'+str(step),
-                     'adjt',"{}--{}.c.sac".format(sta2,sta1))
-            adjt.extend(glob(adjtf))
-
-        adjtf = os.path.join(source_conf['source_path'],
-                     'step_'+str(step),
-                     'adjt',"{}--{}.a.sac".format(sta1,sta2))
-
-        adjt.extend(glob(adjtf))
-
-        if ignore_network:
-            adjtf = os.path.join(source_conf['source_path'],
-                     'step_'+str(step),
-                     'adjt',"{}--{}.a.sac".format(sta2,sta1))
-        adjt.extend(glob(adjtf))
-
-
-        if adjt == []:
-
-
-            print("No adjoint source found for station pair: {}, {}".format(sta1,sta2))
-                # ToDo: this is too horrible, please find another solution.
-            adjt = '-'
-        
-    else:
-        adjt = ''
-
-    
-    return(wf1,wf2,nsrc,adjt)
+    return(wf1,wf2,nsrc)
     
     
-def paths_output(cp,source_conf,step):
+def path_output(cp,source_conf,step):
     
 
     id1 = cp[0].split()[0]+cp[0].split()[1]
@@ -141,19 +84,14 @@ def paths_output(cp,source_conf,step):
     channel = source_conf['channel']
     sta1 = "{}.{}..{}".format(*(inf1[0:2]+[channel]))
     sta2 = "{}.{}..{}".format(*(inf2[0:2]+[channel]))
-    
-     # Kernel (without measurement) file
-    kern_name = "{}--{}.npy".format(sta1,sta2)
-    kern_name = os.path.join(source_conf['source_path'],
-        'step_'+str(step), 'kern',
-        kern_name)
+
         
     corr_trace_name = "{}--{}.sac".format(sta1,sta2)    
     corr_trace_name =  os.path.join(source_conf['source_path'],
         'step_'+str(step),'corr',
         corr_trace_name)  
 
-    return (kern_name,corr_trace_name)
+    return corr_trace_name
     
 def get_ns(wf1,source_conf,insta):
     
@@ -192,13 +130,12 @@ def get_ns(wf1,source_conf,insta):
     return nt,n,n_corr,Fs
         
     
-def g1g2_corr(wf1,wf2,corr_file,kernel,adjt,
-    src,source_conf,insta):
-"""
-Compute noise cross-correlations from two .h5 'wavefield' files.
-Noise source distribution and spectrum is given by starting_model.h5
-It is assumed that noise sources are delta-correlated in space.
-"""
+def g1g2_corr(wf1,wf2,corr_file,src,source_conf,insta):
+    """
+    Compute noise cross-correlations from two .h5 'wavefield' files.
+    Noise source distribution and spectrum is given by starting_model.h5
+    It is assumed that noise sources are delta-correlated in space.
+    """
     
     
     #ToDo: check whether to include autocorrs from user (now hardcoded off)
@@ -319,8 +256,7 @@ It is assumed that noise sources are delta-correlated in space.
         
 
 
-def run_corr(source_configfile,step,kernelrun=False,
-    steplengthrun=False,ignore_network=False):
+def run_corr(source_configfile,step,steplengthrun=False,ignore_network=False):
 
 
     # simple embarrassingly parallel run:
@@ -336,9 +272,15 @@ def run_corr(source_configfile,step,kernelrun=False,
     obs_only = source_config['model_observed_only']
     insta = json.load(open(os.path.join(source_config['project_path'],
         'config.json')))['instaseis']
+    auto_corr = False # default value
+    try:
+        auto_corr = source_config['get_auto_corr']
+    except KeyError:
+        pass
 
     # get possible station pairs
-    p = define_correlationpairs(source_config['project_path'])
+    p = define_correlationpairs(source_config['project_path'],
+        auto_corr=auto_corr)
     if rank == 0:
         print('Nr all possible correlation pairs %g ' %len(p))
     
@@ -356,7 +298,7 @@ def run_corr(source_configfile,step,kernelrun=False,
             print('Nr correlation pairs after checking available observ. %g ' %len(p))
 
     # Remove pairs that have already been calculated
-    p = rem_fin_prs(p,source_config,step,kernelrun)
+    p = rem_fin_prs(p,source_config,step)
     if rank == 0:
         print('Nr correlation pairs after checking already calculated ones %g ' %len(p))
         print(16*'*')    
@@ -380,20 +322,20 @@ def run_corr(source_configfile,step,kernelrun=False,
         # requested that isn't in the database)
         # if unknown errors occur and no correlations are computed, comment try-
         # except to see the error messages.
-        try:
-            wf1,wf2,src,adjt = paths_input(cp,source_config,
+        #try:
+        wf1,wf2,src = paths_input(cp,source_config,
                 step,ignore_network,insta)
-            print(wf1,wf2,src)
-            kernel,corr = paths_output(cp,source_config,step)
-            print(corr) 
-        except:
-            print('Could not determine correlation for: %s\
-             \nCheck if wavefield .h5 file is available.' %cp)
-            continue
+        print(wf1,wf2,src)
+        corr = path_output(cp,source_config,step)
+        print(corr) 
+        #except:
+         #   print('Could not determine correlation for: %s\
+          #   \nCheck if wavefield .h5 file is available.' %cp)
+           # continue
             
         if os.path.exists(corr):
             continue
 
-        g1g2_corr(wf1,wf2,corr,kernel,adjt,src,source_config,insta=insta)
+        g1g2_corr(wf1,wf2,corr,src,source_config,insta=insta)
 
     return()

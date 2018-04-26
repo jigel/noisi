@@ -4,7 +4,7 @@ import os
 import h5py
 from obspy import Trace
 from noisi.util import plot
-from noisi import filter
+from noisi.util import filter
 from scipy.signal import sosfilt
 from scipy.fftpack import next_fast_len
 #from scipy.signal.signaltools import _next_regular

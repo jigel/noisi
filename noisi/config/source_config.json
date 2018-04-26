@@ -1,5 +1,6 @@
 {
     "date_created": "",
+    "get_auto_corr":true,
 	"preprocess_do":true,
     "preprocess_filter_kind": "bandpass",
     "preprocess_filter_params": [
