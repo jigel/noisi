@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 
 import matplotlib.tri as tri
 import numpy as np
+import time
 
 
 def plot_grid(map_x,map_y,map_z,stations=[],v=None,globe=False,
@@ -177,4 +178,14 @@ def plot_window(correlation, window, measurement):
     plt.xlabel('Correlation Lag in seconds.')
     plt.ylabel('Normalized correlation and window.')
 
+    plt.show()
+
+def plot_envelope(corr,env):
+    max_lag = (corr.stats.npts-1)/2 * corr.stats.delta
+    lag = np.linspace(-max_lag,max_lag,corr.stats.npts)
+    plt.plot(lag,corr.data/np.max(np.abs(corr.data)),'k')
+    plt.plot(lag,env/np.max(np.abs(env)),'r',linewidth=2.)
+    plt.grid()
+    plt.xlabel('Lag (s)')
+    plt.ylabel('Normalized correlation / normalized envelope')
     plt.show()

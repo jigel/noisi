@@ -2,7 +2,7 @@ import numpy as np
 from scipy.signal import hilbert
 from math import pi, log
 from noisi.util.windows import get_window,my_centered
-from noisi.util.plot import plot_window
+from noisi.util.plot import plot_window, plot_envelope
 #def window(wtype,n,i0,i1):
 #    win = np.zeros(n)
 #    
@@ -74,11 +74,14 @@ from noisi.util.plot import plot_window
 #    return win_signal, win_noise, scs
 
     
-def envelope(correlation,plot=False):
+def square_envelope(correlation,g_speed,window_params):
     
-    envelope = correlation.data**2 + np.imag(hilbert(correlation.data))**2
+    square_envelope = (correlation.data**2 +
+    np.imag(hilbert(correlation.data))**2)
+    if window_params['plot']:
+        plot_envelope(correlation,square_envelope)
     
-    return envelope
+    return square_envelope
 
 def windowed_envelope(correlation,plot=False):
     pass    
@@ -177,7 +180,7 @@ def get_measure_func(mtype):
     elif mtype == 'energy_diff':
         func = energy
     elif mtype == 'square_envelope':
-        func = envelope
+        func = square_envelope
     elif mtype == 'windowed_waveform_diff':
         func = windowed_waveform
     elif mtype == 'inst_phase':

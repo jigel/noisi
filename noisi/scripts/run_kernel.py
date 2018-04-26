@@ -390,4 +390,5 @@ def run_kern(source_configfile,step,ignore_network=False):
             continue
 
         kern = g1g2_kern(wf1,wf2,kernel,adjt,src,source_config,insta=insta)
+    return()
 

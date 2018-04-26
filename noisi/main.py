@@ -32,16 +32,16 @@ def setup_project(project_name):
     if os.path.exists(project_name):
         click.echo('Project exists already, must give it a new name.')
         exit()   
-    os.makedirs(os.path.join(project_name,'observed_correlations'))    
+    # #os.makedirs(os.path.join(project_name,'observed_correlations'))    
     from . import _ROOT
-    with io.open(os.path.join(_ROOT,'config','config.json'),'rb+') as fh:
+    with io.open(os.path.join(_ROOT,'config','config.json'),'r+') as fh:
         conf = json.loads(fh.read())
         
     conf['date_created'] = time.strftime("%Y.%m.%d")
     conf['project_name'] = project_name
     conf['project_path'] = os.path.abspath(project_name)
     
-    with io.open(os.path.join(project_name,'config.json'),'wb') as fh:
+    with io.open(os.path.join(project_name,'config.json'),'w') as fh:
         cf = json.dumps(conf,sort_keys=True, indent=4, separators=(",", ": "))
         fh.write(cf)
     
@@ -83,21 +83,21 @@ def setup_source(source_model):
     
     with io.open(os.path.join(_ROOT,'config','source_config.json'),'r') as fh:
         conf = json.loads(fh.read())
-        conf['date_created'] = unicode(time.strftime("%Y.%m.%d"))
+        conf['date_created'] = str(time.strftime("%Y.%m.%d"))
         conf['project_name'] = os.path.basename(os.getcwd())
         conf['project_path'] = os.getcwd()
         conf['source_name'] = source_model
         conf['source_path'] = os.path.abspath(source_model)
         
-    with io.open(os.path.join(source_model,'source_config.json'),'wb') as fh:
+    with io.open(os.path.join(source_model,'source_config.json'),'w') as fh:
         cf = json.dumps(conf,sort_keys=True, indent=4, separators=(",", ": "))
         fh.write(cf)
     
     with io.open(os.path.join(_ROOT,'config','measr_config.json'),'r') as fh:
         conf = json.loads(fh.read())
-        conf['date_created'] = unicode(time.strftime("%Y.%m.%d"))
+        conf['date_created'] = str(time.strftime("%Y.%m.%d"))
        
-    with io.open(os.path.join(source_model,'measr_config.json'),'wb') as fh:
+    with io.open(os.path.join(source_model,'measr_config.json'),'w') as fh:
         cf = json.dumps(conf,sort_keys=True, indent=4, separators=(",", ": "))
         fh.write(cf)
     
@@ -107,6 +107,8 @@ setup_noisesource.ipynb'),
     source_model))  
     os.system('cp {} {}'.format(os.path.join(_ROOT,'util/setup_noisesource.py'),
     source_model))
+    os.system('cp {} {}'.format(os.path.join(_ROOT,
+        'util/wavefield_from_instaseis.py'),source_model))
     click.secho("Copied default source_config.json and measr_config.json \
 to source model directory, please edit. \
 Please run setup_noisesource.ipynb or setup_noisesource.py after editing to \

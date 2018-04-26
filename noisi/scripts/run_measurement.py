@@ -45,11 +45,13 @@ def get_station_info(stats):
 
 
 
-def measurement(source_config,mtype,step,ignore_network,bandpass,step_test,**options):
+def measurement(source_config,mtype,step,ignore_network,
+    bandpass,step_test,**options):
     
     """
     Get measurements on noise correlation data and synthetics. 
-    options: g_speed,window_params (only needed if mtype is ln_energy_ratio or enery_diff)
+    options: g_speed,window_params (only needed if 
+    mtype is ln_energy_ratio or enery_diff)
     """
     step_n = 'step_{}'.format(int(step))
     
@@ -175,23 +177,25 @@ def measurement(source_config,mtype,step,ignore_network,bandpass,step_test,**opt
                     continue
 
             else:
-                try:
+                #try:
                     
-                    msr_o = func(tr_o,**options)
-                    msr_s = func(tr_s,**options)
+                msr_o = func(tr_o,**options)
+                msr_s = func(tr_s,**options)
 
-                except:
-                    print("** Could not take measurement")
-                    print(f)
-                    continue
+                #except:
+                #    print("** Could not take measurement")
+                #    print(f)
+                #    continue
             
             # timeseries-like measurements:
-            if mtype in ['envelope','windowed_envelope','waveform',\
+            if mtype in ['square_envelope','windowed_envelope','waveform',
             'windowed_waveform']:
                 l2_so = np.trapz(0.5*(msr_s-msr_o)**2) * tr_o.stats.delta
                 msr = np.nan
                 snr = np.nan
                 snr_a = np.nan
+                info.extend([np.nan,np.nan,np.nan,np.nan,
+                    l2_so,snr,snr_a,tr_o.stats.sac.user0])
             # single value measurements:
             else:
 
@@ -219,8 +223,6 @@ def measurement(source_config,mtype,step,ignore_network,bandpass,step_test,**opt
                     msr,snr,snr_a,tr_o.stats.sac.user0])
 
 
-            
-            
             measurements.loc[i] = info
 
             # step index
@@ -244,18 +246,16 @@ def run_measurement(source_configfile,measr_configfile,
     
 
     # TODo all available misfits --  what parameters do they need (if any.)
-    if measr_config['mtype'] in ['ln_energy_ratio','energy_diff','inst_phase']:
-        
+    
 
-       #g_speed                         =    measr_config['g_speed']
-        window_params                   =    {}
-        window_params['hw']             =    measr_config['window_params_hw']
-        
-        window_params['sep_noise']      =    measr_config['window_params_sep_noise']
-        window_params['win_overlap']    =    measr_config['window_params_win_overlap']
-        window_params['wtype']          =    measr_config['window_params_wtype']
-        window_params['causal_side']    =    measr_config['window_params_causal']
-        window_params['plot']           =    measr_config['window_plot_measurements']
+    window_params                   =    {}
+    window_params['hw']             =    measr_config['window_params_hw']
+    
+    window_params['sep_noise']      =    measr_config['window_params_sep_noise']
+    window_params['win_overlap']    =    measr_config['window_params_win_overlap']
+    window_params['wtype']          =    measr_config['window_params_wtype']
+    window_params['causal_side']    =    measr_config['window_params_causal']
+    window_params['plot']           =    measr_config['window_plot_measurements']
    
 
     if bandpass == None:
@@ -263,20 +263,20 @@ def run_measurement(source_configfile,measr_configfile,
     if type(bandpass[0]) != list and bandpass[0] != None:
             bandpass = [bandpass]
             warn('\'Bandpass\' should be defined as list of filters.')
-    if measr_config['mtype'] in ['ln_energy_ratio','energy_diff','inst_phase']:
-        if type(window_params['hw']) != list:
-            window_params['hw'] = [window_params['hw']]
-        if len(window_params['hw']) != len(bandpass):
-            warn('Using the same window length for all measurements.')
-            window_params['hw'] = len(bandpass)*[window_params['hw'][0]]
-        if type(measr_config['g_speed']) in [float,int]:
-            warn('Using the same group velocity for all measurements.')
-            g_speeds = len(bandpass)*[measr_config['g_speed']]
-        # ToDo: This is ugly and should be sorted out beforehand but 
-        # I am too lazy.
-        elif type(measr_config['g_speed']) == list \
-        and len(measr_config['g_speed']) == len(bandpass):
-            g_speeds = measr_config['g_speed']
+
+    if type(window_params['hw']) != list:
+        window_params['hw'] = [window_params['hw']]
+    if len(window_params['hw']) != len(bandpass):
+        warn('Using the same window length for all measurements.')
+        window_params['hw'] = len(bandpass)*[window_params['hw'][0]]
+    if type(measr_config['g_speed']) in [float,int]:
+        warn('Using the same group velocity for all measurements.')
+        g_speeds = len(bandpass)*[measr_config['g_speed']]
+    # ToDo: This is ugly and should be sorted out beforehand but 
+    # I am too lazy.
+    elif type(measr_config['g_speed']) == list \
+    and len(measr_config['g_speed']) == len(bandpass):
+        g_speeds = measr_config['g_speed']
             
 
     #if bandpass is None or type(bandpass[0]) != list:
