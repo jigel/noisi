@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 # ------------------------------------------------------------------
 # with modifications from obspy 
+# Modifications: Do not apply the filter, but only return it.
+#
+#
 # Filename: filter.py
 #  Purpose: Various Seismogram Filtering Functions
 #   Author: Tobias Megies, Moritz Beyreuther, Yannik Behr

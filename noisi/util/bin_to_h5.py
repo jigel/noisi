@@ -1,4 +1,3 @@
-#!/Users/lermert/anaconda2/bin/python
 #ToDo Docs
 #ToDo build calling into main
 #ToDo check whether these are all the metadata we sensibly need.
@@ -37,7 +36,7 @@ Fs = round(np.fromfile(f_in,dtype='f'+str(size_of_float),count=1)[0],6)
 nbytes_trace = nbytes_stationname + (2 + ntimesteps) * size_of_float 
 # Number of records actually contained
 ntraces = int(nbytes_total / nbytes_trace)
-print 'This file contains %g Traces.' %ntraces
+print('This file contains %g Traces.' %ntraces)
 # Reference station: 
 # ToDo: May differentiate location?
 refstation = os.path.basename(sys.argv[1])

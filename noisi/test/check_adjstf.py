@@ -91,7 +91,6 @@ for step in steps:
 	djdch = (jh - j) / (10.**step) 
 	dcheck.append(abs(djdc - djdch) / abs(djdc))
 	
-print dcheck
 # plot
 plt.semilogy(steps,dcheck)
 plt.title("Check for adjoint source time function")

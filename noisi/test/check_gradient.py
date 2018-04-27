@@ -83,7 +83,6 @@ for step in steps:
 	syn.stats.sac = {}
 	syn.stats.sac['dist'] = obs.stats.sac.dist
 	msr_sh = m_func(syn,**m_a_options)
-	print msr_sh
 
 	jh = 0.5 * (msr_sh - msr_o)**2
 	djdqh = (jh - j) / (10.**step) 

@@ -19,7 +19,7 @@ def grid_to_specfem_stations(grid,spec_dir):
     
     for dir in os.listdir(spec_dir):
         dst = os.path.join(spec_dir,dir,'DATA','STATIONS')
-        print dst
+        print(dst)
         shutil.copy('temp.txt',dst)
     os.remove('temp.txt')
     
@@ -34,7 +34,7 @@ def stations_to_cmtsolutions(stationlist,hdur,outdir):
         station = stationlist[i]
         if station =='': continue
         
-        print station
+        print(station)
         info = station.split()
         
         id = info[0].strip() + '.' + info[1].strip()

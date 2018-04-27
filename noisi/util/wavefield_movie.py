@@ -60,7 +60,7 @@ for sta in stations:
 
 with writer.saving(fig, filename, 100):
     for t in np.arange(t_min,t_max,t_step):
-        print t
+        print(t)
         map_z = wf.get_snapshot(t,resolution=resolution)
         #if globe:
         #    map_z = np.append(map_z,map_z[0])

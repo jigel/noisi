@@ -15,7 +15,6 @@ def test_kernel():
 	# ToDo: path
 	k1 = np.load('test/testdata/testsrc/step_0/kern/NET.STA1..CHA--NET.STA2..CHA.0.npy')
 	k2 = np.load('test/testdata/testsrc/step_0/kern_archived/NET.STA1..CHA--NET.STA2..CHA.npy')
-	# assert (k1 == k2).sum() == len(k1) Need something more tolerant, I ran into tiny differences -- precision?
 	assert ((k1-k2)/k1 * 100).sum() < 1.e-09
 
 	# remove stuff
