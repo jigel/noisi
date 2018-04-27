@@ -41,7 +41,7 @@ if dataless:
     # copy files from the synthetic correlations to the observed correlations '/Source_1/observed_correlations/'
     for files in glob(os.path.join(path_model,'*.sac')):
         shutil.copy(files,path_obs)
-        print 'Copied:',files
+        print('Copied:',files)
 
 
 # Rename files as noisi expects different filename
@@ -58,7 +58,7 @@ for filename in glob(os.path.join(path_obs,'*.sac*')):
         filename_2 = filename_1 + '.' + project_name + ext
         # rename the file
         os.rename(filename,filename_2)
-        print 'Renamed:', filename_2
+        print('Renamed:', filename_2)
 
 
 # Check metadata in observed_correlations folder
@@ -67,7 +67,7 @@ ext = '*.sac'
 corrs_path_obs = os.path.join(path_obs,ext) # get all .sac files in directory
 st = obspy.read(corrs_path_obs) # load all into one stream
 # print(st)
-#print st[0].stats
+#print(st[0].stats)
 
 
 # # Laura's code: assign_geodata.py
@@ -127,18 +127,18 @@ for t in traces:
     except IndexError:
         sta2 = os.path.basename(t).split('.')[7]
     tr[0].stats.sac.user0 = 100.   
-    #print lat1 > -90.
-    #print lat1 < 90.
-    #print type(lat1)
+    #print(lat1 > -90.)
+    #print(lat1 < 90.)
+    #print(type(lat1))
     #print(float(lat1))
-    #print lat1,lon1,lat2,lon2
+    #print(lat1,lon1,lat2,lon2)
     
     geoinf = gps2dist_azimuth(lat1,lon1,lat2,lon2)
     tr[0].stats.sac.dist = geoinf[0]
     tr[0].stats.sac.az = geoinf[1]
     tr[0].stats.sac.baz = geoinf[2]
     tr[0].stats['distance'] = geoinf[0]   # add stats.distance for section plot
-    #print tr[0].stats.keys()
+    #print(tr[0].stats.keys())
 
     tr.write(t,format='SAC')
     #tr.plot()
@@ -163,7 +163,7 @@ if corr_filt_sectionplot:
     for tr in traces:
         t = read(tr)
         t[0].stats.distance = t[0].stats.sac.dist
-        #print t[0].stats.distance
+        #print(t[0].stats.distance)
         t_filt = t
         t_filt.filter('bandpass',freqmin=0.02,freqmax=0.05,zerophase = True)
         #t_filt.plot()

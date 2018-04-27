@@ -44,5 +44,5 @@ for j in range(len(weights)):
 	msr_file = os.path.join(source_dir,'step_'+step,filename)
 	dat = read_csv(msr_file)
 	mf += dat.l2_norm.mean()/len(weights) * weights[j]
-print mf
+print("Average misfit of all frequency bands: %g" %mf)
 

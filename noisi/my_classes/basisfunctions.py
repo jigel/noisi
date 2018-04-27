@@ -2,6 +2,10 @@ import numpy as np
 
 # ToDo: Might not be necessary to have a separate class for this, but could be incorporated into the NoiseSource class.
 # ToDo: Docs
+
+# ToDo: This object is out of date. The idea was to have it in order to flexibly work with different bases, such as Gaussians, spherical harmonics, etc.
+# This may be still useful in the future so keep this fragment.
+
 class MyBasis(object):
     
     def __init__(self,btype,params):
@@ -46,7 +50,6 @@ class MyBasis(object):
             basis_shape.extend(i for i in np.shape(grid))
             
             basis_grid = np.zeros(basis_shape)
-            print np.shape(basis_grid)
             step = len(grid) // basis_shape[0]
             for i in np.arange(basis_shape[0]):
                 basis_grid[i,i*step:(i+1)*step] = 1.

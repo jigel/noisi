@@ -42,18 +42,18 @@ params_gaussian_blobs = [{'center':(-10.,0.),'sigma_radius_m':2000000.,
 'rel_weight':2.,'only_ocean':True}]
 
 
-# Parameters are pulled out of the measr_config file.
+# Further parameters are pulled out of the measr_config file.
 ###############################################################################
 
 grd  = np.load(os.path.join(projectpath,'sourcegrid.npy'))
 ntraces = np.shape(grd)[-1]
-print 'Loaded source grid'
+print('Loaded source grid')
 
 
 config = json.load(open(os.path.join(projectpath,'config.json')))
 source_config = json.load(open(os.path.join(sourcepath,'source_config.json')))
 measr_config = json.load(open(os.path.join(sourcepath,'measr_config.json')))
-print 'Loaded config files.'
+print('Loaded config files.')
 
 
 #if len(distributions) != len(measr_config['bandpass']):
@@ -72,7 +72,7 @@ else:
 
 wfs = glob(os.path.join(wavefield_path,ext))
 if wfs != []:
-    print 'Found wavefield.'
+    print('Found wavefield.')
     with WaveField(wfs[0]) as wf:
         df = wf.stats['Fs']
         nt = wf.stats['nt']
@@ -90,7 +90,7 @@ else:
 n = next_fast_len(2*nt-1)    
 freq = np.fft.rfftfreq(n,d=1./df)
 taper = cosine_taper(len(freq),0.01)
-print 'Determined frequency axis.'
+print('Determined frequency axis.')
 
 def get_distance(grid,location):
     def f(lat,lon,location):
@@ -100,7 +100,7 @@ def get_distance(grid,location):
 
 # Use Basemap to figure out where ocean is
 def get_ocean_mask():
-    print 'Getting ocean mask...'
+    print('Getting ocean mask...')
     from mpl_toolkits.basemap import Basemap
     m = Basemap(rsphere=6378137,resolution=coastres,projection='cea',lat_0=0.,
                 lon_0=0.,llcrnrlat=-90.,urcrnrlat=90.,llcrnrlon=-180.,urcrnrlon=180.)
@@ -168,7 +168,7 @@ num_bases = len(distributions)
 gauss_cnt = 0
 basis_geo = np.zeros((num_bases,ntraces))
 
-print 'Filling distribution...'
+print('Filling distribution...')
 
 for i in range(num_bases):
 
@@ -188,7 +188,7 @@ for i in range(num_bases):
         raise NotImplementedError('Unknown geographical distributions. \
             Must be \'gaussian\', \'homogeneous\' or \'ocean\'.')
 
-print 'Plotting...'
+print('Plotting...')
 from noisi.util import plot
 for i in range(num_bases):
     plot.plot_grid(grd[0],grd[1],basis_geo[i,:],normalize=False,
@@ -247,5 +247,5 @@ with h5py.File(os.path.join(sourcepath,'step_0','base_model.h5'),'w') as fh:
     fh.create_dataset('distr_weights',data=weights.astype(np.float32))
     fh.create_dataset('spect_basis',data=basis_spec.astype(np.float32))
 
-print 'Done.'
+print('Done.')
 

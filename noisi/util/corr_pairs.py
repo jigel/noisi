@@ -1,7 +1,8 @@
 from glob import glob
 import os
 
-def define_correlationpairs(proj_dir,auto_corr=False,only_observed=True,channel='*'):
+def define_correlationpairs(proj_dir,auto_corr=False,
+    only_observed=True,channel='*'):
     """
     Match correlation pairs.
     :param proj_dir: Path to project directory, where a stations.txt file has to be located
@@ -59,7 +60,7 @@ def rem_no_obs(stapairs,source_conf,directory,ignore_network=True):
     return stapairs_new
 
 
-def rem_fin_prs(stapairs,source_conf,step,kernelrun):
+def rem_fin_prs(stapairs,source_conf,step):
 
     """
     Remove those station pairs from the list for which correlation / kernel has already 
@@ -67,15 +68,11 @@ def rem_fin_prs(stapairs,source_conf,step,kernelrun):
     :param sta_pairs: List of all station pairs
     :param source_conf: source config dictionary
     :param step: step nr
-    :param kernelrun: run for calculating kernels or correlations 
     """
     
     channel = source_conf['channel']
 
-    if kernelrun:
-        mod_dir = os.path.join(source_conf['source_path'],'step_{}'.format(step),'kern')
-    else:
-        mod_dir = os.path.join(source_conf['source_path'],'step_{}'.format(step),'corr')
+    mod_dir = os.path.join(source_conf['source_path'],'step_{}'.format(step),'corr')
 
 
     stapairs_new = []
@@ -94,23 +91,6 @@ def rem_fin_prs(stapairs,source_conf,step,kernelrun):
         sta1 = "{}.{}..{}".format(*(inf1[0:2]+[channel]))
         sta2 = "{}.{}..{}".format(*(inf2[0:2]+[channel]))
         
-        # if kernelrun: Too complicated! Too many different cases with 
-        # different measurements, causal and acausal branch, etc
-
-        #     if measr_conf['bandpass']
-
-        #     kern_basicname = "{}--{}.*.npy".format(sta1,sta2),
-                          
-        #     for kern_name in kern_names:
-
-        #         kern_name = os.path.join(mod_dir,kern_name)
-        #         kerns_calc.append(glob(kern_name))
-
-        #     if len(kern_name)
-        #     #kern_name = os.path.join(mod_dir,kern_name)
-        #     #if not os.path.exists(kern_name):
-        #     #    stapairs_new.append(sp)
-        # else:
         corr_name = "{}--{}.sac".format(sta1,sta2)    
         corr_name = os.path.join(mod_dir,corr_name)
         if not os.path.exists(corr_name):
@@ -213,72 +193,5 @@ def glob_obs_corr(sta1,sta2,directory,ignore_network):
 
 
     return obs_files
-    
 
-
-
-# and now...find the observed filename from the synthetic one
-# def get_observed_filenames(sta1,sta2,directory,stack=False,
-#     t1=None,t2=None,fileformat=None,old_format=False,
-#     channel_basename='LH',tag=None,ignore_network=True):
-
-    
-#     inf1 = sta1.split('.')
-#     inf2 = sta2.split('.')
-    
-#     sta1 = inf1[1]
-#     sta2 = inf2[1]
-
-#     cha1 = channel_basename + inf1[3][-1]
-#     cha2 = channel_basename + inf2[3][-1]
-
-#     if not ignore_network:
-#         net1 = inf1[0]
-#         net2 = inf2[0]
-#     else:
-#         net1 = '*'
-#         net2 = '*' 
-
-
-
-#     if not stack:
-#         stack = ''
-#     else:
-#         stack = '.stack'
-
-#     if t1 is None:
-#         t1=''
-#     else:
-#         t1 = '.'+t1
-#     if t2 is None:
-#         t2 = ''
-#     else:
-#         t2 = '.'+t2
-
-#     if fileformat is None:
-#         fileformat = '*'
-
-#     if tag is None:
-#         tag = '*'
-    
-#     if not old_format:
-#         obs_filename = ('{}.{}.*.{}--{}.{}.*.{}{}{}{}.{}'.format(
-#             net1,sta1,cha1,net2,sta2,cha2,stack,t1,t2,fileformat
-#             ))
-#     else:
-#         obs_filename = ('{}.{}.*.{}.{}.{}.*.{}.ccc.{}.{}'.format(
-#             net1,sta1,cha1,net2,sta2,cha2,tag,fileformat))
-
-#     obs_filename = os.path.join(directory,obs_filename)
-#     obs_filename = glob(obs_filename)
-
-
-#     if ignore_network:
-#         obs_filename2 = ('{}.{}.*.{}--{}.{}.*.{}{}{}{}.{}'.format(
-#             net2,sta2,cha2,net1,sta1,cha1,stack,t1,t2,fileformat
-#             ))
-#         obs_filename2 = os.path.join(directory,obs_filename2)
-#         obs_filename.extend(glob(obs_filename2))
-
-#     return obs_filename
 
