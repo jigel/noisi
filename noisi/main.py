@@ -33,7 +33,7 @@ def setup_project(project_name):
         click.echo('Project exists already, must give it a new name.')
         exit()
     else:
-        os.makedirs(os.path.join(project_name,'observed_correlations'))
+        os.makedirs(os.path.join(project_name))
     from . import _ROOT
     with io.open(os.path.join(_ROOT,'config','config.json'),'r+') as fh:
         conf = json.loads(fh.read())
