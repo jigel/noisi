@@ -34,7 +34,6 @@ def setup_project(project_name):
         exit()
     else:
         os.makedirs(os.path.join(project_name))
-||||||| merged common ancestors
     from . import _ROOT
     with io.open(os.path.join(_ROOT,'config','config.json'),'r+') as fh:
         conf = json.loads(fh.read())
