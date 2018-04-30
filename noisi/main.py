@@ -31,9 +31,9 @@ def run():
 def setup_project(project_name):
     if os.path.exists(project_name):
         click.echo('Project exists already, must give it a new name.')
-        exit()   
+        exit()
     else:
-        os.makedirs(os.path.join(project_name))    
+        os.makedirs(os.path.join(project_name))
     from . import _ROOT
     with io.open(os.path.join(_ROOT,'config','config.json'),'r+') as fh:
         conf = json.loads(fh.read())
