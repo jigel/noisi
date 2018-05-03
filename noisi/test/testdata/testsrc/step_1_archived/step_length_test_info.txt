@@ -6,7 +6,7 @@ min_stck 0
 step_length 1e+10
 ----------------------------------------
 Station pairs to be used for step lenght test:
-NET STA1, NET STA2 L2 misfit: 2.75006304432e-16
+['NET', 'STA1', '', 'CHA--NET'], ['NET', 'STA2', '', 'CHA'] L2 misfit: 0.4739400222902125
 ----------------------------------------
-Cumulative misfit: 2.75006e-16
+Cumulative misfit: 0.47394
 ----------------------------------------

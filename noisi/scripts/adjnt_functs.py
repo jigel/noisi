@@ -2,6 +2,7 @@ import numpy as np
 from math import pi
 #from noisi.scripts import measurements as rm
 from noisi.util import windows as wn
+from scipy.signal import hilbert
 
 
 
@@ -15,7 +16,6 @@ def log_en_ratio_adj(corr_o,corr_s,g_speed,window_params):
     #msr_o = rm.log_en_ratio(corr_o,g_speed,window_params)
     #msr_s = rm.log_en_ratio(corr_s,g_speed,window_params)
     data = wn.my_centered(corr_s.data,corr_o.stats.npts)
-
 
     if window[2] == True:
         sig_c = corr_s.data * win
@@ -45,6 +45,19 @@ def windowed_waveform(corr_o,corr_s,g_speed,window_params):
         adjt_src = win-win+np.nan
 
     return adjt_src, success
+
+
+def square_envelope(corr_o,corr_s,g_speed,
+    window_params,taper_filter):
+    success = False
+    adjt_src = (2.0*corr_s.data +
+    2 * np.imag(hilbert(corr_s.data)) *
+    np.imag(hilbert(taper_filter.data))) # Maybe the second term can be neglected!
+    success = True
+    return adjt_src, success
+
+
+
 
 
 def energy(corr_o,corr_s,g_speed,window_params):
@@ -80,6 +93,9 @@ def get_adj_func(mtype):
 
     elif mtype == 'windowed_waveform':
         func = windowed_waveform
+
+    elif mtype == 'square_envelope':
+        func = square_envelope
 
     else:
         msg = 'Measurement functional %s not currently implemented.' %mtype

@@ -201,13 +201,12 @@ def g1g2_kern(wf1str,wf2str,kernel,adjt,
                 print('No adjoint source found: {}\n'.format(a))
                 break
 
-        if len(f) == len(adjt):
-            adjt_srcs.append(f)
-        else:
-            adjt_srcs.append(None)
+        adjt_srcs.append(f)
+        
 
     if adjt_srcs_cnt == 0:
         return()
+    print(adjt_srcs[0])
 
 ########################################################################
 # Compute the kernels
@@ -308,7 +307,7 @@ def g1g2_kern(wf1str,wf2str,kernel,adjt,
                 for j in range(len(f)):
                     delta = f[j].stats.delta
                     kern[ix_f,i,j] = np.dot(corr_temp,f[j].data) * delta
-                    print(kern[ix_f,i,j])
+                    
            
             
             if i%50000 == 0:

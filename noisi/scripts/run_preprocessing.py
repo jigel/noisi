@@ -30,7 +30,10 @@ def run_preprocessing(source_config):
 
         if os.path.exists(newfile):
             print("File {} was already processed, skipping.".format(os.path.basename(file)))
-        print("Preprocessing {}".format(os.path.basename(file)))
+            continue
+
+        else:
+            print("Preprocessing {}".format(os.path.basename(file)))
         
 
          

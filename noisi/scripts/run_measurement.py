@@ -5,7 +5,6 @@ from math import log, pi
 import click
 import copy
 import json
-from scipy.signal import hilbert
 from glob import glob
 from obspy import read, Trace
 from obspy.geodetics import gps2dist_azimuth

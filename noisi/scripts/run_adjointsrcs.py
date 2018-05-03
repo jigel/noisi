@@ -103,8 +103,8 @@ def adjointsrcs(source_config,mtype,step,ignore_network,bandpass,**options):
 
             # read synthetics
             try:
-                synth_filename = get_synthetics_filename(os.path.basename(f),synth_dir,
-                    ignore_network=ignore_network)
+                synth_filename = get_synthetics_filename(os.path.basename(f),
+                    synth_dir,ignore_network=ignore_network)
                 if synth_filename is None:
                     continue
                 #sname = glob(os.path.join(synth_dir,synth_filename))[0]
@@ -120,8 +120,9 @@ def adjointsrcs(source_config,mtype,step,ignore_network,bandpass,**options):
             tr_s.stats.sac = get_essential_sacmeta(tr_o.stats.sac)
 
             # Check sampling rates.
-            if round(tr_s.stats.sampling_rate,6) != round(tr_o.stats.sampling_rate,6):
-                print("Sampling Rates (Hz)")
+            if round(tr_s.stats.sampling_rate,6) != round(tr_o.stats.
+                sampling_rate,6):
+                print("Sampling Rates (Hz):\n")
                 print(tr_s.stats.sampling_rate)
                 print(tr_o.stats.sampling_rate)
                 msg = 'Sampling rates of data and synthetics must match.'
@@ -142,21 +143,30 @@ def adjointsrcs(source_config,mtype,step,ignore_network,bandpass,**options):
 
                 tr_o_filt = tr_o.copy()
                 tr_s_filt = tr_s.copy()
+                # trace with the taper and filter for envelope misfit:
+                tr_t_filt = tr_s.copy()
+                tr_t_filt.data = np.ones(tr_t_filt.stats.npts)
 
 
                 bp = bandpass[j]
                 tr_o_filt.taper(0.05)
                 tr_s_filt.taper(0.05)
+                tr_t_filt.taper(0.05) # filtering artifacts will occur 
+                # right now.
 
                 if bp != None:
                     tr_o_filt.filter('bandpass',freqmin=bp[0],freqmax=bp[1],
                         corners=bp[2],zerophase=True)
                     tr_s_filt.filter('bandpass',freqmin=bp[0],freqmax=bp[1],
                         corners=bp[2],zerophase=True)
+                    tr_t_filt.filter('bandpass',freqmin=bp[0],freqmax=bp[1],
+                        corners=bp[2],zerophase=True)
+                    tr_t_filt.taper(0.05)
 
 
+                if mtype == 'square_envelope':
+                    options['taper_filter'] = tr_t_filt
                 # Get the adjoint source
-
                 data, success = func(tr_o_filt,tr_s_filt,**options)
                 if not success:
                     continue
@@ -167,8 +177,6 @@ def adjointsrcs(source_config,mtype,step,ignore_network,bandpass,**options):
 
                     adj_src += Trace(data=data[0])
                     adj_src += Trace(data=data[1])
-
-                    # TODO: super ugly
                     brnchs = ['c','a']
                     for k in range(2):
                         adjtrc = adj_src[k]
@@ -191,6 +199,7 @@ def adjointsrcs(source_config,mtype,step,ignore_network,bandpass,**options):
                         os.path.basename(synth_filename).
                             rstrip('sac')+'{}.sac'.format(j))
                         adjtrc.write(file_adj_src,format='SAC')
+    return()
 
 
 
@@ -211,30 +220,23 @@ def run_adjointsrcs(source_configfile,measr_configfile,step,ignore_network):
             warn('\'Bandpass\' should be defined as list of filters.')
 
     window_params = {}
+    window_params['hw'] = measr_config['window_params_hw']
+    if type(window_params['hw']) != list:
+        window_params['hw'] = [window_params['hw']]
+    if len(window_params['hw']) != len(bandpass):
+        warn('Using the same window length for all measurements.')
+        window_params['hw'] = len(bandpass)*[window_params['hw'][0]]
+    if type(measr_config['g_speed']) in [float,int]:
+        warn('Using the same group velocity for all measurements.')
+        g_speed = len(bandpass)*[measr_config['g_speed']]
+    elif type(measr_config['g_speed']) == list \
+    and len(measr_config['g_speed']) == len(bandpass):
+        g_speed = measr_config['g_speed']
 
-    # TODo all available misfits --  what parameters do they need (if any.)
-    if mtype in ['ln_energy_ratio','energy_diff','windowed_waveform']:
-        window_params['hw'] = measr_config['window_params_hw']
-        if type(window_params['hw']) != list:
-            window_params['hw'] = [window_params['hw']]
-        if len(window_params['hw']) != len(bandpass):
-            warn('Using the same window length for all measurements.')
-            window_params['hw'] = len(bandpass)*[window_params['hw'][0]]
-        if type(measr_config['g_speed']) in [float,int]:
-            warn('Using the same group velocity for all measurements.')
-            g_speed = len(bandpass)*[measr_config['g_speed']]
-        # ToDo: This is ugly and should be sorted out beforehand but
-        # I am too lazy.
-        elif type(measr_config['g_speed']) == list \
-        and len(measr_config['g_speed']) == len(bandpass):
-            g_speed = measr_config['g_speed']
-
-        window_params['sep_noise'] = measr_config['window_params_sep_noise']
-        window_params['win_overlap'] = measr_config['window_params_win_overlap']
-        window_params['wtype'] = measr_config['window_params_wtype']
-        window_params['causal_side'] = measr_config['window_params_causal']
-        window_params['plot'] = False # To avoid plotting the same thing twice
-
-
-        adjointsrcs(source_config,mtype,step,ignore_network=ignore_network,g_speed=g_speed,
+    window_params['sep_noise'] = measr_config['window_params_sep_noise']
+    window_params['win_overlap'] = measr_config['window_params_win_overlap']
+    window_params['wtype'] = measr_config['window_params_wtype']
+    window_params['causal_side'] = measr_config['window_params_causal']
+    window_params['plot'] = False 
+    adjointsrcs(source_config,mtype,step,ignore_network=ignore_network,g_speed=g_speed,
         bandpass=bandpass,window_params=window_params)

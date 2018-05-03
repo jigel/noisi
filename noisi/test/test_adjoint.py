@@ -20,5 +20,5 @@ def test_adjoint():
 	
 	
 	# remove stuff
-	os.system('rm test/testdata/testsrc/step_0/corr/*')
-	os.system('rm -rf test/testdata/testsrc/step_0/adjt/*')
+	os.system('rm -rf test/testdata/testsrc/step_0/corr/')
+	os.system('rm -rf test/testdata/testsrc/step_0/adjt/')

@@ -1,3 +1,0 @@
-Station pairs to be used for step lenght test:
-NET STA1 -1.0 -1.0
-NET STA2 1.0 1.0

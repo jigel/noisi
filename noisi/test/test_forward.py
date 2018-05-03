@@ -11,7 +11,8 @@ def test_forward():
 		test/testdata/testsrc/step_0/starting_model.h5')
 	os.system('cp test/testdata/testsrc/wavefield_processed_archived/*.h5 \
 		test/testdata/testsrc/wavefield_processed')
-
+        
+	os.mkdir('test/testdata/testsrc/step_0/corr/')
 	# run forward model
 	os.system('noisi correlation %s 0' %srcdir)
 
