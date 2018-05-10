@@ -2,7 +2,7 @@ import numpy as np
 from math import pi
 #from noisi.scripts import measurements as rm
 from noisi.util import windows as wn
-from scipy.signal import hilbert
+from scipy.signal import hilbert, fftconvolve
 
 
 
@@ -50,9 +50,15 @@ def windowed_waveform(corr_o,corr_s,g_speed,window_params):
 def square_envelope(corr_o,corr_s,g_speed,
     window_params,taper_filter):
     success = False
-    adjt_src = (2.0*corr_s.data +
-    2 * np.imag(hilbert(corr_s.data)) *
-    np.imag(hilbert(taper_filter.data))) # Maybe the second term can be neglected!
+    env_s = corr_s.data**2 + np.imag(hilbert(corr_s.data))**2
+    env_o = corr_o.data**2 + np.imag(hilbert(corr_o.data))**2
+    d_env_1 =  2. * corr_s.data 
+    d_env_2 =  (2. * np.imag(hilbert(corr_s.data)) *
+        np.imag(hilbert(taper_filter.data)) )
+    d_env = d_env_1 #+ d_env_2 # Maybe the second term can be neglected!
+    adjt_src = (env_s - env_o) * d_env #* corr_o.stats.delta
+                
+    
     success = True
     return adjt_src, success
 

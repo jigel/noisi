@@ -149,9 +149,9 @@ def adjointsrcs(source_config,mtype,step,ignore_network,bandpass,**options):
 
 
                 bp = bandpass[j]
-                tr_o_filt.taper(0.05)
-                tr_s_filt.taper(0.05)
-                tr_t_filt.taper(0.05) # filtering artifacts will occur 
+                tr_o_filt.taper(0.1)
+                tr_s_filt.taper(0.1)
+                tr_t_filt.taper(0.1) # filtering artifacts will occur 
                 # right now.
 
                 if bp != None:
@@ -161,7 +161,7 @@ def adjointsrcs(source_config,mtype,step,ignore_network,bandpass,**options):
                         corners=bp[2],zerophase=True)
                     tr_t_filt.filter('bandpass',freqmin=bp[0],freqmax=bp[1],
                         corners=bp[2],zerophase=True)
-                    tr_t_filt.taper(0.05)
+                    tr_t_filt.taper(0.1)
 
 
                 if mtype == 'square_envelope':

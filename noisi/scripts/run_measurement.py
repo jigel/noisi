@@ -183,7 +183,8 @@ def measurement(source_config,mtype,step,ignore_network,
             # timeseries-like measurements:
             if mtype in ['square_envelope','windowed_envelope','waveform',
             'windowed_waveform']:
-                l2_so = np.trapz(0.5*(msr_s-msr_o)**2) * tr_o.stats.delta
+                #l2_so = np.trapz(0.5*(msr_s-msr_o)**2) * tr_o.stats.delta
+                l2_so = 0.5*np.dot((msr_s-msr_o),np.transpose(msr_s-msr_o))
                 snr = snratio(tr_o,**options)
                 snr_a = snratio(tr_o,**_options_ac)
                 info.extend([np.nan,np.nan,np.nan,np.nan,

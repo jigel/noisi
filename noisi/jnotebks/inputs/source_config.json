@@ -4,7 +4,7 @@
     "ktype": "td",
     "max_lag": 160,
     "model_observed_only": false,
-    "mtype": "ln_energy_ratio",
+    "mtype": "square_envelope",
     "preprocess_decimation_factor": null,
     "preprocess_do": true,
     "preprocess_filter_kind": "bandpass",

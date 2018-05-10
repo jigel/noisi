@@ -12,7 +12,7 @@ import h5py
 # *********************************************
 # input:
 # *********************************************
-steps = np.arange(-8, 0.5, 0.2)
+steps = np.arange(-8, 0.5, 0.1)
 mtype = 'ln_energy_ratio' # only ln_energy_ratio can be used.
 g_speed = 3300.
 window_params                   =    {}
@@ -32,6 +32,12 @@ window_params['plot']           =    False
 # 	adstf = (tr_1.data - tr_2.data)
 # 	return mf,adstf
 
+# preparations:
+os.mkdir('test/testdata/testsrc/step_0/corr')
+os.system('cp -R test/testdata/testsrc/wavefield_processed_archived \
+test/testdata/testsrc/wavefield_processed')
+
+
 m_a_options = {'g_speed':g_speed,'window_params':window_params}
 m_func = rm.get_measure_func(mtype) 
 
@@ -49,7 +55,7 @@ m_a_options = {'g_speed':g_speed,'window_params':window_params}
 m_func = rm.get_measure_func(mtype)
 
 # open the files....
-obs = read('test/testdata/testsrc/observed_correlations/*.SAC')[0]
+obs = read('test/testdata/testsrc/observed_correlations/*.sac')[0]
 syn = read('test/testdata/testsrc/step_0/corr_archived/*.sac')[0]
 syn.stats.sac = {}
 syn.stats.sac['dist'] = obs.stats.sac.dist
@@ -59,7 +65,8 @@ msr_s = m_func(syn,**m_a_options)
 # unperturbed misfit
 j = 0.5*(msr_s-msr_o)**2
 # unperturbed gradient
-grad = np.load('test/testdata/testsrc/step_0/grad/grad_all.npy')
+grad = np.load('test/testdata/testsrc/step_0/grad_archived/grad_all.npy')
+
 # left hand side of test 3: gradient * dq = change of misfit wrt q
 grad_dq = np.dot(grad,d_q)
 
@@ -76,6 +83,7 @@ for step in steps:
 	n.flush()
 	n.close()
 # run correlation
+
 	os.system('noisi correlation test/testdata/testsrc 0')
 
 # evaluate misfit and add to list.
@@ -98,5 +106,9 @@ for step in steps:
 plt.semilogy(steps,dcheck)
 plt.title("Check for gradient")
 plt.show()
+
+# clean up...
+os.system('rmdir test/testdata/testsrc/step_0/corr')
+os.system('rm -rf test/testdata/testsrc/wavefield_processed')
 
 

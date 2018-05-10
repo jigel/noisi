@@ -31,6 +31,7 @@ def assemble_ascent_dir(source_model,step,snr_min,n_min,save_all=False,
 # get the predefined weights
 	measr_config = json.load(open(os.path.join(source_config['source_path'],\
 		'measr_config.json')))
+	m_type = measr_config['mtype']
 	try:
 		var_weights = measr_config['weights']
 	except KeyError:
@@ -42,7 +43,7 @@ def assemble_ascent_dir(source_model,step,snr_min,n_min,save_all=False,
 	for ix_basis in range(n_basis):
 
 		msrfile = os.path.join(datadir,"{}.{}.measurement.csv".\
-			format(source_config['mtype'],ix_basis))
+			format(measr_config['mtype'],ix_basis))
 
 
 
@@ -110,7 +111,8 @@ def assemble_ascent_dir(source_model,step,snr_min,n_min,save_all=False,
 
 
 	# Skip if entry is nan: This is most likely due to no measurement taken because station distance too short	
-			if isnan(data.at[i,'obs']):
+			if (isnan(data.at[i,'obs']) and m_type 
+				in ['ln_energy_ratio','energy_diff']):
 				print("No measurement in dataset for:")
 				print(os.path.basename(kernelfile))
 				cnt_overlap += 1
@@ -137,12 +139,15 @@ def assemble_ascent_dir(source_model,step,snr_min,n_min,save_all=False,
 	# always assuming L2 norm here!
 		
 			else:
+
 				if kernel.shape[-1] == 1:
-					kernel *= (data.at[i,'syn'] - data.at[i,'obs'])
+					if m_type in ['ln_energy_ratio','energy_diff']:
+						kernel *= (data.at[i,'syn'] - data.at[i,'obs'])
 					kernel = kernel[:,0]
 				elif kernel.shape[-1] == 2:
-					kernel[:,0] *= (data.at[i,'syn'] - data.at[i,'obs'])
-					kernel[:,1] *= (data.at[i,'syn_a'] - data.at[i,'obs_a'])
+					if m_type in ['ln_energy_ratio','energy_diff']:
+						kernel[:,0] *= (data.at[i,'syn'] - data.at[i,'obs'])
+						kernel[:,1] *= (data.at[i,'syn_a'] - data.at[i,'obs_a'])
 					kernel = kernel[:,0] + kernel[:,1]
 				cnt_success += 1 # yuhu
 
