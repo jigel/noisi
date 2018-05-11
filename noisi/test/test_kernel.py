@@ -6,6 +6,7 @@ def test_kernel():
     if os.path.exists('test/testdata/testsrc/step_0/adjt'):
         os.system('rm -rf test/testdata/testsrc/step_0/adjt/')
     os.mkdir('test/testdata/testsrc/step_0/adjt')
+    os.mkdir('test/testdata/testsrc/step_0/kern')
     os.system('cp test/testdata/testsrc/step_0/adjt_archived/*.sac \
     test/testdata/testsrc/step_0/adjt/')
     os.system('cp -r test/testdata/testsrc/wavefield_processed_archived\
@@ -21,6 +22,6 @@ def test_kernel():
     assert ((k1-k2)/k1 * 100).sum() < 1.e-09
 
     # remove stuff
-    os.system('rm test/testdata/testsrc/step_0/adjt/*')
-    os.system('rm test/testdata/testsrc/step_0/kern/*')
+    os.system('rm -rf test/testdata/testsrc/step_0/adjt/')
+    os.system('rm -rf test/testdata/testsrc/step_0/kern/')
     os.system('rm -rf test/testdata/testsrc/wavefield_processed')

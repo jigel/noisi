@@ -4,6 +4,7 @@
     "g_speed": 3300.0,
     "ignore_network": false,
     "mtype": "ln_energy_ratio",
+    "taper_perc":0.05,
     "window_params_causal": true,
     "window_params_hw": 20,
     "window_params_sep_noise": 0.0,

@@ -40,7 +40,7 @@ def get_station_info(stats):
 
 
 def measurement(source_config,mtype,step,ignore_network,
-    bandpass,step_test,**options):
+    bandpass,step_test,taper_perc,**options):
     
     """
     Get measurements on noise correlation data and synthetics. 
@@ -73,7 +73,7 @@ def measurement(source_config,mtype,step,ignore_network,
 
     _options_ac = copy.deepcopy(options)
     _options_ac['window_params']['causal_side'] = not(options['window_params']['causal_side'])
-
+    
     # ToDo
     if mtype == 'inst_phase':
          _opt_inst = copy.deepcopy(options)
@@ -234,6 +234,7 @@ def run_measurement(source_configfile,measr_configfile,
     step_n = 'step_{}'.format(int(step))
     step_dir = os.path.join(source_config['source_path'],
     step_n)
+    taper_perc = measr_config['taper_perc']
 
     window_params                   =    {}
     window_params['hw']             =    measr_config['window_params_hw']
@@ -284,7 +285,7 @@ def run_measurement(source_configfile,measr_configfile,
 
         window_params['hw'] = hws[i]
         ms = measurement(source_config,mtype,step,ignore_network,bandpass=bandpass[i],
-        step_test=step_test,g_speed=g_speed,window_params=window_params)
+        step_test=step_test,taper_perc=taper_perc,g_speed=g_speed,window_params=window_params)
 
         filename = '{}.{}.measurement.csv'.format(mtype,i)
         ms.to_csv(os.path.join(step_dir,filename),index=None)

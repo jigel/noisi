@@ -4,7 +4,7 @@ from obspy import read
 def test_forward():
 
 	srcdir = os.path.join('test','testdata','testsrc')
-
+	os.mkdir('test/testdata/testsrc/step_0/corr/')
 	# copy the preprocessed wavefields
 	os.system('mkdir '+os.path.join(srcdir,'wavefield_processed'))
 	os.system('cp test/testdata/testsrc/step_0/starting_model_archived.h5\
@@ -12,7 +12,7 @@ def test_forward():
 	os.system('cp test/testdata/testsrc/wavefield_processed_archived/*.h5 \
 		test/testdata/testsrc/wavefield_processed')
         
-	os.mkdir('test/testdata/testsrc/step_0/corr/')
+	
 	# run forward model
 	os.system('noisi correlation %s 0' %srcdir)
 
@@ -26,5 +26,5 @@ def test_forward():
 
 	# remove the resulting data and the preprocessed wavefields
 	os.system('rm -rf test/testdata/testsrc/wavefield_processed/')
-	os.system('rm test/testdata/testsrc/step_0/corr/*')
+	os.system('rm -rf test/testdata/testsrc/step_0/corr/')
 	os.system('rm test/testdata/testsrc/step_0/starting_model.h5')

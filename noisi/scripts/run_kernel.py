@@ -11,7 +11,7 @@ from scipy.signal.signaltools import fftconvolve
 from scipy.fftpack import next_fast_len
 from obspy import Trace, read, Stream
 from noisi import NoiseSource, WaveField
-from noisi.util import geo, natural_keys
+from noisi.util import geo#, natural_keys
 from obspy.signal.invsim import cosine_taper
 from noisi.util import filter
 from scipy.signal import sosfilt
@@ -170,7 +170,10 @@ def g1g2_kern(wf1str,wf2str,kernel,adjt,
             filtcnt = len(bandpass)    
     
     ntime, n, n_corr, Fs = get_ns(wf1str,source_conf,insta)
-    taper = cosine_taper(ntime,p=0.05)
+    # use a one-sided taper: The seismogram probably has a non-zero end, 
+    # being cut off whereever the solver stopped running.
+    taper = cosine_taper(ntime,p=0.01)
+    taper[0:ntime//2] = 1.0
 
     
 ########################################################################
@@ -346,8 +349,15 @@ def run_kern(source_configfile,step,ignore_network=False):
     #ToDo: ugly.
     insta = json.load(open(os.path.join(source_config['project_path'],
         'config.json')))['instaseis']
-    
-    p = define_correlationpairs(source_config['project_path'])
+
+    auto_corr = False # default value
+    try:
+        auto_corr = source_config['get_auto_corr']
+    except KeyError:
+        pass
+
+    p = define_correlationpairs(source_config['project_path'],
+        auto_corr = auto_corr)
     if rank == 0:
         print('Nr all possible kernels %g ' %len(p))
     

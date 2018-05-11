@@ -11,7 +11,7 @@ from scipy.signal.signaltools import fftconvolve
 from scipy.fftpack import next_fast_len
 from obspy import Trace, read, Stream
 from noisi import NoiseSource, WaveField
-from noisi.util import geo, natural_keys
+from noisi.util import geo#, natural_keys
 from obspy.signal.invsim import cosine_taper
 from noisi.util import filter
 from scipy.signal import sosfilt
@@ -151,8 +151,11 @@ def g1g2_corr(wf1,wf2,corr_file,src,source_conf,insta):
     with NoiseSource(src) as nsrc:
 
         ntime, n, n_corr, Fs = get_ns(wf1,source_conf,insta)
-        
-        taper = cosine_taper(ntime,p=0.05)
+
+    # use a one-sided taper: The seismogram probably has a non-zero end, 
+    # being cut off whereever the solver stopped running.
+        taper = cosine_taper(ntime,p=0.01)
+        taper[0:ntime//2] = 1.0
         ntraces = nsrc.src_loc[0].shape[0]
 
         correlation = np.zeros(n_corr)

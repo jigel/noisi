@@ -3,8 +3,10 @@ from obspy import read
 
 def test_adjoint():
 	# copy the correlation
+	os.mkdir('test/testdata/testsrc/step_0/corr')
 	os.system('cp test/testdata/testsrc/step_0/corr_archived/*.sac \
 		test/testdata/testsrc/step_0/corr/')
+	os.mkdir('test/testdata/testsrc/step_0/adjt/')
 
 	# run forward model
 	os.system('noisi measurement test/testdata/testsrc/ 0')

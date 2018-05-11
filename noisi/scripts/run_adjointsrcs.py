@@ -59,7 +59,8 @@ def get_essential_sacmeta(sac):
 
 
 
-def adjointsrcs(source_config,mtype,step,ignore_network,bandpass,**options):
+def adjointsrcs(source_config,mtype,step,ignore_network,bandpass,
+    taper_perc,**options):
 
     """
     Get 'adjoint source' from noise correlation data and synthetics.
@@ -88,6 +89,7 @@ def adjointsrcs(source_config,mtype,step,ignore_network,bandpass,**options):
     #i = 0
     hws = options['window_params']['hw'][:]
     g_speed = options['g_speed'][:]
+
 
     with click.progressbar(files,label='Determining adjoint sources...') as bar:
 
@@ -149,9 +151,9 @@ def adjointsrcs(source_config,mtype,step,ignore_network,bandpass,**options):
 
 
                 bp = bandpass[j]
-                tr_o_filt.taper(0.1)
-                tr_s_filt.taper(0.1)
-                tr_t_filt.taper(0.1) # filtering artifacts will occur 
+                tr_o_filt.taper(taper_perc)
+                tr_s_filt.taper(taper_perc)
+                tr_t_filt.taper(taper_perc) # filtering artifacts will occur 
                 # right now.
 
                 if bp != None:
@@ -161,7 +163,7 @@ def adjointsrcs(source_config,mtype,step,ignore_network,bandpass,**options):
                         corners=bp[2],zerophase=True)
                     tr_t_filt.filter('bandpass',freqmin=bp[0],freqmax=bp[1],
                         corners=bp[2],zerophase=True)
-                    tr_t_filt.taper(0.1)
+                    tr_t_filt.taper(taper_perc)
 
 
                 if mtype == 'square_envelope':
@@ -211,6 +213,7 @@ def run_adjointsrcs(source_configfile,measr_configfile,step,ignore_network):
     g_speed = measr_config['g_speed']
     mtype = measr_config['mtype']
     bandpass = measr_config['bandpass']
+    taper_perc = measr_config['taper_perc']
 
     if bandpass == None:
         bandpass = [None]
@@ -238,5 +241,6 @@ def run_adjointsrcs(source_configfile,measr_configfile,step,ignore_network):
     window_params['wtype'] = measr_config['window_params_wtype']
     window_params['causal_side'] = measr_config['window_params_causal']
     window_params['plot'] = False 
-    adjointsrcs(source_config,mtype,step,ignore_network=ignore_network,g_speed=g_speed,
-        bandpass=bandpass,window_params=window_params)
+    adjointsrcs(source_config,mtype,step,ignore_network=ignore_network,
+        g_speed=g_speed,bandpass=bandpass,
+        taper_perc=taper_perc,window_params=window_params)

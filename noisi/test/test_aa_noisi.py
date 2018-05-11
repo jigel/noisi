@@ -16,15 +16,15 @@ test/testdata/testsrc/measr_config.json')
     os.system('rm -rf test/testdata/testsrc/wavefield_processed/')
     
     os.system("rm -rf test/testdata/testsrc/step_0/corr")
-    os.mkdir("test/testdata/testsrc/step_0/corr")
+    #os.mkdir("test/testdata/testsrc/step_0/corr")
 
     os.system("rm -rf test/testdata/testsrc/step_0/adjt")
-    os.mkdir("test/testdata/testsrc/step_0/adjt")
+    #os.mkdir("test/testdata/testsrc/step_0/adjt")
 
     os.system("rm -rf test/testdata/testsrc/step_0/kern")
-    os.mkdir("test/testdata/testsrc/step_0/kern")
+    #os.mkdir("test/testdata/testsrc/step_0/kern")
 
     os.system("rm -rf test/testdata/testsrc/step_0/grad")
-    os.mkdir("test/testdata/testsrc/step_0/grad")
+    #os.mkdir("test/testdata/testsrc/step_0/grad")
 
 
