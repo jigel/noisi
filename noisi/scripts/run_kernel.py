@@ -14,7 +14,10 @@ from noisi import NoiseSource, WaveField
 from noisi.util import geo#, natural_keys
 from obspy.signal.invsim import cosine_taper
 from noisi.util import filter
-from scipy.signal import sosfilt
+try:
+    from scipy.signal import sosfilt
+except ImportError:
+    from obspy.signal._sosfilt import _sosfilt as sosfilt
 from noisi.util.windows import my_centered, zero_buddy
 from noisi.util.geo import geograph_to_geocent
 from noisi.util.corr_pairs import *

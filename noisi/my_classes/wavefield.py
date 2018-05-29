@@ -8,7 +8,10 @@ try:
 except ImportError:
     print('Plotting unavailable, is basemap installed?')
 from noisi.util import filter
-from scipy.signal import sosfilt
+try:
+    from scipy.signal import sosfilt
+except ImportError:
+    from obspy.signal._sosfilt import _sosfilt as sosfilt
 from scipy.fftpack import next_fast_len
 #from scipy.signal.signaltools import _next_regular
 from obspy.signal.invsim import cosine_taper

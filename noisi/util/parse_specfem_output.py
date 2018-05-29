@@ -24,7 +24,11 @@ import os
 import sys
 from warnings import warn
 from scipy.signal import cheb2ord, cheby2
-from scipy.signal import zpk2sos, sosfilt
+try:
+    from scipy.signal import zpk2sos, sosfilt
+except ImportError:
+    from obspy.signal._sosfilt import _sosfilt as sosfilt
+    from obspy.signal._sosfilt import _zpk2sos as zpk2sos
 #ToDo: build in a more stable filter (?); cut off the first x seconds before zero time; take derivative! 
 # ToDo: Write directly to hdf5? (The nice thing about unformatted bin is convenient concatenating)
 
