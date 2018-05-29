@@ -8,7 +8,10 @@ import click
 from glob import glob
 from math import ceil
 from scipy.signal.signaltools import fftconvolve
-from scipy.fftpack import next_fast_len
+try:
+    from scipy.fftpack import next_fast_len
+except ImportError:
+    from noisi.util.scipy_next_fast_len import next_fast_len
 from obspy import Trace, read, Stream
 from noisi import NoiseSource, WaveField
 from noisi.util import geo#, natural_keys

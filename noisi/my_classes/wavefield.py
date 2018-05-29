@@ -12,7 +12,10 @@ try:
     from scipy.signal import sosfilt
 except ImportError:
     from obspy.signal._sosfilt import _sosfilt as sosfilt
-from scipy.fftpack import next_fast_len
+try:
+    from scipy.fftpack import next_fast_len
+except ImportError:
+    from noisi.util.scipy_next_fast_len import next_fast_len
 #from scipy.signal.signaltools import _next_regular
 from obspy.signal.invsim import cosine_taper
 from obspy.signal.filter import integer_decimation

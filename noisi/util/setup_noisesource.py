@@ -11,7 +11,10 @@ from noisi import WaveField
 import json
 from glob import glob
 import os
-from scipy.fftpack import next_fast_len
+try:
+    from scipy.fftpack import next_fast_len
+except ImportError:
+    from noisi.util.scipy_next_fast_len import next_fast_len
 from scipy.signal import hann, iirfilter, freqz_zpk
 
 ##################################################################
