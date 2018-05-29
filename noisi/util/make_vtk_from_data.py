@@ -5,9 +5,13 @@ import pyvtk
 from pyvtk import PointData, Scalars
 import os
 import sys
+import h5py
 
-infile = sys.argv[1] 
-sourcegrid = sys.argv[2]
+infile = sys.argv[1]
+try: 
+    sourcegrid = sys.argv[2]
+except:
+    pass
 outfilename = os.path.splitext(infile)[0]
 
 #============================================================
@@ -15,9 +19,14 @@ outfilename = os.path.splitext(infile)[0]
 #============================================================
 
 print('Read data ...')
+try:
+    m = np.load(infile)
+    grd = np.load(sourcegrid)
+except:
+    n = h5py.File(infile,'r')
+    m = n['distr_basis'][:]
+    grd = n['coordinates'][:]
 
-m = np.load(infile)
-grd = np.load(sourcegrid)
 lat = grd[1]
 lon = grd[0]
 
