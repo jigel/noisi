@@ -5,7 +5,10 @@ import json
 from glob import glob
 from math import isnan
 from noisi import NoiseSource
-from noisi.util.plot import plot_grid
+try:	
+	from noisi.util.plot import plot_grid
+except:
+	pass
 from warnings import warn
 
 def assemble_ascent_dir(source_model,step,snr_min,n_min,save_all=False,

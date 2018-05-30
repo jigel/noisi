@@ -2,7 +2,10 @@ import numpy as np
 from scipy.signal import hilbert
 from math import pi, log
 from noisi.util.windows import get_window,my_centered
-from noisi.util.plot import plot_window, plot_envelope
+try:
+    from noisi.util.plot import plot_window, plot_envelope
+except:
+    pass
 
 
 def square_envelope(correlation,g_speed,window_params):
