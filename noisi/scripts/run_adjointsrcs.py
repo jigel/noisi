@@ -166,7 +166,7 @@ def adjointsrcs(source_config,mtype,step,ignore_network,bandpass,
                     tr_t_filt.taper(taper_perc)
 
 
-                if mtype == 'square_envelope':
+                if mtype in ['square_envelope','envelope']:
                     options['taper_filter'] = tr_t_filt
                 # Get the adjoint source
                 data, success = func(tr_o_filt,tr_s_filt,**options)

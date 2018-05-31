@@ -63,6 +63,20 @@ def square_envelope(corr_o,corr_s,g_speed,
     return adjt_src, success
 
 
+def envelope(corr_o,corr_s,g_speed,
+    window_params,taper_filter):
+    success = False
+    env_s = np.sqrt(corr_s.data**2 + np.imag(hilbert(corr_s.data))**2)
+    env_o = np.sqrt(corr_o.data**2 + np.imag(hilbert(corr_o.data))**2)
+    d_env_1 = corr_s.data 
+    d_env_2 =   np.imag(hilbert(taper_filter.data)) * np.imag(hilbert(corr_s.data))
+    #d_env = d_env_1 + d_env_2 
+    u1 = (env_s - env_o) * 1./ np.sqrt(env_s) * d_env_1 #* corr_o.stats.delta
+    u2 = (env_s - env_o) * 1./ np.sqrt(env_s) * d_env_2
+    adjt_src = [u1,u2]
+    success = True
+
+    return adjt_src, success
 
 
 
@@ -102,6 +116,8 @@ def get_adj_func(mtype):
 
     elif mtype == 'square_envelope':
         func = square_envelope
+    elif mtype == 'envelope':
+        func = envelope
 
     else:
         msg = 'Measurement functional %s not currently implemented.' %mtype

@@ -28,6 +28,10 @@ import matplotlib.pyplot as plt
 import instaseis
 
 
+from noisi.scripts.kernel import g1g2_kern
+from noisi.scripts.kernel import g1g2_kern_wftype
+
+
 #ToDo: put in the possibility to run on mixed channel pairs
 def paths_input(cp,source_conf,step,ignore_network,instaseis):
     
@@ -156,6 +160,7 @@ def get_ns(wf1,source_conf,insta):
     return nt,n,n_corr,Fs
         
     
+
 
 
 def g1g2_kern(wf1str,wf2str,kernel,adjt,
@@ -334,7 +339,187 @@ def g1g2_kern(wf1str,wf2str,kernel,adjt,
     return()
 
        
+def g1g2_kern_wftype(wf1str,wf2str,kernel,adjt,
+    src,source_conf,insta):
+        
+    measr_conf = json.load(open(os.path.join(source_conf['source_path'],
+        'measr_config.json')))
+
+
+    bandpass = measr_conf['bandpass']
+
+    if bandpass == None:
+        filtcnt = 1
+    elif type(bandpass) == list:
+        if type(bandpass[0]) != list:
+            filtcnt = 1
+        else:
+            filtcnt = len(bandpass)    
+    
+    ntime, n, n_corr, Fs = get_ns(wf1str,source_conf,insta)
+    acausal_start_ind = int((n+1)/2 -(n_corr-1)/2)
+    print(n)
+    print(acausal_start_ind)
+    # use a one-sided taper: The seismogram probably has a non-zero end, 
+    # being cut off whereever the solver stopped running.
+    taper = cosine_taper(ntime,p=0.01)
+    taper[0:ntime//2] = 1.0
+    
+    
+########################################################################
+# Prepare filenames and adjoint sources
+########################################################################   
+
+    filenames = []
+    adjt_srcs = []
+    adjt_srcs_cnt = 0
+
+    for ix_f in range(filtcnt):
+    
+        filename = kernel+'.{}.npy'.format(ix_f)
+        print(filename)
+        filenames.append(filename)
+        #if os.path.exists(filename):
+         #   continue
+
+        f = Stream()
+        for a in adjt:
+            adjtfile = a + '*.{}.sac'.format(ix_f)
+            adjtfile = glob(adjtfile)
+            try:    
+                f += read(adjtfile[0])[0]
+                f[-1].data = my_centered(f[-1].data,n_corr)
+                adjt_srcs_cnt += 1
+            except IndexError:
+                print('No adjoint source found: {}\n'.format(a))
+                break
+
+        adjt_srcs.append(f)
+        
+
+    if adjt_srcs_cnt == 0:
+        return()
+
+########################################################################
+# Compute the kernels
+######################################################################## 
+
+
+    with NoiseSource(src) as nsrc:
+
+        
+        ntraces = nsrc.src_loc[0].shape[0]
+
+
+        if insta:
+            # open database
+            dbpath = json.load(open(os.path.join(source_conf['project_path'],
+                'config.json')))['wavefield_path']
+            # open and determine Fs, nt
+            db = instaseis.open_db(dbpath)
+            # get receiver locations
+            lat1 = geograph_to_geocent(float(wf1[2]))
+            lon1 = float(wf1[3])
+            rec1 = instaseis.Receiver(latitude=lat1,longitude=lon1)
+            lat2 = geograph_to_geocent(float(wf2[2]))
+            lon2 = float(wf2[3])
+            rec2 = instaseis.Receiver(latitude=lat2,longitude=lon2)
+
+        else:
+            wf1 = WaveField(wf1str)
+            wf2 = WaveField(wf2str)
+
+        kern = np.zeros((filtcnt,ntraces,len(adjt)))
+        
+        ########################################################################
+        # Loop over locations
+        ########################################################################            
+        for i in range(ntraces):
+
+            # noise source spectrum at this location
+            # For the kernel, this contains only the basis functions of the 
+            # spectrum without weights; might still be location-dependent, 
+            # for example when constraining sensivity to ocean
+            S = nsrc.get_spect(i)
             
+
+            if S.sum() == 0.: 
+            # The spectrum has 0 phase so only checking absolute value here
+                continue
+
+            ####################################################################
+            # Get synthetics
+            ####################################################################                
+            if insta:
+            # get source locations
+                lat_src = geograph_to_geocent(nsrc.src_loc[1,i])
+                lon_src = nsrc.src_loc[0,i]
+                fsrc = instaseis.ForceSource(latitude=lat_src,
+                    longitude=lon_src,f_r=1.e12)
+                
+                s1 = np.ascontiguousarray(db.get_seismograms(source=fsrc,
+                    receiver=rec1,
+                    dt=1./source_conf['sampling_rate'])[0].data*taper)
+                s2 = np.ascontiguousarray(db.get_seismograms(source=fsrc,
+                    receiver=rec2,
+                    dt=1./source_conf['sampling_rate'])[0].data*taper)
+                
+
+            else:
+                s1 = np.ascontiguousarray(wf1.data[i,:]*taper)
+                s2 = np.ascontiguousarray(wf2.data[i,:]*taper)
+            
+            
+
+            spec1 = np.fft.rfft(s1,n)
+            spec2 = np.fft.rfft(s2,n)
+
+            
+          
+            g1g2_tr = np.multiply(np.conjugate(spec1),spec2)
+            c = np.multiply(g1g2_tr,S)
+
+        #######################################################################
+        # Get Kernel at that location
+        #######################################################################   
+            #corr_temp = my_centered(np.fft.ifftshift(np.fft.irfft(c,n)),n_corr)
+            
+        #######################################################################
+        # Apply the 'adjoint source'
+        #######################################################################
+            for ix_f in range(filtcnt):
+                f = adjt_srcs[ix_f]
+                
+
+                if f==None:
+                    continue
+                for j in range(len(f)):
+
+                    f_temp = np.zeros(n)
+                    
+                    f_temp[acausal_start_ind:acausal_start_ind+n_corr] =\
+                     f[j].data[::-1]
+
+                    f_temp_fft = np.fft.rfft(f_temp,n)
+
+                    delta = f[j].stats.sampling_rate * 2 * np.pi
+                    kern[ix_f,i,j] = np.dot(c,f_temp_fft) * delta
+                    
+           
+            
+            if i%50000 == 0:
+                print("Finished {} source locations.".format(i))
+
+
+    if not insta:
+        wf1.file.close()
+        wf2.file.close()
+
+    for ix_f in range(filtcnt):
+        filename = filenames[ix_f]
+        if kern[ix_f,:,:].sum() != 0:
+            np.save(filename,kern[ix_f,:,:]) 
+    return()
 
 
 def run_kern(source_configfile,step,ignore_network=False):
@@ -351,6 +536,9 @@ def run_kern(source_configfile,step,ignore_network=False):
 
     #ToDo think about that configuration decorator
     source_config=json.load(open(source_configfile))
+    measr_config = json.load(open(os.path.join(source_config['source_path'],
+        'measr_config.json')))
+
     obs_only = source_config['model_observed_only']
     #ToDo: ugly.
     insta = json.load(open(os.path.join(source_config['project_path'],
@@ -404,6 +592,12 @@ def run_kern(source_configfile,step,ignore_network=False):
 \nCheck if wavefield .h5 file and base_model file are available.' %cp)
             continue
 
-        kern = g1g2_kern(wf1,wf2,kernel,adjt,src,source_config,insta=insta)
+
+        if measr_config['mtype'] in ['ln_energy_ratio','energy_diff',
+        'windowed_waveform']:
+            kern = g1g2_kern(wf1,wf2,kernel,adjt,src,source_config,insta=insta)
+        elif measr_config['mtype'] in ['envelope']:
+            kern = g1g2_kern_wftype(wf1,wf2,kernel,adjt,
+                src,source_config,insta=insta)
     return()
 

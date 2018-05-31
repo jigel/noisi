@@ -18,6 +18,15 @@ def square_envelope(correlation,g_speed,window_params):
     return square_envelope
 
 
+def envelope(correlation,g_speed,window_params):
+    
+    envelope = np.sqrt((correlation.data**2 +
+    np.imag(hilbert(correlation.data))**2))
+    if window_params['plot']:
+        plot_envelope(correlation,envelope)
+    
+    return envelope
+
 def windowed_envelope(correlation,plot=False):
     pass
 
@@ -116,6 +125,8 @@ def get_measure_func(mtype):
         func = energy
     elif mtype == 'square_envelope':
         func = square_envelope
+    elif mtype == 'envelope':
+        func = envelope
     elif mtype == 'windowed_waveform':
         func = windowed_waveform
     elif mtype == 'inst_phase':
