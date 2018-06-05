@@ -130,9 +130,7 @@ def adjointsrcs(source_config,mtype,step,ignore_network,bandpass,
                 msg = 'Sampling rates of data and synthetics must match.'
                 raise ValueError(msg)
 
-            # Waveforms must have same nr of samples.
-            tr_s.data = my_centered(tr_s.data,tr_o.stats.npts)
-
+            
             func = af.get_adj_func(mtype)
 
             # ugly...sorry
@@ -145,30 +143,28 @@ def adjointsrcs(source_config,mtype,step,ignore_network,bandpass,
 
                 tr_o_filt = tr_o.copy()
                 tr_s_filt = tr_s.copy()
-                # trace with the taper and filter for envelope misfit:
-                tr_t_filt = tr_s.copy()
-                tr_t_filt.data = np.ones(tr_t_filt.stats.npts)
-
+      
+                # Waveforms must have same nr of samples.
+                tr_s_filt.data = my_centered(tr_s_filt.data,tr_o.stats.npts)
 
                 bp = bandpass[j]
-                tr_o_filt.taper(taper_perc)
-                tr_s_filt.taper(taper_perc)
-                tr_t_filt.taper(taper_perc) # filtering artifacts will occur 
-                # right now.
-
                 if bp != None:
+                    tr_o_filt.taper(taper_perc)
                     tr_o_filt.filter('bandpass',freqmin=bp[0],freqmax=bp[1],
                         corners=bp[2],zerophase=True)
+                    tr_s_filt.taper(taper_perc)
                     tr_s_filt.filter('bandpass',freqmin=bp[0],freqmax=bp[1],
                         corners=bp[2],zerophase=True)
-                    tr_t_filt.filter('bandpass',freqmin=bp[0],freqmax=bp[1],
-                        corners=bp[2],zerophase=True)
-                    tr_t_filt.taper(taper_perc)
+                    
 
 
-                if mtype in ['square_envelope','envelope']:
-                    options['taper_filter'] = tr_t_filt
-                # Get the adjoint source
+
+                #======================================================
+                # Weight observed stack by nstack
+                #======================================================
+
+                tr_o_filt.data /= tr_o_filt.stats.sac.user0
+                
                 data, success = func(tr_o_filt,tr_s_filt,**options)
                 if not success:
                     continue

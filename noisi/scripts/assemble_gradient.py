@@ -144,22 +144,26 @@ def assemble_ascent_dir(source_model,step,snr_min,n_min,save_all=False,
 			else:
 
 				if kernel.shape[-1] == 1:
+
+					kernel = kernel[:,0]
+
 					if m_type in ['ln_energy_ratio','energy_diff']:
 						kernel *= (data.at[i,'syn'] - data.at[i,'obs'])
-					kernel = kernel[:,0]
+					
+
 				elif kernel.shape[-1] == 2:
 					if m_type in ['ln_energy_ratio','energy_diff']:
 						kernel[:,0] *= (data.at[i,'syn'] - data.at[i,'obs'])
 						kernel[:,1] *= (data.at[i,'syn_a'] - data.at[i,'obs_a'])
 						kernel = kernel[:,0] + kernel[:,1]
-					if m_type in ['envelope']:
-						kernel = kernel[:,0] + kernel[:,1]
+					#if m_type in ['envelope']:
+				#		kernel = kernel[:,0] + kernel[:,1]
 				cnt_success += 1 # yuhu
 
 			
 	
 			
-		# co	llect
+		# collect
 			gradient[ix_basis,:] += kernel * var_weights[ix_basis]
 			del kernel
 

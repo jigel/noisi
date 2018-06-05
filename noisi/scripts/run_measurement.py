@@ -123,20 +123,6 @@ def measurement(source_config,mtype,step,ignore_network,
                 continue
 
             #======================================================
-            # Filtering
-            #======================================================
-            print(bandpass)
-            if bandpass != None:
-                tr_o.taper(0.05)
-                tr_o.filter('bandpass',freqmin=bandpass[0],
-                    freqmax=bandpass[1],corners=bandpass[2],
-                    zerophase=True)
-                tr_s.taper(0.05)
-                tr_s.filter('bandpass',freqmin=bandpass[0],
-                    freqmax=bandpass[1],corners=bandpass[2],
-                    zerophase=True)
-
-            #======================================================
             # Assigning stats to synthetics, cutting them to right length
             #======================================================
 
@@ -144,6 +130,22 @@ def measurement(source_config,mtype,step,ignore_network,
             tr_s.data = my_centered(tr_s.data,tr_o.stats.npts)
             # Get all the necessary information
             info = get_station_info(tr_o.stats)
+
+            #======================================================
+            # Filtering
+            #======================================================
+            print(bandpass)
+            if bandpass != None:
+                tr_o.taper(taper_perc)
+                tr_o.filter('bandpass',freqmin=bandpass[0],
+                    freqmax=bandpass[1],corners=bandpass[2],
+                    zerophase=True)
+                tr_s.taper(taper_perc)
+                tr_s.filter('bandpass',freqmin=bandpass[0],
+                    freqmax=bandpass[1],corners=bandpass[2],
+                    zerophase=True)
+
+
 
             #======================================================
             # Weight observed stack by nstack
@@ -181,10 +183,10 @@ def measurement(source_config,mtype,step,ignore_network,
                     continue
 
             # timeseries-like measurements:
-            if mtype in ['square_envelope','envelope','windowed_envelope',
+            if mtype in ['square_envelope',
             'waveform','windowed_waveform']:
-                #l2_so = np.trapz(0.5*(msr_s-msr_o)**2) * tr_o.stats.delta
-                l2_so = 0.5*np.dot((msr_s-msr_o),np.transpose(msr_s-msr_o))
+                # l2_so = np.trapz(0.5*(msr_s-msr_o)**2) * tr_o.stats.delta
+                l2_so = 0.5 * np.sum(np.power((msr_s-msr_o),2))#0.5*np.dot((msr_s-msr_o),(msr_s-msr_o))
                 snr = snratio(tr_o,**options)
                 snr_a = snratio(tr_o,**_options_ac)
                 info.extend([np.nan,np.nan,np.nan,np.nan,
@@ -198,7 +200,7 @@ def measurement(source_config,mtype,step,ignore_network,
                     msr_a = msr_o[1]
                     snr = snratio(tr_o,**options)
                     snr_a = snratio(tr_o,**_options_ac)
-                    l2 = l2_so.sum()/2.
+                    l2 = l2_so.sum()
                     info.extend([msr_s[0],msr_s[1],msr,msr_a,
                     l2,snr,snr_a,tr_o.stats.sac.user0])
                 elif mtype == 'ln_energy_ratio':

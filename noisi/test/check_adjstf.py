@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from obspy import Trace
 from noisi.scripts import measurements as rm
 from noisi.scripts import adjnt_functs as af
-
+from scipy.signal import hilbert
 
 # more or less copying Korbi's test with my measurement and adjoint source 
 
@@ -13,7 +13,7 @@ from noisi.scripts import adjnt_functs as af
 # *********************************************
 #scale = 1e20 #ununsed
 steps = np.arange(-14, 0, 0.1)
-mtype = 'ln_energy_ratio'#'ln_energy_ratio'
+mtype = 'square_envelope'#'ln_energy_ratio'
 sacdict = {'dist':1e6}
 g_speed = 3700.
 window_params                   =    {}
@@ -50,7 +50,7 @@ c_syn = Trace(data=c_ini)
 c_syn.stats.sampling_rate = 1.0
 c_syn.stats.sac = sacdict
 
-
+#tr_taper_filter = Trace(data=np.ones(c_obs.stats.npts))
 
 # obtain a measurement and an adjoint source time function
 # for the unperturbed measurement
@@ -58,19 +58,35 @@ msr_o = m_func(c_obs,**m_a_options)
 msr_s = m_func(c_syn,**m_a_options)
 data, success = a_func(c_obs,c_syn,**m_a_options)
 
-if mtype == 'energy_diff':
-	data = data[0]
-	msr_s = msr_s[0]
-	msr_o = msr_o[0]
-data *= (msr_s-msr_o)
 
-j = 0.5*(msr_s-msr_o)**2
+if mtype == 'energy_diff':
+	data = data[0] + data[1]
+	msr_s = msr_s[0] + msr_s[1]
+	msr_o = msr_o[0] + msr_o [1]
+	data *= (msr_s-msr_o)
+
+elif mtype == 'ln_energy_ratio':
+	data *= (msr_s-msr_o)
+
+elif mtype == 'windowed_waveform':
+	pass
+#elif mtype == 'envelope':
+#	data = data[0] + data[1]
+
+if mtype in ['ln_energy_ratio','energy_diff']:
+	j = 0.5*(msr_s-msr_o)**2
+elif mtype in ['windowed_waveform','square_envelope','envelope']:
+	j = 0.5 * np.sum(np.power((msr_s-msr_o),2))
 
 # testing the test:
 # j,data = l2_simple(c_syn,c_obs)
 
 # left hand side of test 1: adjt source time function * du = change of misfit wrt u
 djdc = np.dot(data,d_c) 
+
+#if mtype in ['envelope','square_envelope']:
+#	djdc = np.dot(data[0],d_c)
+	#djdc += np.dot(data[1],d_c)
 
 # right hand side of test 1: Finite difference approx of misfit change for different steps
 
@@ -83,9 +99,11 @@ for step in steps:
 	d_ch.data = c_ini + 10. ** step * d_c
 	msr_sh = m_func(d_ch,**m_a_options)
 	if mtype == 'energy_diff':	
-		msr_sh = msr_sh[0]
+		msr_sh = msr_sh[0] + msr_sh[1]
 
 	jh = 0.5 * (msr_sh - msr_o)**2
+	if mtype in ['windowed_waveform','envelope','square_envelope']:
+		jh = 0.5 * np.sum(np.power((msr_sh-msr_o),2))
 	# testing the test:
 	# jh, dn = l2_simple(d_ch,c_obs)
 	djdch = (jh - j) / (10.**step) 

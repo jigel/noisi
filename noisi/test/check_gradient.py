@@ -12,7 +12,7 @@ import h5py
 # *********************************************
 # input:
 # *********************************************
-steps = np.arange(-8, 0.5, 0.1)
+steps = np.arange(-8, 0.5, 0.3)
 mtype = 'ln_energy_ratio' # only ln_energy_ratio can be used.
 g_speed = 3300.
 window_params                   =    {}
@@ -36,6 +36,12 @@ window_params['plot']           =    False
 os.mkdir('test/testdata/testsrc/step_0/corr')
 os.system('cp -R test/testdata/testsrc/wavefield_processed_archived \
 test/testdata/testsrc/wavefield_processed')
+os.system('cp test/testdata/config_archived.json \
+test/testdata/config.json')
+os.system('cp test/testdata/testsrc/measr_config_archived.json \
+	test/testdata/testsrc/measr_config.json')
+os.system('cp test/testdata/testsrc/source_config_archived.json \
+test/testdata/testsrc/source_config.json')
 
 
 m_a_options = {'g_speed':g_speed,'window_params':window_params}
@@ -77,7 +83,7 @@ for step in steps:
 	os.system('cp test/testdata/testsrc/step_0/starting_model_archived.h5 test/testdata/testsrc/step_0/starting_model.h5')
 
 	n = h5py.File('test/testdata/testsrc/step_0/starting_model.h5')
-	# ugly -- change array within the underlying hdf5
+	
 	n['distr_basis'][:] += 10.**step * d_q
 	
 	n.flush()
@@ -109,6 +115,10 @@ plt.show()
 
 # clean up...
 os.system('rmdir test/testdata/testsrc/step_0/corr')
+os.system('rm test/testdata/config.json')
+os.system('rm test/testdata/testsrc/source_config.json')
+os.system('rm test/testdata/testsrc/measr_config.json')
+
 os.system('rm -rf test/testdata/testsrc/wavefield_processed')
 
 

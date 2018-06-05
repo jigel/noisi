@@ -2,7 +2,8 @@ import numpy as np
 from math import pi
 #from noisi.scripts import measurements as rm
 from noisi.util import windows as wn
-from scipy.signal import hilbert, fftconvolve
+from scipy.signal import fftconvolve
+from scipy.signal import hilbert
 
 
 
@@ -38,8 +39,11 @@ def windowed_waveform(corr_o,corr_s,g_speed,window_params):
     window = wn.get_window(corr_o.stats,g_speed,window_params)
     win = window[0] + window[0][::-1]
     if window[2]:
-        u = np.multiply(win,corr_s.data)
-        adjt_src = u
+
+        u_s = np.multiply(win,corr_s.data)
+        u_o = np.multiply(win,corr_o.data)
+
+        adjt_src = np.multiply(win,(u_s-u_o))
         success = True
     else:
         adjt_src = win-win+np.nan
@@ -48,35 +52,21 @@ def windowed_waveform(corr_o,corr_s,g_speed,window_params):
 
 
 def square_envelope(corr_o,corr_s,g_speed,
-    window_params,taper_filter):
+    window_params):
     success = False
     env_s = corr_s.data**2 + np.imag(hilbert(corr_s.data))**2
     env_o = corr_o.data**2 + np.imag(hilbert(corr_o.data))**2
     d_env_1 =  2. * corr_s.data 
-    d_env_2 =  (2. * np.imag(hilbert(corr_s.data)) *
-        np.imag(hilbert(taper_filter.data)) )
-    d_env = d_env_1 #+ d_env_2 # Maybe the second term can be neglected!
-    adjt_src = (env_s - env_o) * d_env #* corr_o.stats.delta
-                
+    d_env_2 =  (2. * np.imag(hilbert(corr_s.data)))
+
+    u1 = (env_s - env_o) * d_env_1
+    u2 = np.imag(hilbert((env_s - env_o) * d_env_2))
+
+    adjt_src = u1 - u2
     
     success = True
     return adjt_src, success
 
-
-def envelope(corr_o,corr_s,g_speed,
-    window_params,taper_filter):
-    success = False
-    env_s = np.sqrt(corr_s.data**2 + np.imag(hilbert(corr_s.data))**2)
-    env_o = np.sqrt(corr_o.data**2 + np.imag(hilbert(corr_o.data))**2)
-    d_env_1 = corr_s.data 
-    d_env_2 =   np.imag(hilbert(taper_filter.data)) * np.imag(hilbert(corr_s.data))
-    #d_env = d_env_1 + d_env_2 
-    u1 = (env_s - env_o) * 1./ np.sqrt(env_s) * d_env_1 #* corr_o.stats.delta
-    u2 = (env_s - env_o) * 1./ np.sqrt(env_s) * d_env_2
-    adjt_src = [u1,u2]
-    success = True
-
-    return adjt_src, success
 
 
 
@@ -92,8 +82,8 @@ def energy(corr_o,corr_s,g_speed,window_params):
      #   win = window[0][::-1]
 
     if window[2]:
-        u1 = 2 * np.multiply(np.power(win,2),corr_s.data)
-        u2 = 2 * np.multiply(np.power(win[::-1],2),corr_s.data)
+        u1 = 2* np.multiply(np.power(win,2),corr_s.data)
+        u2 = 2* np.multiply(np.power(win[::-1],2),corr_s.data)
         adjt_src = [u1,u2]
         success = True
     else:
@@ -116,8 +106,6 @@ def get_adj_func(mtype):
 
     elif mtype == 'square_envelope':
         func = square_envelope
-    elif mtype == 'envelope':
-        func = envelope
 
     else:
         msg = 'Measurement functional %s not currently implemented.' %mtype
