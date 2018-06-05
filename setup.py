@@ -10,8 +10,8 @@ setup(
  seismic wavefields',
     #long_description =
     # url = 
-    author = 'ETH CSE group',
-    author_email  = 'lermert@student.ethz.ch',
+    author = 'L. Ermert, J. Igel, A. Fichtner',
+    author_email  = 'laura.ermert@earth.ox.ac.uk, jigel@student.ethz.ch',
     # license
     classifiers = [
         'Development Status :: 3 - Alpha',

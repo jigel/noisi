@@ -1,0 +1,21 @@
+{
+    "channel": "CHA",
+    "date_created": "2017.08.23",
+    "ktype": "td",
+    "max_lag": 160,
+    "model_observed_only": false,
+    "preprocess_decimation_factor": null,
+    "preprocess_do": true,
+    "preprocess_filter_kind": "bandpass",
+    "preprocess_filter_params": [
+        0.003,
+        0.3,
+        3,
+        true
+    ],
+    "preprocess_truncate_sec": null,
+    "project_name": "testdata",
+    "project_path": "../test/testdata/",
+    "source_name": "testsrc",
+    "source_path": "../test/testdata/testsrc"
+}

@@ -2,11 +2,20 @@ from __future__ import print_function
 import numpy as np
 import os
 import h5py
-from obspy import Trace
-from noisi.util import plot
+#from obspy import Trace
+try:
+    from noisi.util import plot
+except ImportError:
+    print('Plotting unavailable, is basemap installed?')
 from noisi.util import filter
-from scipy.signal import sosfilt
-from scipy.fftpack import next_fast_len
+try:
+    from scipy.signal import sosfilt
+except ImportError:
+    from obspy.signal._sosfilt import _sosfilt as sosfilt
+try:
+    from scipy.fftpack import next_fast_len
+except ImportError:
+    from noisi.util.scipy_next_fast_len import next_fast_len
 #from scipy.signal.signaltools import _next_regular
 from obspy.signal.invsim import cosine_taper
 from obspy.signal.filter import integer_decimation
@@ -208,28 +217,28 @@ class WaveField(object):
 
 
 
-    def space_integral(self,weights=None):
-        # ToDo: have this checked; including spatial sampling!
-        # ToDo: Figure out how to assign the metadata...buh
-        trace = Trace()
-        trace.stats.sampling_rate = self.stats['Fs']
+    # def space_integral(self,weights=None):
+    #     # ToDo: have this checked; including spatial sampling!
+    #     # ToDo: Figure out how to assign the metadata...buh
+    #     trace = Trace()
+    #     trace.stats.sampling_rate = self.stats['Fs']
         
-        # ToDo: Thinking about weights
-        if not self.complex:
-            if weights: 
-                trace.data = np.trapz(np.multiply(self.data[:],weights[:]),axis=0)
-            else:
-                trace.data = np.trapz(self.data[:],axis=0)
-        #oDo complex wavefield
-        else:
-            if weights: 
-                trace.data_i = np.trapz(np.multiply(self.data_i[:],weights[:]),axis=0)
-                trace.data_r = np.trapz(np.multiply(self.data_r[:],weights[:]),axis=0)
-            else:
-                trace.data_i = np.trapz(self.data_i[:],axis=0)
-                trace.data_r = np.trapz(self.data_r[:],axis=0)
+    #     # ToDo: Thinking about weights
+    #     if not self.complex:
+    #         if weights: 
+    #             trace.data = np.trapz(np.multiply(self.data[:],weights[:]),axis=0)
+    #         else:
+    #             trace.data = np.trapz(self.data[:],axis=0)
+    #     #oDo complex wavefield
+    #     else:
+    #         if weights: 
+    #             trace.data_i = np.trapz(np.multiply(self.data_i[:],weights[:]),axis=0)
+    #             trace.data_r = np.trapz(np.multiply(self.data_r[:],weights[:]),axis=0)
+    #         else:
+    #             trace.data_i = np.trapz(self.data_i[:],axis=0)
+    #             trace.data_r = np.trapz(self.data_r[:],axis=0)
             
-        return trace
+    #     return trace
             
     
     def get_snapshot(self,t,resolution=1):
@@ -253,6 +262,9 @@ class WaveField(object):
         if self.sourcegrid is None:
             msg = 'Must have a source grid to plot a snapshot.'
             raise ValueError(msg)
+        if not 'basemap' in locals():
+            msg = 'Plotting requires basemap.'
+            raise ImportError(msg)
         
         # ToDo: Replace all the hardcoded geographical boundary values!
         map_x = self.sourcegrid[0][0::resolution]

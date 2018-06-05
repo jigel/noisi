@@ -120,8 +120,10 @@ def plot_grid(map_x,map_y,map_z,stations=[],v=None,globe=False,
 
         m.scatter(mx[indx],my[indx],marker='o',c=colors[indx],s=sizes[indx])
 
-    if normalize:
-        cbar.set_ticks([-1.0,0.,1.0])
+    if normalize and v==1.:
+        cbar.set_ticks([-1.0,-0.5,0.,0.5,1.0])
+    elif normalize and v!=1.:
+        cbar.set_ticks([-v,-v/2.,0.,v/2.,v])
 
 
     if globe:

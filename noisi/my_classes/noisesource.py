@@ -3,7 +3,11 @@ import h5py
 
 from scipy.stats import linregress
 import os
-from noisi.util.plot import plot_grid
+try:
+    from noisi.util.plot import plot_grid
+except ImportError:
+    print('Plotting unavailable, is basemap installed?')
+
 
 
 class NoiseSource(object):

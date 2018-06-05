@@ -14,8 +14,11 @@
 
 import warnings
 from scipy.signal import iirfilter
-from scipy.signal import sosfilt
-from scipy.signal import zpk2sos
+try:
+    from scipy.signal import zpk2sos, sosfilt
+except ImportError:
+    from obspy.signal._sosfilt import _sosfilt as sosfilt
+    from obspy.signal._sosfilt import _zpk2sos as zpk2sos
 from scipy.signal import cheb2ord, cheby2
 
 """

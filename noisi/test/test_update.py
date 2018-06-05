@@ -3,6 +3,9 @@ from noisi import NoiseSource
 
 def test_update():
 	# copy data
+	os.mkdir('test/testdata/testsrc/step_0/corr')
+	os.mkdir('test/testdata/testsrc/step_0/grad')
+	
 	os.system('cp test/testdata/testsrc/step_0/corr_archived/NET.STA1..CHA--NET.STA2..CHA.sac \
 		test/testdata/testsrc/step_0/corr/NET.STA1..CHA--NET.STA2..CHA.sac')
 
@@ -26,8 +29,8 @@ def test_update():
 	
 	
 	# remove stuff
-	os.system('rm test/testdata/testsrc/step_0/grad/*')
-	os.system('rm test/testdata/testsrc/step_0/corr/*')
+	os.system('rm -rf test/testdata/testsrc/step_0/grad')
+	os.system('rm -rf test/testdata/testsrc/step_0/corr')
 	os.system('rm -rf test/testdata/testsrc/step_1')
 	os.system('rm test/testdata/testsrc/step_0/starting_model.h5')
 	os.system('rm test/testdata/testsrc/step_0/ln_energy_ratio.0.measurement.csv')

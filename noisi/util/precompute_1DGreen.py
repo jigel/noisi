@@ -50,7 +50,6 @@ ntraces = len(srcgrid[0])
 # In[3]:
 
 freq = np.fft.rfftfreq(2*int(npts),d=1.0/Fs)
-print freq.shape
 w = 2 * pi * freq
 g_fd = np.zeros(freq.shape,dtype=np.complex)
 
