@@ -9,6 +9,10 @@ except:
     pass
 # Try yet another: sort of Gaussian convolution, but determining the distance
 # in cartesian coordinates.
+    # initialize parallel comm
+comm = MPI.COMM_WORLD
+size = comm.Get_size()
+rank = comm.Get_rank()
 
 
 def get_distance(gridx,gridy,gridz,x,y,z):
@@ -114,31 +118,12 @@ def test_gauss_smoothing(sourcegrid,map):
     plot_grid(grd[0],grd[1],smooth_map)
 
 
-if __name__=='__main__':
+def smooth(inputfile,outputfile,coordfile,sigma,cap,thresh):
 
-    # initialize parallel comm
-    comm = MPI.COMM_WORLD
-    size = comm.Get_size()
-    rank = comm.Get_rank()
-
-    # pass in: input_file, output_file, coord_file, sigma
-    # open the files
-    inputfile = sys.argv[1]
-    outputfile = sys.argv[2]
-    coordfile = sys.argv[3]
-    
-
-    #sigma = float(sys.argv[4])
-    sigma = sys.argv[4].split(',')
     for ixs in range(len(sigma)):
         sigma[ixs] = float(sigma[ixs])
 
-    cap = float(sys.argv[5])
-    
-    try:
-        thresh = float(sys.argv[6])
-    except IndexError:
-        thresh = 1.e-12
+
 
     coords = np.load(coordfile)
     values = np.array(np.load(inputfile),ndmin=2)
@@ -161,5 +146,25 @@ if __name__=='__main__':
 
     if rank == 0:
         np.save(outputfile,smoothed_values)
+
+
+
+if __name__=='__main__':
+
+    # pass in: input_file, output_file, coord_file, sigma
+    # open the files
+    inputfile = sys.argv[1]
+    outputfile = sys.argv[2]
+    coordfile = sys.argv[3]
+    sigma = sys.argv[4].split(',')
+    cap = float(sys.argv[5])
+    
+    try:
+        thresh = float(sys.argv[6])
+    except IndexError:
+        thresh = 1.e-12
+
+    smooth(inputfile,outputfile,coordfile,sigma,cap,thresh)
+
 
     

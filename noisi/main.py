@@ -15,6 +15,7 @@ from noisi.scripts.run_kernel import run_kern
 from noisi.scripts.run_preprocessing import run_preprocessing
 from noisi.scripts.run_preprocessing_data import run_preprocess_data
 from noisi.scripts.assemble_gradient import assemble_ascent_dir
+from noisi.util.setup_new import setup_proj
 @click.group()
 def run():
     """
@@ -33,18 +34,7 @@ def setup_project(project_name):
         click.echo('Project exists already, must give it a new name.')
         exit()
     else:
-        os.makedirs(os.path.join(project_name))
-    from . import _ROOT
-    with io.open(os.path.join(_ROOT,'config','config.json'),'r+') as fh:
-        conf = json.loads(fh.read())
-        
-    conf['date_created'] = time.strftime("%Y.%m.%d")
-    conf['project_name'] = project_name
-    conf['project_path'] = os.path.abspath(project_name)
-    
-    with io.open(os.path.join(project_name,'config.json'),'w') as fh:
-        cf = json.dumps(conf,sort_keys=True, indent=4, separators=(",", ": "))
-        fh.write(cf)
+        setup_proj(project_name)
     
     click.secho("Copied default config.json to project directory, please edit.")
 
