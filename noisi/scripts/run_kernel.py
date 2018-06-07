@@ -8,18 +8,28 @@ import click
 from glob import glob
 from math import ceil
 from scipy.signal.signaltools import fftconvolve
-from scipy.fftpack import next_fast_len
+try:
+    from scipy.fftpack import next_fast_len, hilbert
+except ImportError:
+    from noisi.util.scipy_next_fast_len import next_fast_len
 from obspy import Trace, read, Stream
 from noisi import NoiseSource, WaveField
-from noisi.util import geo, natural_keys
+from noisi.util import geo#, natural_keys
 from obspy.signal.invsim import cosine_taper
 from noisi.util import filter
-from scipy.signal import sosfilt
+try:
+    from scipy.signal import sosfilt
+except ImportError:
+    from obspy.signal._sosfilt import _sosfilt as sosfilt
 from noisi.util.windows import my_centered, zero_buddy
 from noisi.util.geo import geograph_to_geocent
 from noisi.util.corr_pairs import *
 import matplotlib.pyplot as plt
 import instaseis
+
+
+from noisi.scripts.kernel import g1g2_kern
+from noisi.scripts.kernel import g1g2_kern_wftype
 
 
 #ToDo: put in the possibility to run on mixed channel pairs
@@ -70,7 +80,7 @@ def paths_input(cp,source_conf,step,ignore_network,instaseis):
                  'base_model.h5')
   
     # Adjoint source
-    if measr_conf['mtype'] == 'energy_diff':
+    if measr_conf['mtype'] in ['energy_diff','envelope']:
         adj_src_basicnames = [ os.path.join(source_conf['source_path'],
                  'step_'+str(step),
                  'adjt',"{}--{}.c".format(sta1,sta2)),
@@ -152,6 +162,7 @@ def get_ns(wf1,source_conf,insta):
     
 
 
+
 def g1g2_kern(wf1str,wf2str,kernel,adjt,
     src,source_conf,insta):
         
@@ -170,7 +181,10 @@ def g1g2_kern(wf1str,wf2str,kernel,adjt,
             filtcnt = len(bandpass)    
     
     ntime, n, n_corr, Fs = get_ns(wf1str,source_conf,insta)
-    taper = cosine_taper(ntime,p=0.05)
+    # use a one-sided taper: The seismogram probably has a non-zero end, 
+    # being cut off whereever the solver stopped running.
+    taper = cosine_taper(ntime,p=0.01)
+    taper[0:ntime//2] = 1.0
 
     
 ########################################################################
@@ -184,7 +198,6 @@ def g1g2_kern(wf1str,wf2str,kernel,adjt,
     for ix_f in range(filtcnt):
     
         filename = kernel+'.{}.npy'.format(ix_f)
-        print(filename)
         filenames.append(filename)
         #if os.path.exists(filename):
          #   continue
@@ -201,13 +214,9 @@ def g1g2_kern(wf1str,wf2str,kernel,adjt,
                 print('No adjoint source found: {}\n'.format(a))
                 break
 
-        if len(f) == len(adjt):
-            adjt_srcs.append(f)
-        else:
-            adjt_srcs.append(None)
-
-    if adjt_srcs_cnt == 0:
-        return()
+        adjt_srcs.append(f)
+        
+    
 
 ########################################################################
 # Compute the kernels
@@ -307,8 +316,20 @@ def g1g2_kern(wf1str,wf2str,kernel,adjt,
                     continue
                 for j in range(len(f)):
                     delta = f[j].stats.delta
+                    
                     kern[ix_f,i,j] = np.dot(corr_temp,f[j].data) * delta
-                    print(kern[ix_f,i,j])
+                    
+
+                    #elif measr_conf['mtype'] in ['envelope']:
+                    #    if j == 0:
+                    #        corr_temp_h = corr_temp
+                    #        print(corr_temp_h)
+                    #    if j == 1:
+                    #        corr_temp_h = hilbert(corr_temp)
+                    #        print(corr_temp_h)
+                    #    
+                    #    kern[ix_f,i,j] = np.dot(corr_temp,f[j].data) * delta
+                    
            
             
             if i%50000 == 0:
@@ -326,7 +347,7 @@ def g1g2_kern(wf1str,wf2str,kernel,adjt,
     return()
 
        
-            
+
 
 
 def run_kern(source_configfile,step,ignore_network=False):
@@ -343,12 +364,22 @@ def run_kern(source_configfile,step,ignore_network=False):
 
     #ToDo think about that configuration decorator
     source_config=json.load(open(source_configfile))
+    measr_config = json.load(open(os.path.join(source_config['source_path'],
+        'measr_config.json')))
+
     obs_only = source_config['model_observed_only']
     #ToDo: ugly.
     insta = json.load(open(os.path.join(source_config['project_path'],
         'config.json')))['instaseis']
-    
-    p = define_correlationpairs(source_config['project_path'])
+
+    auto_corr = False # default value
+    try:
+        auto_corr = source_config['get_auto_corr']
+    except KeyError:
+        pass
+
+    p = define_correlationpairs(source_config['project_path'],
+        auto_corr = auto_corr)
     if rank == 0:
         print('Nr all possible kernels %g ' %len(p))
     
@@ -389,6 +420,8 @@ def run_kern(source_configfile,step,ignore_network=False):
 \nCheck if wavefield .h5 file and base_model file are available.' %cp)
             continue
 
+
         kern = g1g2_kern(wf1,wf2,kernel,adjt,src,source_config,insta=insta)
+        
     return()
 

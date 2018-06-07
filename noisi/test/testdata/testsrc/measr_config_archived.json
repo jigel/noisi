@@ -1,0 +1,14 @@
+{
+    "bandpass": null, 
+    "date_created": "2017.08.23",
+    "g_speed": 3300.0,
+    "ignore_network": false,
+    "mtype": "ln_energy_ratio",
+    "taper_perc":0.05,
+    "window_params_causal": true,
+    "window_params_hw": 20,
+    "window_params_sep_noise": 0.0,
+    "window_params_win_overlap": false,
+    "window_params_wtype": "hann",
+    "window_plot_measurements": false 
+}

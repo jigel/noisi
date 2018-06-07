@@ -5,7 +5,6 @@ from math import log, pi
 import click
 import copy
 import json
-from scipy.signal import hilbert
 from glob import glob
 from obspy import read, Trace
 from obspy.geodetics import gps2dist_azimuth
@@ -41,7 +40,7 @@ def get_station_info(stats):
 
 
 def measurement(source_config,mtype,step,ignore_network,
-    bandpass,step_test,**options):
+    bandpass,step_test,taper_perc,**options):
     
     """
     Get measurements on noise correlation data and synthetics. 
@@ -74,7 +73,7 @@ def measurement(source_config,mtype,step,ignore_network,
 
     _options_ac = copy.deepcopy(options)
     _options_ac['window_params']['causal_side'] = not(options['window_params']['causal_side'])
-
+    
     # ToDo
     if mtype == 'inst_phase':
          _opt_inst = copy.deepcopy(options)
@@ -124,20 +123,6 @@ def measurement(source_config,mtype,step,ignore_network,
                 continue
 
             #======================================================
-            # Filtering
-            #======================================================
-            print(bandpass)
-            if bandpass != None:
-                tr_o.taper(0.05)
-                tr_o.filter('bandpass',freqmin=bandpass[0],
-                    freqmax=bandpass[1],corners=bandpass[2],
-                    zerophase=True)
-                tr_s.taper(0.05)
-                tr_s.filter('bandpass',freqmin=bandpass[0],
-                    freqmax=bandpass[1],corners=bandpass[2],
-                    zerophase=True)
-
-            #======================================================
             # Assigning stats to synthetics, cutting them to right length
             #======================================================
 
@@ -145,6 +130,22 @@ def measurement(source_config,mtype,step,ignore_network,
             tr_s.data = my_centered(tr_s.data,tr_o.stats.npts)
             # Get all the necessary information
             info = get_station_info(tr_o.stats)
+
+            #======================================================
+            # Filtering
+            #======================================================
+            print(bandpass)
+            if bandpass != None:
+                tr_o.taper(taper_perc)
+                tr_o.filter('bandpass',freqmin=bandpass[0],
+                    freqmax=bandpass[1],corners=bandpass[2],
+                    zerophase=True)
+                tr_s.taper(taper_perc)
+                tr_s.filter('bandpass',freqmin=bandpass[0],
+                    freqmax=bandpass[1],corners=bandpass[2],
+                    zerophase=True)
+
+
 
             #======================================================
             # Weight observed stack by nstack
@@ -182,9 +183,10 @@ def measurement(source_config,mtype,step,ignore_network,
                     continue
 
             # timeseries-like measurements:
-            if mtype in ['square_envelope','windowed_envelope','waveform',
-            'windowed_waveform']:
-                l2_so = np.trapz(0.5*(msr_s-msr_o)**2) * tr_o.stats.delta
+            if mtype in ['square_envelope',
+            'waveform','windowed_waveform']:
+                # l2_so = np.trapz(0.5*(msr_s-msr_o)**2) * tr_o.stats.delta
+                l2_so = 0.5 * np.sum(np.power((msr_s-msr_o),2))#0.5*np.dot((msr_s-msr_o),(msr_s-msr_o))
                 snr = snratio(tr_o,**options)
                 snr_a = snratio(tr_o,**_options_ac)
                 info.extend([np.nan,np.nan,np.nan,np.nan,
@@ -198,7 +200,7 @@ def measurement(source_config,mtype,step,ignore_network,
                     msr_a = msr_o[1]
                     snr = snratio(tr_o,**options)
                     snr_a = snratio(tr_o,**_options_ac)
-                    l2 = l2_so.sum()/2.
+                    l2 = l2_so.sum()
                     info.extend([msr_s[0],msr_s[1],msr,msr_a,
                     l2,snr,snr_a,tr_o.stats.sac.user0])
                 elif mtype == 'ln_energy_ratio':
@@ -234,6 +236,7 @@ def run_measurement(source_configfile,measr_configfile,
     step_n = 'step_{}'.format(int(step))
     step_dir = os.path.join(source_config['source_path'],
     step_n)
+    taper_perc = measr_config['taper_perc']
 
     window_params                   =    {}
     window_params['hw']             =    measr_config['window_params_hw']
@@ -284,7 +287,7 @@ def run_measurement(source_configfile,measr_configfile,
 
         window_params['hw'] = hws[i]
         ms = measurement(source_config,mtype,step,ignore_network,bandpass=bandpass[i],
-        step_test=step_test,g_speed=g_speed,window_params=window_params)
+        step_test=step_test,taper_perc=taper_perc,g_speed=g_speed,window_params=window_params)
 
         filename = '{}.{}.measurement.csv'.format(mtype,i)
         ms.to_csv(os.path.join(step_dir,filename),index=None)

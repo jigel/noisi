@@ -11,7 +11,10 @@ from noisi import WaveField
 import json
 from glob import glob
 import os
-from scipy.fftpack import next_fast_len
+try:
+    from scipy.fftpack import next_fast_len
+except ImportError:
+    from noisi.util.scipy_next_fast_len import next_fast_len
 from scipy.signal import hann, iirfilter, freqz_zpk
 
 ##################################################################
@@ -102,11 +105,23 @@ def get_distance(grid,location):
 def get_ocean_mask():
     print('Getting ocean mask...')
     from mpl_toolkits.basemap import Basemap
-    m = Basemap(rsphere=6378137,resolution=coastres,projection='cea',lat_0=0.,
-                lon_0=0.,llcrnrlat=-90.,urcrnrlat=90.,llcrnrlon=-180.,urcrnrlon=180.)
-    (x,y) = m(grd[0],grd[1])
-    ocean_mask = map(lambda (x,y): not m.is_land(x,y),zip(x,y))
-    return ocean_mask
+    latmin = grd[1].min()
+    latmax = grd[1].max()
+    lonmin = grd[0].min()
+    lonmax = grd[0].max()
+    print("Latitude {}--{},\n\
+Longitude {}--{}".format(
+    round(latmin,2),
+    round(latmax,2),
+    round(lonmin,2),
+    round(lonmax,2)))
+    m = Basemap(rsphere=6378137,resolution=coastres,projection='cea',
+        llcrnrlat=latmin,urcrnrlat=latmax,
+        llcrnrlon=lonmin,urcrnrlon=lonmax)
+    (east,north) = m(grd[0],grd[1])
+
+    ocean_mask = [not m.is_land(x,y) for (x,y) in zip(east,north)]#list(map(lambda x,y: not m.is_land(x,y),zip(x,y)))
+    return np.array(ocean_mask)
 
 
    
@@ -134,7 +149,8 @@ def get_geodist(disttype,gaussian_params=None):
 
 
 def get_spectrum(sparams):
-    spec = taper*np.exp(-(freq-sparams['central_freq'])**2/(2*sparams['sigma_freq']**2))
+    spec = taper*np.exp(-(freq-sparams['central_freq'])**2/
+        (2*sparams['sigma_freq']**2))
     return spec / np.max(np.abs(spec))
 
 

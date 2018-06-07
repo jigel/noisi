@@ -2,13 +2,15 @@ import numpy as np
 from scipy.signal import hilbert
 from math import pi, log
 from noisi.util.windows import get_window,my_centered
-from noisi.util.plot import plot_window, plot_envelope
+try:
+    from noisi.util.plot import plot_window, plot_envelope
+except:
+    pass
 
 
 def square_envelope(correlation,g_speed,window_params):
     
-    square_envelope = (correlation.data**2 +
-    np.imag(hilbert(correlation.data))**2)
+    square_envelope = correlation.data**2 + np.imag(hilbert(correlation.data))**2
     if window_params['plot']:
         plot_envelope(correlation,square_envelope)
     
