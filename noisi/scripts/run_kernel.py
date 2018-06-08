@@ -28,9 +28,6 @@ import matplotlib.pyplot as plt
 import instaseis
 
 
-from noisi.scripts.kernel import g1g2_kern
-from noisi.scripts.kernel import g1g2_kern_wftype
-
 
 #ToDo: put in the possibility to run on mixed channel pairs
 def paths_input(cp,source_conf,step,ignore_network,instaseis):
