@@ -35,23 +35,9 @@ def setup_project(project_name):
         click.echo('Project exists already, must give it a new name.')
         exit()
     else:
-<<<<<<< Updated upstream
         setup_proj(project_name)
-||||||| merged common ancestors
         os.makedirs(os.path.join(project_name))
-    from . import _ROOT
-    with io.open(os.path.join(_ROOT,'config','config.json'),'r+') as fh:
-        conf = json.loads(fh.read())
-        
-    conf['date_created'] = time.strftime("%Y.%m.%d")
-    conf['project_name'] = project_name
-    conf['project_path'] = os.path.abspath(project_name)
-    
-    with io.open(os.path.join(project_name,'config.json'),'w') as fh:
-        cf = json.dumps(conf,sort_keys=True, indent=4, separators=(",", ": "))
-        fh.write(cf)
-=======
-        os.makedirs(os.path.join(project_name))
+
     from . import _ROOT
     with io.open(os.path.join(_ROOT,'config','config.json'),'r+') as fh:
         conf = json.loads(fh.read())
@@ -71,8 +57,7 @@ def setup_project(project_name):
     with io.open(os.path.join(project_name,'config.json'),'w') as fh:
         cf = json.dumps(conf,sort_keys=True, indent=4, separators=(",", ": "))
         fh.write(cf)
->>>>>>> Stashed changes
-    
+
     # For gaussian grid
     with io.open(os.path.join(project_name,'config_gauss.json'),'w') as fh:
         cf = json.dumps(conf_gauss,sort_keys=True, indent=4, separators=(",", ": "))
@@ -80,7 +65,6 @@ def setup_project(project_name):
     
     # Copy gaussian grid notebook
     from . import _ROOT
-    
     os.system('cp {} {}'.format(os.path.join(_ROOT,'jnotebks/setup_gaussian_grid.ipynb'),
     project_name))
     
