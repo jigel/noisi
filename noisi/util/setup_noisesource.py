@@ -81,8 +81,8 @@ if wfs != []:
         nt = wf.stats['nt']
         
 else:
-    df = float(raw_input('Sampling rate of synthetic Greens functions in Hz?\n'))
-    nt = int(raw_input('Nr of time steps in synthetic Greens functions?\n'))
+    df = float(input('Sampling rate of synthetic Greens functions in Hz?\n'))
+    nt = int(input('Nr of time steps in synthetic Greens functions?\n'))
 
 
 

@@ -31,9 +31,15 @@ radius=None):
     
     while lat <= ymax:
         d_lat = dx / len_deg_lat(lat)
-        lon = xmin
+        d_lon = dx / len_deg_lon(lat)
+        
+        lon = xmin + np.random.rand(1)[0] * d_lon
+
         while lon <= xmax:
-            
+                    
+            gridx.append(lon)
+            gridy.append(lat)
+
             if c_centr and radius:
                 if gps2dist_azimuth(lat,lon,c_centr[0],c_centr[1])[0] > radius:
                     print(lat,lon,gps2dist_azimuth(lat,lon,c_centr[0],c_centr[1])[0])
@@ -43,9 +49,7 @@ radius=None):
                         continue
                     else:
                         break
-                    
-            gridx.append(lon)
-            gridy.append(lat)
+
             
             if abs(lat) == 90:
                 # length of a degree longitude will be 0.
