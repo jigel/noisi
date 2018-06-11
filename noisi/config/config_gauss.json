@@ -1,0 +1,20 @@
+{
+    "date_created": "2018.06.07",
+    "sigma": 20,
+    "beta": 7,
+    "phi_ini": 0.1,
+    "phi_max": 1.3,
+    "lat_0": 46.8,
+    "lon_0": 8.2,
+    "n": 400,
+    "plot": true,
+    "hdur_pointsource": 10,
+    "instaseis": false,
+    "project_name": "",
+    "project_path": "x",
+    "station_channels": [
+        "MXZ"
+    ],
+    "synt_data": "DIS",
+    "wavefield_path": ""
+}
