@@ -7,6 +7,7 @@ import json
 import time
 
 from noisi.scripts.source_grid import setup_sourcegrid as setup_sgrid
+from noisi.scripts.source_grid_gauss import setup_sourcegrid_gauss as setup_sgrid_gauss
 from noisi.scripts.run_correlation import run_corr
 from noisi.util.prepare_sem_input import prepare_specfem_input
 from noisi.scripts.run_measurement import run_measurement
@@ -34,9 +35,57 @@ def setup_project(project_name):
         click.echo('Project exists already, must give it a new name.')
         exit()
     else:
+<<<<<<< Updated upstream
         setup_proj(project_name)
+||||||| merged common ancestors
+        os.makedirs(os.path.join(project_name))
+    from . import _ROOT
+    with io.open(os.path.join(_ROOT,'config','config.json'),'r+') as fh:
+        conf = json.loads(fh.read())
+        
+    conf['date_created'] = time.strftime("%Y.%m.%d")
+    conf['project_name'] = project_name
+    conf['project_path'] = os.path.abspath(project_name)
     
-    click.secho("Copied default config.json to project directory, please edit.")
+    with io.open(os.path.join(project_name,'config.json'),'w') as fh:
+        cf = json.dumps(conf,sort_keys=True, indent=4, separators=(",", ": "))
+        fh.write(cf)
+=======
+        os.makedirs(os.path.join(project_name))
+    from . import _ROOT
+    with io.open(os.path.join(_ROOT,'config','config.json'),'r+') as fh:
+        conf = json.loads(fh.read())
+    
+    # For gaussian grid
+    with io.open(os.path.join(_ROOT,'config','config_gauss.json'),'r+') as fh:
+        conf_gauss = json.loads(fh.read())
+        
+    conf['date_created'] = time.strftime("%Y.%m.%d")
+    conf['project_name'] = project_name
+    conf['project_path'] = os.path.abspath(project_name)
+    
+    conf_gauss['date_created'] = time.strftime("%Y.%m.%d")
+    conf_gauss['project_name'] = project_name
+    conf_gauss['project_path'] = os.path.abspath(project_name)
+    
+    with io.open(os.path.join(project_name,'config.json'),'w') as fh:
+        cf = json.dumps(conf,sort_keys=True, indent=4, separators=(",", ": "))
+        fh.write(cf)
+>>>>>>> Stashed changes
+    
+    # For gaussian grid
+    with io.open(os.path.join(project_name,'config_gauss.json'),'w') as fh:
+        cf = json.dumps(conf_gauss,sort_keys=True, indent=4, separators=(",", ": "))
+        fh.write(cf)
+    
+    # Copy gaussian grid notebook
+    from . import _ROOT
+    
+    os.system('cp {} {}'.format(os.path.join(_ROOT,'jnotebks/setup_gaussian_grid.ipynb'),
+    project_name))
+    
+    click.secho("Copied default config.json and config_gauss.json to project directory, please edit.\
+                Use setup_gaussian_grid.ipynb to visually setup gaussian grid.")
 
 
 ###########################################################################
@@ -46,6 +95,16 @@ def setup_project(project_name):
 @click.argument('project_path')
 def setup_sourcegrid(project_path):
     setup_sgrid(os.path.join(project_path,'config.json'))
+
+
+###########################################################################
+### Setting up a gaussian source grid
+###########################################################################  
+@run.command(help='Determine the gaussian source grid.')
+@click.argument('project_path')
+def setup_sourcegrid_gauss(project_path):
+    setup_sgrid_gauss(os.path.join(project_path,'config_gauss.json'))
+
 
 
 ###########################################################################
