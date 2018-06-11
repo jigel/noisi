@@ -3,8 +3,8 @@ from noisi import NoiseSource
 
 def test_update():
 	# copy data
-	os.mkdir('test/testdata/testsrc/step_0/corr')
-	os.mkdir('test/testdata/testsrc/step_0/grad')
+	os.makedirs('test/testdata/testsrc/step_0/corr',exist_ok=True)
+	os.makedirs('test/testdata/testsrc/step_0/grad',exist_ok=True)
 	
 	os.system('cp test/testdata/testsrc/step_0/corr_archived/NET.STA1..CHA--NET.STA2..CHA.sac \
 		test/testdata/testsrc/step_0/corr/NET.STA1..CHA--NET.STA2..CHA.sac')
