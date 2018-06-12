@@ -15,7 +15,11 @@ try:
     from scipy.fftpack import next_fast_len
 except ImportError:
     from noisi.util.scipy_next_fast_len import next_fast_len
-from scipy.signal import hann, iirfilter, freqz_zpk
+from scipy.signal import hann, iirfilter
+try:
+    from scipy.signal import freqz_zpk
+except ImportError:
+    from noisi.util.scipy_filter_design import freqz_zpk
 
 ##################################################################
 # USER INPUT
