@@ -44,15 +44,13 @@ def len_deg_lat(lat):
     dlat = 111132.954 - 559.822 * cos(2*lat) + 1.175*cos(4*lat)
     return round(dlat,5)
 
-def get_spherical_surface_elements(lon,lat,globe=False):
+def get_spherical_surface_elements(lon,lat):
 
     # radius...assuming spherical Earth here
     r = 6.378100e6
     # surfel
     surfel = np.zeros(lon.shape)
     colat = 90. - lat
-
-
 
     # find neighbours
     for i in range(len(lon)):
