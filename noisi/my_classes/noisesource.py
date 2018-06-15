@@ -8,7 +8,7 @@ try:
 except ImportError:
     print('Plotting unavailable, is basemap installed?')
 
-
+from noisi.util.geo import get_spherical_surface_elements
 
 class NoiseSource(object):
     """
@@ -34,9 +34,14 @@ class NoiseSource(object):
             self.distr_basis = self.model['distr_basis'][:]
             self.spect_basis = self.model['spect_basis'][:]
             self.distr_weights = self.model['distr_weights'][:]
-            
-            # discontinued: (the distribution yields the spectral weights)
-            #self.spect_weights = self.model['spect_weights'][:]
+
+            # The surface area of each grid element...new since June 18
+            try:
+                self.surf_area = self.model['surf_area'][:]
+            except KeyError:
+                # approximate as spherical surface elements...
+                self.surf_area = get_spherical_surface_elements(
+                                            self.src_loc[0],self.src_loc[1])
             
             self.spatial_source_model = self.expand_distr()
             

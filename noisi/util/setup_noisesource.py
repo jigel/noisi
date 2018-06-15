@@ -14,12 +14,12 @@ import os
 try:
     from scipy.fftpack import next_fast_len
 except ImportError:
-    from noisi.util.scipy_next_fast_len import next_fast_len
+    from noisi.borrowed_functions.scipy_next_fast_len import next_fast_len
 from scipy.signal import hann, iirfilter
 try:
     from scipy.signal import freqz_zpk
 except ImportError:
-    from noisi.util.scipy_filter_design import freqz_zpk
+    from noisi.borrowed_functions.scipy_filter_design import freqz_zpk
 
 ##################################################################
 # USER INPUT
@@ -208,12 +208,14 @@ for i in range(num_bases):
         raise NotImplementedError('Unknown geographical distributions. \
             Must be \'gaussian\', \'homogeneous\' or \'ocean\'.')
 
-print('Plotting...')
-from noisi.util import plot
-for i in range(num_bases):
-    plot.plot_grid(grd[0],grd[1],basis_geo[i,:],normalize=False,
-    outfile = os.path.join(sourcepath,'geog_distr_basis{}.png'.format(i)))
-
+try:
+    print('Plotting...')
+    from noisi.util import plot
+    for i in range(num_bases):
+        plot.plot_grid(grd[0],grd[1],basis_geo[i,:],normalize=False,
+        outfile = os.path.join(sourcepath,'geog_distr_basis{}.png'.format(i)))
+except ImportError:
+    print('Plotting not possible (is basemap installed?)')
 
 #########################
 # spectrum
