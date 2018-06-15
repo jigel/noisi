@@ -42,6 +42,7 @@ class NoiseSource(object):
                 # approximate as spherical surface elements...
                 self.surf_area = get_spherical_surface_elements(
                                             self.src_loc[0],self.src_loc[1])
+                np.save('surface_areas_grid.npy',self.surf_area)
             
             self.spatial_source_model = self.expand_distr()
             

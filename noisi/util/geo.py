@@ -60,8 +60,11 @@ def get_spherical_surface_elements(lon,lat):
 
         # get the nearest longitude along the current colatitude 
         current_colat = colat[i]
-        colat_idx = np.where(colat==current_colat)
+        if current_colat in [0.,180.]:
+            # surface area will be 0 at poles.
+            continue
 
+        colat_idx = np.where(colat==current_colat)
         lon_idx_1 = np.argsort(np.abs(lon[colat_idx]-lon[i]))[1]
         lon_idx_2 = np.argsort(np.abs(lon[colat_idx]-lon[i]))[2]
         closest_lon_1 = lon[colat_idx][lon_idx_1]
