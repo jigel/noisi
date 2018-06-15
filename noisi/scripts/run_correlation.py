@@ -11,7 +11,7 @@ from scipy.signal.signaltools import fftconvolve
 try:
     from scipy.fftpack import next_fast_len
 except ImportError:
-    from noisi.util.scipy_next_fast_len import next_fast_len
+    from noisi.borrowed_functions.scipy_next_fast_len import next_fast_len
     
 from obspy import Trace, read, Stream
 from noisi import NoiseSource, WaveField
@@ -231,7 +231,7 @@ def g1g2_corr(wf1,wf2,corr_file,src,source_conf,insta):
             
             # transform back    
             correlation += my_centered(np.fft.ifftshift(np.fft.irfft(c,n)),
-                n_corr)
+                n_corr) * nsrc.surf_area[i]
             
             # occasional info
             if i%50000 == 0:

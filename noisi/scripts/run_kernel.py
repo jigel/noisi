@@ -11,7 +11,7 @@ from scipy.signal.signaltools import fftconvolve
 try:
     from scipy.fftpack import next_fast_len, hilbert
 except ImportError:
-    from noisi.util.scipy_next_fast_len import next_fast_len
+    from noisi.borrowed_functions.scipy_next_fast_len import next_fast_len
 from obspy import Trace, read, Stream
 from noisi import NoiseSource, WaveField
 from noisi.util import geo#, natural_keys

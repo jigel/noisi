@@ -14,12 +14,13 @@ import os
 try:
     from scipy.fftpack import next_fast_len
 except ImportError:
-    from noisi.util.scipy_next_fast_len import next_fast_len
+    from noisi.borrowed_functions.scipy_next_fast_len import next_fast_len
 from scipy.signal import hann, iirfilter
 try:
     from scipy.signal import freqz_zpk
 except ImportError:
-    from noisi.util.scipy_filter_design import freqz_zpk
+    from noisi.borrowed_functions.scipy_filter_design import freqz_zpk
+from noisi.util.geo import get_spherical_surface_elements
 
 ##################################################################
 # USER INPUT
@@ -208,12 +209,14 @@ for i in range(num_bases):
         raise NotImplementedError('Unknown geographical distributions. \
             Must be \'gaussian\', \'homogeneous\' or \'ocean\'.')
 
-print('Plotting...')
-from noisi.util import plot
-for i in range(num_bases):
-    plot.plot_grid(grd[0],grd[1],basis_geo[i,:],normalize=False,
-    outfile = os.path.join(sourcepath,'geog_distr_basis{}.png'.format(i)))
-
+try:
+    print('Plotting...')
+    from noisi.util import plot
+    for i in range(num_bases):
+        plot.plot_grid(grd[0],grd[1],basis_geo[i,:],normalize=False,
+        outfile = os.path.join(sourcepath,'geog_distr_basis{}.png'.format(i)))
+except ImportError:
+    print('Plotting not possible (is basemap installed?)')
 
 #########################
 # spectrum
@@ -246,6 +249,16 @@ plt.savefig(os.path.join(sourcepath,'freq_distr_startingmodel.png'))
 
 weights = np.eye(basis_spec.shape[0],num_bases)
 
+
+########################
+# approximate surface
+# areas of all elements
+# set up in this way.
+########################
+
+surf_areas = get_spherical_surface_elements(grd[0],grd[1])
+
+
 ########################
 # Save to an hdf5 file
 ########################
@@ -257,7 +270,7 @@ with h5py.File(os.path.join(sourcepath,'step_0','starting_model.h5'),'w') as fh:
     # for now: Geographic model can vary freely.
     fh.create_dataset('distr_weights',data=weights)
     fh.create_dataset('spect_basis',data=basis_spec.astype(np.float64))
-    #fh.create_dataset('spect_weights',data=np.ones(min(basis_spec.shape)))
+    fh.create_dataset('surf_areas',data=surf_areas.astype(np.float64))
 
 basis1_b = np.ones(basis_geo.shape)
 with h5py.File(os.path.join(sourcepath,'step_0','base_model.h5'),'w') as fh:
@@ -266,6 +279,7 @@ with h5py.File(os.path.join(sourcepath,'step_0','base_model.h5'),'w') as fh:
     fh.create_dataset('distr_basis',data=basis1_b.astype(np.float32))
     fh.create_dataset('distr_weights',data=weights.astype(np.float32))
     fh.create_dataset('spect_basis',data=basis_spec.astype(np.float32))
+    fh.create_dataset('surf_areas',data=surf_areas.astype(np.float64))
 
 print('Done.')
 

@@ -163,7 +163,7 @@ def plot_sourcegrid(gridpoints,**kwargs):
     m = Basemap(rsphere=6378137,**kwargs)
     m.drawcoastlines()
 
-    m.plot(gridpoints[0],gridpoints[1],marker='+',markersize=10.,latlon=True)
+    m.plot(gridpoints[0],gridpoints[1],'go',markersize=10.,latlon=True)
     plt.show()
 
 
