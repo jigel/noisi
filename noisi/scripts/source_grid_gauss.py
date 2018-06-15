@@ -40,6 +40,10 @@ def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,plot=True):
         msg = 'phi_ini and phi_max should not be larger than 90'
         raise ValueError(msg)
     
+    if phi_ini > phi_max:
+        msg = 'phi_ini should be smaller than phi_max'
+        raise ValueError(msg)
+    
     # PHI IS LATITUDE BETWEEN -90 and 90
     # THETA IS LONGITUDE BETWEEN -180 and 180
     
@@ -85,6 +89,13 @@ def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,plot=True):
                     phi = phi[:-1]  # removes last entry of phi since it would be bigger than 90
                     dphi = dphi[:-1] # removes last phi
                     break
+            else:
+                phi = phi[:-1]  # removes last entry of phi since it would be bigger than 90
+                dphi = dphi[:-1] # removes last phi
+                #phi_0 = 90
+                #phi.append(phi_0)
+                #dphi.append(90-phi[i-2])
+                break
     
     # phi now consists of the latitudinal angles up to 90° over which we should loop
 
