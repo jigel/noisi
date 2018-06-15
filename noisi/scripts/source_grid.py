@@ -31,9 +31,13 @@ radius=None):
     
     while lat <= ymax:
         d_lat = dx / len_deg_lat(lat)
-        d_lon = dx / len_deg_lon(lat)
         
-        lon = xmin + np.random.rand(1)[0] * d_lon
+        if abs(lat) == 90:
+        # length of a degree longitude will be 0.
+            lon = xmin
+        else:
+            d_lon = dx / len_deg_lon(lat)
+            lon = xmin + np.random.rand(1)[0] * d_lon
 
         while lon <= xmax:
                     
@@ -66,7 +70,7 @@ radius=None):
 
 
 
-
+    
 def create_sourcegrid(config):
     
     cfile = open(config,'r')
@@ -86,7 +90,8 @@ def create_sourcegrid(config):
     sources = np.zeros((2,len(grid[0])))
     #sources[0,:] = ids
     sources[0:2,:] = grid
-
+    
+    print('Number of gridpoints:',np.size(grid)/2)
     
     return sources
     
