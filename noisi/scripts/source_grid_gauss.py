@@ -77,7 +77,7 @@ def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,plot=True):
                     phi = phi[:-1]  # removes last entry of phi since it would be bigger than 90
                     dphi = dphi[:-1] # removes last phi
                     break
-            elif dphi[i] < dphi[i-1]: 
+            elif dphi[i] <= dphi[i-1]: 
                 if 90-phi[i-1] < dphi[i-1]:
                     phi = phi[:-2]  # removes last entry of phi since it would be bigger than 90
                     dphi = dphi[:-2] # removes last phi
