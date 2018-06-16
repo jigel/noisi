@@ -15,7 +15,7 @@ except ImportError:
 try:
     from scipy.fftpack import next_fast_len
 except ImportError:
-    from noisi.util.scipy_next_fast_len import next_fast_len
+    from noisi.borrowed_functions.scipy_next_fast_len import next_fast_len
 #from scipy.signal.signaltools import _next_regular
 from obspy.signal.invsim import cosine_taper
 from obspy.signal.filter import integer_decimation

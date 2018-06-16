@@ -4,10 +4,10 @@ import os
 import io
 from obspy.geodetics import gps2dist_azimuth
 from noisi.util.geo import len_deg_lat, len_deg_lon
-
+from warnings import warn
     
 
-def points_on_sphere(dx,xmin=-180.,xmax=180.,ymin=-90.,ymax=90.,c_centr=None,\
+def points_on_sphere(dx,xmin=-180.,xmax=180.,ymin=-89.999,ymax=89.999,c_centr=None,\
 radius=None):
     """
     Calculate a more or less equally spaced grid on spherical Earth's surface.
@@ -27,17 +27,14 @@ radius=None):
     gridx = []
     gridy = []
     
-    lat = ymin
+    lat = (ymin if ymin != -90. else -89.999)
+    warn("Resetting lat_min to -89.999 degree")
     
     while lat <= ymax:
         d_lat = dx / len_deg_lat(lat)
-        
-        if abs(lat) == 90:
-        # length of a degree longitude will be 0.
-            lon = xmin
-        else:
-            d_lon = dx / len_deg_lon(lat)
-            lon = xmin + np.random.rand(1)[0] * d_lon
+        d_lon = dx / len_deg_lon(lat)
+            
+        lon = xmin + np.random.rand(1)[0] * d_lon
 
         while lon <= xmax:
                     
