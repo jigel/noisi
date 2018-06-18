@@ -37,7 +37,7 @@ def setup_project(project_name):
     else:
         setup_proj(project_name)
 
-    click.secho("Copied default config.json and config_gauss.json to project directory, please edit.\
+    click.secho("Copied default config.json to project directory, please edit.\
                 Use setup_gaussian_grid.ipynb to visually setup gaussian grid.")
 
 
@@ -47,18 +47,23 @@ def setup_project(project_name):
 @run.command(help='Determine the source grid and get specfem STATIONS file.')
 @click.argument('project_path')
 def setup_sourcegrid(project_path):
-    setup_sgrid(os.path.join(project_path,'config.json'))
+    
+    conf = json.load(open(os.path.join(project_path,'config.json')))
+        
+    if conf['gauss_grid']:
+        setup_sgrid_gauss(os.path.join(project_path,'config.json'))
+    else:
+        setup_sgrid(os.path.join(project_path,'config.json'))
 
-
+        
 ###########################################################################
 ### Setting up a gaussian source grid
 ###########################################################################  
-@run.command(help='Determine the gaussian source grid.')
-@click.argument('project_path')
-def setup_sourcegrid_gauss(project_path):
-    setup_sgrid_gauss(os.path.join(project_path,'config_gauss.json'))
-
-
+#@run.command(help='Determine the gaussian source grid.')
+#@click.argument('project_path')
+#def setup_sourcegrid_gauss(project_path):
+#        setup_sgrid_gauss(os.path.join(project_path,'config.json'))
+        
 
 ###########################################################################
 ### Initialize a source model
