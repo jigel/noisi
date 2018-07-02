@@ -262,9 +262,6 @@ class WaveField(object):
         if self.sourcegrid is None:
             msg = 'Must have a source grid to plot a snapshot.'
             raise ValueError(msg)
-        if not 'basemap' in locals():
-            msg = 'Plotting requires basemap.'
-            raise ImportError(msg)
         
         # ToDo: Replace all the hardcoded geographical boundary values!
         map_x = self.sourcegrid[0][0::resolution]

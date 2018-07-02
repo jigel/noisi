@@ -109,7 +109,6 @@ for i in range(startindex,ntraces):
     	values.rotate('NE->RT',back_azimuth=baz)
 
     values = values[c_index]
-    values.taper(0.01)
 
     if config['synt_data'] in ['VEL','ACC']:
     	values.differentiate()
