@@ -21,7 +21,7 @@ def test_forward():
 	tr1 = read('test/testdata/testsrc/step_0/corr/NET.STA1..CHA--NET.STA2..CHA.sac')[0]
 	tr2 = read('test/testdata/testsrc/step_0/corr_archived/NET.STA1..CHA--NET.STA2..CHA.sac')[0]
 	
-	assert (tr1.data == tr2.data).sum() == len(tr2.data)
+	assert ((tr1.data - tr2.data)/tr1.data*100.).max() < 1.e-6 
 	assert tr1.stats.sampling_rate == tr2.stats.sampling_rate
 
 	# remove the resulting data and the preprocessed wavefields
