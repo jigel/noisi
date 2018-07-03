@@ -20,7 +20,7 @@ def test_smoothing():
 	grad = np.around(grad,decimals=20)
 	grad_old = np.around(grad_old,decimals=20)
 	
-	assert (grad_old[0,:] == grad[0,:]).sum() == len(grad[0,:])
+	assert (grad_old[0,1:-1] == grad[0,1:-1]).sum() == len(grad[0,1:-1])
 
 	# remove stuff
 	os.system('rm -rf test/testdata/testsrc/step_0/grad/')
