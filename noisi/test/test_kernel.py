@@ -19,7 +19,7 @@ def test_kernel():
     # ToDo: path
     k1 = np.load('test/testdata/testsrc/step_0/kern/NET.STA1..CHA--NET.STA2..CHA.0.npy')
     k2 = np.load('test/testdata/testsrc/step_0/kern_archived/NET.STA1..CHA--NET.STA2..CHA.npy')
-    assert ((k1-k2)/k1 * 100).max() < 1.e-06
+    assert ((k1-k2)/k1).max() < 1.e-06
 
     # remove stuff
     os.system('rm -rf test/testdata/testsrc/step_0/adjt/')
