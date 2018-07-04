@@ -256,7 +256,11 @@ weights = np.eye(basis_spec.shape[0],num_bases)
 # set up in this way.
 ########################
 
-surf_areas = get_spherical_surface_elements(grd[0],grd[1])
+if config["voronoi_surface_area"]:
+    from noisi.util.voronoi_surface_area import get_voronoi_surface_area
+    grd, surf_areas = get_voronoi_surface_area(grd)
+else:
+    surf_areas = get_spherical_surface_elements(grd[0],grd[1])
 
 
 ########################
