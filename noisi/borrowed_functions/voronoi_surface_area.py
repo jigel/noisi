@@ -6,6 +6,8 @@ matplotlib.use('Agg')
 import matplotlib.pyplot
 import numpy as np
 import math
+import warnings
+warnings.filterwarnings("ignore")
 
 
 def convert_cartesian_array_to_spherical_array(coord_array,angle_measure='radians'):

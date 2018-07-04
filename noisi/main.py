@@ -37,8 +37,7 @@ def setup_project(project_name):
     else:
         setup_proj(project_name)
 
-    click.secho("Copied default config.json to project directory, please edit.\
-                Use setup_gaussian_grid.ipynb to visually setup gaussian grid.")
+    click.secho("Copied default config.json to project directory, please edit. Use setup_gaussian_grid.ipynb to visually setup gaussian grid.")
 
 
 ###########################################################################
@@ -55,15 +54,6 @@ def setup_sourcegrid(project_path):
     else:
         setup_sgrid(os.path.join(project_path,'config.json'))
 
-        
-###########################################################################
-### Setting up a gaussian source grid
-###########################################################################  
-#@run.command(help='Determine the gaussian source grid.')
-#@click.argument('project_path')
-#def setup_sourcegrid_gauss(project_path):
-#        setup_sgrid_gauss(os.path.join(project_path,'config.json'))
-        
 
 ###########################################################################
 ### Initialize a source model

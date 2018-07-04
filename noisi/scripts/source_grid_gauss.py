@@ -1,34 +1,28 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Jun  7 10:33:05 2018
-
-@author: jigel
-"""
-
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import json
 import os
 import io
-
+import warnings
+warnings.filterwarnings("ignore")
 
 def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,plot=True,Dense_Antipole = True):
     """
     This function creates a Gaussian grid. Input parameters:
-    sigma (greater than 2) = standard deviation, i.e. size of the area of denser grid points
-    beta = steepness of the drop of to the maximum distance
-    phi_ini = initial distance between grid points, in degrees
-    phi_max = maximum distance between grid points, in degrees
-    lat_0 = latitude of point of interest
-    lon_0 = longitude of point of interest
-    n = number of circles
-    plot = True/False
-    Dense_Antipole = True/False
+    :sigma (greater than 2) = standard deviation, i.e. size of the area of denser grid points
+    :beta = steepness of the drop of to the maximum distance
+    :phi_ini = initial distance between grid points, in degrees
+    :phi_max = maximum distance between grid points, in degrees
+    :lat_0 = latitude of point of interest, -90° to 90°
+    :lon_0 = longitude of point of interest, -180° to 180°
+    :n = number of circles
+    :plot = True/False
+    :Dense_Antipole = True/False
+    Returns: list of longitudes and latitudes
     """
     
-    ### Error messages
+    # Error messages
     if lat_0 < -90 or lat_0 > 90:
         msg = 'lat_0 has to be between -90° and 90°'
         raise ValueError(msg)
@@ -44,19 +38,9 @@ def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,plot=True,Dense_Antipole
     if phi_ini > phi_max:
         msg = 'phi_ini should be smaller than phi_max'
         raise ValueError(msg)
-    
-    # PHI IS LATITUDE BETWEEN -90 and 90
-    # THETA IS LONGITUDE BETWEEN -180 and 180
-
-    import numpy as np
-    import matplotlib.pyplot as plt
-    from mpl_toolkits.basemap import Basemap
-    import warnings
-    warnings.filterwarnings("ignore")
 
     # Step 1: Gauss
     # Calculate radii of the circles
-    # How do we get n from this.
     phi_max = phi_max - phi_ini
     
     lat = np.linspace(0,90,n)
@@ -71,12 +55,12 @@ def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,plot=True,Dense_Antipole
             phi_0 += dphi1[i]
             phi.append(phi_0)
             dphi.append(dphi1[i])
-            # Change condition so that if the distance between equator and previous circle is greater than that befor
+            # Change condition so that if the distance between equator and previous circle is greater than that before the point is removed
             if phi_0 > 90:
                 if dphi[i] > dphi[i-1]:
                     if 90-phi[i-1] < dphi[i-1]:
-                        phi = phi[:-2]  # removes last entry of phi since it would be bigger than 90
-                        dphi = dphi[:-2] # removes last phi
+                        phi = phi[:-2]  # removes last two entries of phi
+                        dphi = dphi[:-2] # removes last two dphi
                         phi_0 = 90
                         phi.append(phi_0)
                         dphi.append(90-phi[i-2])
@@ -87,8 +71,8 @@ def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,plot=True,Dense_Antipole
                         break
                 elif dphi[i] <= dphi[i-1]: 
                     if 90-phi[i-1] < dphi[i-1]:
-                        phi = phi[:-2]  # removes last entry of phi since it would be bigger than 90
-                        dphi = dphi[:-2] # removes last phi
+                        phi = phi[:-2]  # removes last two entries of phi
+                        dphi = dphi[:-2] # removes last two dphi
                         phi_0 = 90
                         phi.append(phi_0)
                         dphi.append(90-phi[i-2])
@@ -100,9 +84,6 @@ def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,plot=True,Dense_Antipole
                 else:
                     phi = phi[:-1]  # removes last entry of phi since it would be bigger than 90
                     dphi = dphi[:-1] # removes last phi
-                    #phi_0 = 90
-                    #phi.append(phi_0)
-                    #dphi.append(90-phi[i-2])
                     break
     else:
         for i in range(0,np.size(dphi1)):
@@ -233,7 +214,7 @@ def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,plot=True,Dense_Antipole
         x,y = map(lon_final_rot, lat_final_rot)
         map.plot(x, y,'ko', markersize=1)
         
-        plt.title('Centre at %d ° latitude and %d ° longitude' %(lat_0,lon_0))
+        plt.title('Centre at %0.2f ° latitude and %0.2f ° longitude' %(lat_0,lon_0))
         plt.show()
         
     return list((lon_final_rot,lat_final_rot))
@@ -255,8 +236,6 @@ def create_sourcegrid_gauss(config):
     sources = np.zeros((2,len(grid[0])))
     #sources[0,:] = ids
     sources[0:2,:] = grid
-
-    
     return sources
 
 
@@ -271,10 +250,3 @@ def setup_sourcegrid_gauss(configfile):
     # write to .npy
     np.save(grid_filename,sourcegrid)
     print('Sourcegrid saved as sourcegrid.npy')
-    
-    
-    
-    
-    
-    
-    

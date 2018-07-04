@@ -19,6 +19,7 @@
     "gauss_n": 400,
     "gauss_plot": true,
     "gauss_dense_antipole": true,
+    "voronoi_surface_area": false,
 	"hdur_pointsource":10,
     "station_channels": [
         "MXZ"

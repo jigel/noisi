@@ -31,6 +31,8 @@ import matplotlib.cm as cm
 from matplotlib.patches import Polygon
 from scipy.spatial import SphericalVoronoi
 import pyproj
+import warnings
+warnings.filterwarnings("ignore")
 
 # utility functions for generating the spherical voronoi tesselation.
 
