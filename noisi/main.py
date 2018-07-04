@@ -7,6 +7,7 @@ import json
 import time
 
 from noisi.scripts.source_grid import setup_sourcegrid as setup_sgrid
+from noisi.scripts.source_grid_gauss import setup_sourcegrid_gauss as setup_sgrid_gauss
 from noisi.scripts.run_correlation import run_corr
 from noisi.util.prepare_sem_input import prepare_specfem_input
 from noisi.scripts.run_measurement import run_measurement
@@ -35,8 +36,8 @@ def setup_project(project_name):
         exit()
     else:
         setup_proj(project_name)
-    
-    click.secho("Copied default config.json to project directory, please edit.")
+
+    click.secho("Copied default config.json to project directory, please edit. Use setup_gaussian_grid.ipynb to visually setup gaussian grid.")
 
 
 ###########################################################################
@@ -45,7 +46,13 @@ def setup_project(project_name):
 @run.command(help='Determine the source grid and get specfem STATIONS file.')
 @click.argument('project_path')
 def setup_sourcegrid(project_path):
-    setup_sgrid(os.path.join(project_path,'config.json'))
+    
+    conf = json.load(open(os.path.join(project_path,'config.json')))
+        
+    if conf['gauss_grid']:
+        setup_sgrid_gauss(os.path.join(project_path,'config.json'))
+    else:
+        setup_sgrid(os.path.join(project_path,'config.json'))
 
 
 ###########################################################################

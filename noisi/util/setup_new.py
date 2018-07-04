@@ -14,7 +14,12 @@ def setup_proj(project_name):
     conf['date_created'] = time.strftime("%Y.%m.%d")
     conf['project_name'] = project_name
     conf['project_path'] = os.path.abspath(project_name)
+
     
     with io.open(os.path.join(project_name,'config.json'),'w') as fh:
-        cf = json.dumps(conf,sort_keys=True, indent=4, separators=(",", ": "))
+        cf = json.dumps(conf,sort_keys=False, indent=4, separators=(",", ": "))
         fh.write(cf)
+        
+    # Copy gaussian grid notebook
+    os.system('cp {} {}'.format(os.path.join(_ROOT,'jnotebks/setup_gaussian_grid.ipynb'),
+    project_name))
