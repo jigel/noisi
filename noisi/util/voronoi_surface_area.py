@@ -22,7 +22,7 @@ def get_voronoi_surface_area(grd):
     grid_data = pd.DataFrame(data=gridpd)
     
     # Calculate the vertices for the voronoi cells
-    collection,voronoi,patch_index = getVoronoiCollection(data=grid_data,lat_name='lat',lon_name='lon',full_sphere=True)
+    voronoi = getVoronoiCollection(data=grid_data,lat_name='lat',lon_name='lon',full_sphere=True)
     
     # Calculate the surface area for each voronoi cell
     voronoi_lat = []
