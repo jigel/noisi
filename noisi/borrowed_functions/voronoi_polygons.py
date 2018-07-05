@@ -26,9 +26,9 @@
 
 import numpy as np
 import pandas as pd
-import matplotlib as matplotlib
+#import matplotlib as matplotlib
 import matplotlib.cm as cm
-from matplotlib.patches import Polygon
+#from matplotlib.patches import Polygon
 from scipy.spatial import SphericalVoronoi
 import pyproj
 import warnings
@@ -173,44 +173,43 @@ def getVoronoiCollection(data, lat_name, lon_name, bmap = None, v_name = None, f
     
     voronoi.sort_vertices_of_regions()
     
-    latlon_verts = xyzToSpherical(voronoi.vertices[:,0],voronoi.vertices[:,1], voronoi.vertices[:,2])
+    #latlon_verts = xyzToSpherical(voronoi.vertices[:,0],voronoi.vertices[:,1], voronoi.vertices[:,2])
     
-    if proj1 != None and proj2 != None:
-        results = pyproj.transform(proj2, proj1, latlon_verts[:,1], latlon_verts[:,0])
-        latlon_verts[:, 1] = results[0]
-        latlon_verts[:, 0] = results[1]
+    #if proj1 != None and proj2 != None:
+    #    results = pyproj.transform(proj2, proj1, latlon_verts[:,1], latlon_verts[:,0])
+    #    latlon_verts[:, 1] = results[0]
+    #    latlon_verts[:, 0] = results[1]
         
-    matches = list(map(lambda x: find_match(x, voronoi.regions), range(len(voronoi.regions))))
+    #matches = list(map(lambda x: find_match(x, voronoi.regions), range(len(voronoi.regions))))
     
-    patch_list = []
-    patch_index = []
+    #patch_list = []
+    #patch_index = []
 
-    for i, (region,match,(station,row)) in enumerate(zip(voronoi.regions,matches,
-                                                         full_data.iterrows())):
+    #for i, (region,match,(station,row)) in enumerate(zip(voronoi.regions,matches, full_data.iterrows())):
 
-        if full_sphere or (len(matches)-1) not in match:
+     #   if full_sphere or (len(matches)-1) not in match:
             # Keep an index of regions in patchcollection
-            patch_index.append(i)
+     #       patch_index.append(i)
 
-            if bmap != None:
-                xy = np.array(bmap(latlon_verts[region,1],latlon_verts[region,0])).T
-            else:
-                xy = np.array([latlon_verts[region,1],latlon_verts[region,0]]).T
+     #       if bmap != None:
+     #           xy = np.array(bmap(latlon_verts[region,1],latlon_verts[region,0])).T
+     #       else:
+     #           xy = np.array([latlon_verts[region,1],latlon_verts[region,0]]).T
                 
             
-            if v_name != None:
-                value = row[v_name]
-                scaled_value = (value - min_v) / (max_v - min_v)
-                if scaled_value > 1:
-                    scaled_value = 1.0
-                elif scaled_value < 0:
-                    scaled_value = 0.0
+     #       if v_name != None:
+     #           value = row[v_name]
+     #           scaled_value = (value - min_v) / (max_v - min_v)
+     #           if scaled_value > 1:
+     #               scaled_value = 1.0
+     #           elif scaled_value < 0:
+     #               scaled_value = 0.0
 
-                poly = Polygon(xy, fill=True,facecolor = cmap(scaled_value),edgecolor=cmap(scaled_value))
+     #           poly = Polygon(xy, fill=True,facecolor = cmap(scaled_value),edgecolor=cmap(scaled_value))
                 
-            else:
-                poly = Polygon(xy, fill=False)
-                
-            patch_list.append(poly)
+     #       else:
+     #           poly = Polygon(xy, fill=False)
+     #           
+     #       patch_list.append(poly)
 
-    return matplotlib.collections.PatchCollection(patch_list,match_original=True), voronoi, patch_index
+    return voronoi
