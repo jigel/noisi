@@ -1,13 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.basemap import Basemap
+import cartopy.crs as ccrs
 import json
 import os
 import io
 import warnings
 warnings.filterwarnings("ignore")
 
-def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,plot=True,Dense_Antipole = True):
+def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,plot=True,Dense_Antipole = True, bluemarble = False):
     """
     This function creates a Gaussian grid. Input parameters:
     :sigma (greater than 2) = standard deviation, i.e. size of the area of denser grid points
@@ -200,24 +200,18 @@ def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,plot=True,Dense_Antipole
     
     if plot:
         plt.figure(figsize=(25,10))
-        map = Basemap(projection='hammer',lat_0=0,lon_0=0,resolution='l')
-        map.drawcoastlines()
-        #map.drawcountries()
-        #map.fillcontinents(color = 'coral',lake_color='aqua')
-        map.drawmapboundary()
-        #map.bluemarble()
-        parallels = np.arange(-90.,90,10.)
-        # labels = [left,right,top,bottom]
-        map.drawparallels(parallels,labels=[False,False,False,False])
-        meridians = np.arange(0.,360.,10.)
-        map.drawmeridians(meridians,labels=[False,False,False,False])
-        x,y = map(lon_final_rot, lat_final_rot)
-        map.plot(x, y,'ko', markersize=1)
-        
-        plt.title('Centre at %0.2f ° latitude and %0.2f ° longitude' %(lat_0,lon_0))
+        ax = plt.axes(projection=ccrs.Mollweide())
+        ax.coastlines()
+        if bluemarble:
+            ax.stock_img()
+        plt.scatter(lon_final_rot,lat_final_rot,s=1,c='k',transform=ccrs.Geodetic())
+        plt.title('Centre at %0.2f ° latitude and %0.2f ° longitude with %i gridpoints' %(lat_0,lon_0,np.size(lat_final_rot)))
         plt.show()
+
         
     return list((lon_final_rot,lat_final_rot))
+
+
 
 
 def create_sourcegrid_gauss(config):
