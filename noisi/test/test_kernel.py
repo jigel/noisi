@@ -12,6 +12,9 @@ def test_kernel():
     os.system('cp -r test/testdata/testsrc/wavefield_processed_archived\
         test/testdata/testsrc/wavefield_processed')
 
+    os.system('cp test/testdata/testsrc/step_0/starting_model_archived.h5\
+        test/testdata/testsrc/step_0/base_model.h5')
+
     # run forward model
     os.system('noisi kernel test/testdata/testsrc/ 0')
 
