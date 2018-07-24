@@ -6,7 +6,7 @@ def test_smoothing():
 	os.mkdir('test/testdata/testsrc/step_0/grad')
 	os.system('python util/smoothing.py test/testdata/testsrc/step_0/grad_archived/grad_all.npy \
 		test/testdata/testsrc/step_0/grad/grad_smooth.npy test/testdata/sourcegrid.npy \
-		10000.0 95 1e-16')
+		10.0 95 1e-16')
 
 	# assert the results are the same
 	# ToDo: path
@@ -16,7 +16,7 @@ def test_smoothing():
 	grad_old = np.load('test/testdata/testsrc/step_0/grad_archived/grad_smooth.npy')
 	grad = np.load('test/testdata/testsrc/step_0/grad/grad_smooth.npy')
 	
-	assert ((grad - grad_old)/grad_old*100.).max() < 1.e-10 
+	assert (abs(grad - grad_old)/grad_old*100.).max() < 1.e-16 
 
 	# remove stuff
 	os.system('rm -rf test/testdata/testsrc/step_0/grad/')
