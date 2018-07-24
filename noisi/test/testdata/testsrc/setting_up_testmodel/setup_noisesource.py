@@ -27,20 +27,18 @@ sourcepath = '.'
 only_ocean = False
 gaussian_blobs = False
 no_background = False
-params_gaussian_blobs = [{'center':(0.,0.),'sigma_radius_m':500000.,'rel_weight':2.}]
+params_gaussian_blobs = [{'center':(0.,0.),'sigma_radius_m':500000.,'rel_weight':0.00000001}]
 
 #spectra
-params_gaussian_spectra = [{'central_freq':0.075,'sigma_freq':0.1,'weight':10.}]
+params_gaussian_spectra = [{'central_freq':0.001,'sigma_freq':0.0002,'weight':10.}]
 
 ###############################################################################
 
 grd  = np.load(os.path.join(projectpath,'sourcegrid.npy'))
 ntraces = np.shape(grd)[-1]
-print 'Loaded source grid'
 
 config = json.load(open(os.path.join(projectpath,'config.json')))
 source_config = json.load(open(os.path.join(sourcepath,'source_config.json')))
-print 'Loaded config files.'
 
 if source_config['preprocess_do']:
     ext = '*.h5'
@@ -52,7 +50,6 @@ else:
 
 wfs = glob(os.path.join(wavefield_path,ext))
 if wfs != []:
-    print 'Found wavefield.'
     with WaveField(wfs[0]) as wf:
         df = wf.stats['Fs']
         nt = wf.stats['nt']
@@ -66,7 +63,6 @@ n = next_fast_len(2*nt-1)
 freq = np.fft.rfftfreq(n,d=1./df)
     
 taper = cosine_taper(len(freq),0.01)
-print 'Determined frequency axis.'
 
 
 def get_distance(grid,location):
@@ -80,7 +76,7 @@ def get_ocean_mask():
     m = Basemap(rsphere=6378137,resolution='c',projection='cea',lat_0=0.,
                 lon_0=0.,llcrnrlat=-90.,urcrnrlat=90.,llcrnrlon=-180.,urcrnrlon=180.)
     (x,y) = m(grd[0],grd[1])
-    ocean_mask = map(lambda (x,y): not m.is_land(x,y),zip(x,y))
+    #ocean_mask = map(lambda (x,y): not m.is_land(x,y),zip(x,y))
     return ocean_mask
 
 
@@ -95,7 +91,6 @@ if gaussian_blobs:
 
 basis1 = np.zeros((num_bases,ntraces))
 
-print 'Filling geographical distribution...'
 # homogeneous layer
 basis1[0,:] = np.ones(ntraces) 
 
@@ -115,7 +110,6 @@ if gaussian_blobs:
         i+=1
 
 
-print 'Filling spectra...'  
 # spectra
 basis2 = np.zeros((len(params_gaussian_spectra),len(freq)))
 # 'sort of hum gaussian'
@@ -140,14 +134,7 @@ if gaussian_blobs:
         i+=1
     if no_background:
         weights1[0] = 0.
-#print weights1
-# spectra --- much harder to assign manually, since we need weights for every location. just assigning ones.\n",
-weights2 = np.ones((np.shape(grd)[-1],np.shape(basis2)[0]))
-i=0
-for spec in params_gaussian_spectra:
-    weights2[:,i] *= spec['weight']
-
-print 'Plotting...'
+#
 
 
 from noisi.util import plot
@@ -159,14 +146,13 @@ plot.plot_grid(grd[0],grd[1],distr,outfile = os.path.join(sourcepath,'geog_distr
 
 
 plt.figure()
-plt.semilogx(freq,np.dot(weights2[0,:],basis2))
+plt.semilogx(freq,basis2[0,:])
 plt.xlabel('Frequency (Hz)')
 plt.ylabel('Source power (scaled)')
 plt.savefig(os.path.join(sourcepath,'freq_distr_startingmodel.png'))
 
 
 # Save to an hdf5 file
-print basis2
 
 with h5py.File(os.path.join(sourcepath,'step_0','starting_model.h5'),'w') as fh:
     fh.create_dataset('coordinates',data=grd.astype(np.float32))
@@ -174,24 +160,20 @@ with h5py.File(os.path.join(sourcepath,'step_0','starting_model.h5'),'w') as fh:
     fh.create_dataset('distr_basis',data=basis1.astype(np.float32))
     fh.create_dataset('distr_weights',data=weights1.astype(np.float32))
     fh.create_dataset('spect_basis',data=basis2.astype(np.float32))
-    fh.create_dataset('spect_weights',data=weights2.astype(np.float32))
 
 
 # Save the 'base model' to an hdf5 file.
 
 basis1_b = np.ones(basis1.shape)
 weights1_b = np.ones(weights1.shape)
-print 'Current source model allows no updates of spectral basis functions!'
 with h5py.File(os.path.join(sourcepath,'step_0','base_model.h5'),'w') as fh:
     fh.create_dataset('coordinates',data=grd.astype(np.float32))
     fh.create_dataset('frequencies',data=freq.astype(np.float32))
     fh.create_dataset('distr_basis',data=basis1_b.astype(np.float32))
     fh.create_dataset('distr_weights',data=weights1_b.astype(np.float32))
     fh.create_dataset('spect_basis',data=basis2.astype(np.float32))
-    fh.create_dataset('spect_weights',data=weights2.astype(np.float32))
 
 
 
 
-print 'Done.'
 

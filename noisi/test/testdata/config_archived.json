@@ -1,7 +1,7 @@
 {
     "date_created": "2017.08.23",
     "grid_coord_centr": null,
-    "grid_dx": 10000,
+    "grid_dx": 50000,
     "grid_lat_max": 2,
     "grid_lat_min": -2,
     "grid_lon_max": 2,

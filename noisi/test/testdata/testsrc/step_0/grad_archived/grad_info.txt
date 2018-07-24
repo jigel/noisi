@@ -12,7 +12,7 @@ Project:
 {
     "date_created": "2017.08.23",
     "grid_coord_centr": null,
-    "grid_dx": 10000,
+    "grid_dx": 50000,
     "grid_lat_max": 2,
     "grid_lat_min": -2,
     "grid_lon_max": 2,
@@ -31,20 +31,20 @@ Project:
 
 =========================================================================
 Source model:
-{"channel": "CHA", "date_created": "2017.08.23", "ktype": "td", "max_lag": 160, "model_observed_only": false, "mtype": "ln_energy_ratio", "preprocess_decimation_factor": null, "preprocess_do": true, "preprocess_filter_kind": "bandpass", "preprocess_filter_params": [0.003, 0.3, 3, true], "preprocess_truncate_sec": null, "project_name": "testdata", "project_path": "test/testdata/", "source_name": "testsrc", "source_path": "test/testdata/testsrc"}
+{"channel": "CHA", "date_created": "2017.08.23", "ktype": "td", "max_lag": 100, "model_observed_only": false, "mtype": "ln_energy_ratio", "preprocess_decimation_factor": null, "preprocess_do": true, "preprocess_filter_kind": null, "preprocess_filter_params": [0.003, 0.006, 3, true], "preprocess_truncate_sec": 300, "project_name": "testdata", "project_path": "test/testdata/", "source_name": "testsrc", "source_path": "test/testdata/testsrc"}
 =========================================================================
 Measurement:
 {
     "bandpass": null, 
     "date_created": "2017.08.23",
-    "g_speed": 3300.0,
+    "g_speed": 5000.0,
     "ignore_network": false,
     "mtype": "ln_energy_ratio",
     "taper_perc":0.05,
     "window_params_causal": true,
-    "window_params_hw": 20,
+    "window_params_hw": 3,
     "window_params_sep_noise": 0.0,
-    "window_params_win_overlap": false,
+    "window_params_win_overlap": true,
     "window_params_wtype": "hann",
     "window_plot_measurements": false 
 }
