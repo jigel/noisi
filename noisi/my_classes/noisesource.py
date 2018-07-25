@@ -37,7 +37,7 @@ class NoiseSource(object):
 
             # The surface area of each grid element...new since June 18
             try:
-                self.surf_area = self.model['surf_area'][:]
+                self.surf_area = self.model['surf_areas'][:]
             except KeyError:
                 # approximate as spherical surface elements...
                 self.surf_area = get_spherical_surface_elements(
