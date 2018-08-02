@@ -1,13 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.basemap import Basemap
+import cartopy.crs as ccrs
 import json
 import os
 import io
 import warnings
 warnings.filterwarnings("ignore")
 
-def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,plot=True,Dense_Antipole = True):
+def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,plot=True,dense_antipole = True, bluemarble = False,only_ocean=False):
     """
     This function creates a Gaussian grid. Input parameters:
     :sigma (greater than 2) = standard deviation, i.e. size of the area of denser grid points
@@ -18,7 +18,9 @@ def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,plot=True,Dense_Antipole
     :lon_0 = longitude of point of interest, -180° to 180°
     :n = number of circles
     :plot = True/False
-    :Dense_Antipole = True/False
+    :dense_antipole = True/False
+    :bluemarble = True/False
+    :only_ocean = True/False
     Returns: list of longitudes and latitudes
     """
     
@@ -50,7 +52,7 @@ def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,plot=True,Dense_Antipole
     dphi = []
     phi_0 = 0
     
-    if Dense_Antipole:
+    if dense_antipole:
         for i in range(0,np.size(dphi1)):
             phi_0 += dphi1[i]
             phi.append(phi_0)
@@ -124,7 +126,7 @@ def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,plot=True,Dense_Antipole
     lat_final1 = np.subtract(lat_final1,90)
     
     
-    if Dense_Antipole:
+    if dense_antipole:
         # Now flip the longitude to make the other hemisphere
         lat_final2 = [0]
         lon_final2 = [0] 
@@ -162,7 +164,7 @@ def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,plot=True,Dense_Antipole
     # lat_0 and lon_0 give the point to which the center should be shifted in degrees
 
     # Step 1: Convert lat_final & lon_final from degrees to radians
-    if Dense_Antipole:
+    if dense_antipole:
         lat_final_rad = np.deg2rad(lat_final)
         lon_final_rad = np.deg2rad(lon_final)
     else:
@@ -196,28 +198,38 @@ def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,plot=True,Dense_Antipole
             
     lat_final_rot = np.rad2deg(np.arcsin(z_cart_new))
 
-    # Plot using Basemap
     
+    if only_ocean:
+        from noisi.util.cartopy_is_land import is_land
+        grid_onlyocean_lon = []
+        grid_onlyocean_lat = []
+
+        for i in range(0,np.size(lat_final_rot)):
+            if not is_land(lon_final_rot[i],lat_final_rot[i]):
+                grid_onlyocean_lon.append(lon_final_rot[i])
+                grid_onlyocean_lat.append(lat_final_rot[i])
+            else:
+                continue
+        
+        lon_final_final = grid_onlyocean_lon
+        lat_final_final = grid_onlyocean_lat
+    else:
+        lon_final_final = lon_final_rot
+        lat_final_final = lat_final_rot
+        
+   
     if plot:
         plt.figure(figsize=(25,10))
-        map = Basemap(projection='hammer',lat_0=0,lon_0=0,resolution='l')
-        map.drawcoastlines()
-        #map.drawcountries()
-        #map.fillcontinents(color = 'coral',lake_color='aqua')
-        map.drawmapboundary()
-        #map.bluemarble()
-        parallels = np.arange(-90.,90,10.)
-        # labels = [left,right,top,bottom]
-        map.drawparallels(parallels,labels=[False,False,False,False])
-        meridians = np.arange(0.,360.,10.)
-        map.drawmeridians(meridians,labels=[False,False,False,False])
-        x,y = map(lon_final_rot, lat_final_rot)
-        map.plot(x, y,'ko', markersize=1)
-        
-        plt.title('Centre at %0.2f ° latitude and %0.2f ° longitude' %(lat_0,lon_0))
+        ax = plt.axes(projection=ccrs.Mollweide())
+        ax.coastlines()
+        if bluemarble:
+            ax.stock_img()
+        plt.scatter(lon_final_final,lat_final_final,s=1,c='k',transform=ccrs.Geodetic())
+        plt.title('Centre at %0.2f ° latitude and %0.2f ° longitude with %i gridpoints' %(lat_0,lon_0,np.size(lat_final_rot)))
         plt.show()
+
         
-    return list((lon_final_rot,lat_final_rot))
+    return list((lon_final_final,lat_final_final))
 
 
 def create_sourcegrid_gauss(config):
@@ -231,7 +243,8 @@ def create_sourcegrid_gauss(config):
     #ToDo read extra parameters into configuration
     grid = gauss_grid(config['gauss_sigma'],config['gauss_beta'],config['gauss_phi_ini'],config['gauss_phi_max'],
                       config['gauss_lat_0'],config['gauss_lon_0'],config['gauss_n'],
-                      plot=config['gauss_plot'],Dense_Antipole=config['gauss_dense_antipole'])
+                      plot=config['gauss_plot'],dense_antipole=config['gauss_dense_antipole'],
+                      only_ocean=config['gauss_only_ocean'])
    
     sources = np.zeros((2,len(grid[0])))
     #sources[0,:] = ids
@@ -245,8 +258,9 @@ def setup_sourcegrid_gauss(configfile):
     
     with io.open(configfile,'r') as fh:
         config = json.load(fh)
-    grid_filename = os.path.join(config['project_path'],'sourcegrid.npy')
+    grid_filename = os.path.join(config['project_path'],'sourcegrid.npy')    
     
-    # write to .npy
+    # write to .npy    
     np.save(grid_filename,sourcegrid)
+    print('Final number of gridpoints: ',np.size(sourcegrid)/2)
     print('Sourcegrid saved as sourcegrid.npy')
