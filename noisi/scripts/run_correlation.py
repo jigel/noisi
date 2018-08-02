@@ -164,7 +164,7 @@ def g1g2_corr(wf1,wf2,corr_file,src,source_conf,insta):
         taper = cosine_taper(ntime,p=0.01)
         taper[0:ntime//2] = 1.0
         ntraces = nsrc.src_loc[0].shape[0]
-
+        print(taper.shape)
         correlation = np.zeros(n_corr)
 
         if insta:

@@ -27,8 +27,10 @@ radius=None):
     gridx = []
     gridy = []
     
-    lat = (ymin if ymin != -90. else -89.999)
-    warn("Resetting lat_min to -89.999 degree")
+    lat = ymin
+    if ymin == -90.:
+        ymin = -89.999
+        warn("Resetting lat_min to -89.999 degree")
     
     while lat <= ymax:
         d_lat = dx / len_deg_lat(lat)
