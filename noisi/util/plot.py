@@ -118,7 +118,9 @@ def plot_grid(map_x,map_y,map_z,stations=[],v=None,globe=False,
         mx,my = m(map_x,map_y)
 
 
-        m.scatter(mx[indx],my[indx],marker='o',c=colors[indx],s=sizes[indx])
+        #m.scatter(mx[indx],my[indx],marker='o',c=colors[indx],s=sizes[indx])
+        scplt = m.scatter(mx,my,marker='o',c=map_z,cmap=cm,s=sizes)
+        cbar = m.colorbar(scplt,location='bottom',pad=0.3)
 
     if normalize and v==1.:
         cbar.set_ticks([-1.0,-0.5,0.,0.5,1.0])
