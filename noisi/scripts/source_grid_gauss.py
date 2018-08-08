@@ -217,7 +217,8 @@ def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,plot=True,dense_antipole
         lon_final_final = lon_final_rot
         lat_final_final = lat_final_rot
         
-   
+    print('Final number of gridpoints:',np.size(lat_final_final))
+    
     if plot:
         plt.figure(figsize=(25,10))
         ax = plt.axes(projection=ccrs.Mollweide())
@@ -225,7 +226,7 @@ def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,plot=True,dense_antipole
         if bluemarble:
             ax.stock_img()
         plt.scatter(lon_final_final,lat_final_final,s=1,c='k',transform=ccrs.Geodetic())
-        plt.title('Centre at %0.2f ° latitude and %0.2f ° longitude with %i gridpoints' %(lat_0,lon_0,np.size(lat_final_rot)))
+        plt.title('Centre at %0.2f ° latitude and %0.2f ° longitude with %i gridpoints' %(lat_0,lon_0,np.size(lat_final_final)))
         plt.show()
 
         
@@ -262,5 +263,4 @@ def setup_sourcegrid_gauss(configfile):
     
     # write to .npy    
     np.save(grid_filename,sourcegrid)
-    print('Final number of gridpoints: ',np.size(sourcegrid)/2)
     print('Sourcegrid saved as sourcegrid.npy')
