@@ -1,5 +1,6 @@
 from glob import glob
 import os
+from pandas import read_csv
 
 def define_correlationpairs(proj_dir,auto_corr=False,
     only_observed=True,channel='*'):
@@ -12,10 +13,17 @@ def define_correlationpairs(proj_dir,auto_corr=False,
     [['net1 sta1 lat1 lon1','net2 sta2 lat2 lon2'],[...]]
     """
     
+    try:
+        stations = read_csv(os.path.join(proj_dir,'stationlist.csv'))
+        nets = list(stations.net.values)
+        stations = list(stations.sta.values)
+        stations = [nets[i]+'  '+stations[i] for i in range(len(stations))]
+        
+    except FileNotFoundError:
+        stations = open(os.path.join(proj_dir,'stations.txt'),'r')
     
-    stations = open(os.path.join(proj_dir,'stations.txt'))
+        stations = stations.read().split('\n')
     
-    stations = stations.read().split('\n')
     stations.sort()
     i = 0
     corr_pairs = []
