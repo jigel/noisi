@@ -283,7 +283,7 @@ new_sourcemodel = os.path.join(newdir,'starting_model.h5')
 new_update = os.path.join(newdir,'grad','update.npy')
 old_upd = os.path.join(datadir,'grad','update.npy')
 
-src_model = NoiseSource(new_sourcemodel)
+src_model = NoiseSource(new_sourcemodel,w='r+')
 
 if not os.path.exists(old_upd):
 	old_upd = -1. * old_grad.copy()
