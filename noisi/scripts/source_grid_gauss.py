@@ -7,7 +7,7 @@ import io
 import warnings
 warnings.filterwarnings("ignore")
 
-def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,plot=True,dense_antipole = True, bluemarble = False,only_ocean=False):
+def gauss_grid_one(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,plot=True,dense_antipole = True,only_ocean=False):
     """
     This function creates a Gaussian grid. Input parameters:
     :sigma (greater than 2) = standard deviation, i.e. size of the area of denser grid points
@@ -19,7 +19,6 @@ def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,plot=True,dense_antipole
     :n = number of circles
     :plot = True/False
     :dense_antipole = True/False
-    :bluemarble = True/False
     :only_ocean = True/False
     Returns: list of longitudes and latitudes
     """
@@ -155,7 +154,7 @@ def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,plot=True,dense_antipole
     dx_min = dphi[0]*dlat
     dx_max = dphi[-1]*dlat
         
-    print('Number of Gridpoints:',np.size(lat_final))
+    #print('Number of Gridpoints:',np.size(lat_final))
     print('Minimum dx in m:',np.around(dx_min,3),'m which is',np.around(dphi[0],3),'°')
     print('Maximum dx in m:',np.around(dx_max,3),'m which is',np.around(dphi[-1],3),'°')
 
@@ -217,20 +216,146 @@ def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,plot=True,dense_antipole
         lon_final_final = lon_final_rot
         lat_final_final = lat_final_rot
         
-    print('Final number of gridpoints:',np.size(lat_final_final))
+    print('Number of gridpoints:',np.size(lat_final_final))
     
     if plot:
         plt.figure(figsize=(25,10))
         ax = plt.axes(projection=ccrs.Mollweide())
         ax.coastlines()
-        if bluemarble:
-            ax.stock_img()
         plt.scatter(lon_final_final,lat_final_final,s=1,c='k',transform=ccrs.Geodetic())
         plt.title('Centre at %0.2f ° latitude and %0.2f ° longitude with %i gridpoints' %(lat_0,lon_0,np.size(lat_final_final)))
         plt.show()
 
         
     return list((lon_final_final,lat_final_final))
+
+
+def spherical_distance_degrees(lat1,lon1,lat2,lon2):
+    """
+    Calculate ths distance between two points in degrees
+    Input: latitude 1, longitude 1, latitude 2, longitude 2
+    """
+    
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+
+    hav = np.sin(np.deg2rad(dlat)/2)**2 + np.cos(np.deg2rad(lat1)) * np.cos(np.deg2rad(lat2)) * np.sin(np.deg2rad(dlon)/2)**2
+    dist_deg = np.rad2deg(2 * np.arctan2(np.sqrt(hav), np.sqrt(1-hav)))
+
+    return dist_deg
+
+
+def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,gamma,plot,dense_antipole,only_ocean):
+    """
+    This function creates several gaussian grids. To turn them into one grid the variable gamma has to be defined. 
+    The input should be arrays with the variables for the gaussian grid plus gamma.
+    The first grid does not need a gamma, but a random value should be given. This grid will be used as the base grid.
+    Example input: [sigma1,sigma2],[beta1,beta2],[phi_ini1,phi_ini2],....,[gamma1,gamma2],[True,True],[False,True],[True,True]
+    
+    CAREFUL: When additional grids overlap, gridpoints are NOT removed. 
+    
+    :sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,gamma = array of integers
+    :plot,dense_antipole,only_ocean = array of True/False
+    """
+    
+    # first check the number of grids given
+    n_grids = np.size(sigma)
+    
+    if n_grids == 1:
+        plot = True
+        grid = gauss_grid_one(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,plot,dense_antipole,only_ocean)
+        final_grid_lon = grid[0]
+        final_grid_lat = grid[1]
+    else:
+        
+        all_grids = []
+
+        # Compute the different grids
+        for i in range(0,n_grids):
+            print('GRID: ',i+1)
+            grid_one = gauss_grid_one(sigma[i],beta[i],phi_ini[i],phi_max[i],lat_0[i],lon_0[i],n[i],
+                                  plot[i],dense_antipole[i],only_ocean[i])
+            all_grids.append(grid_one)
+            # different grids are now stored in all_grids
+
+
+        final_grid_lon = []
+        final_grid_lat = []
+
+        # loop over all grids
+        ## this only really works correctly if all grids have the same length otherwise it doesn't iterate over all points
+        for i in range(0,np.size(all_grids[0][0])):
+            if n_grids == 2:
+                dist_deg = []
+                dist_deg_var = spherical_distance_degrees(lat_0[1],lon_0[1],all_grids[0][1][i],all_grids[0][0][i])
+                dist_deg.append(dist_deg_var)
+
+                if dist_deg[0] <= gamma[1]:
+                    continue
+                else:
+                    final_grid_lat.append(all_grids[0][1][i])
+                    final_grid_lon.append(all_grids[0][0][i])
+
+            else:
+                dist_deg = []
+                leave_out = False # to skip the points that are in the areas
+
+                for j in range(0,n_grids-1):
+                    dist_deg_var = spherical_distance_degrees(lat_0[j+1],lon_0[j+1],all_grids[0][1][i],all_grids[0][0][i])
+                    dist_deg.append(dist_deg_var)
+                    if dist_deg_var <= gamma[j+1]:
+                        leave_out = True
+                    else:
+                        continue
+
+                if leave_out:
+                    continue
+                else:
+                    final_grid_lat.append(all_grids[0][1][i])
+                    final_grid_lon.append(all_grids[0][0][i])
+
+        plt.figure(figsize=(25,10))
+        ax = plt.axes(projection=ccrs.Mollweide())
+        ax.coastlines()
+        plt.scatter(final_grid_lon,final_grid_lat,s=1,c='k',transform=ccrs.Geodetic())
+        plt.title('Gauss Grid with gridpoints removed')
+        plt.show() 
+
+
+        # Now loop over the non-primary grids and add them to the grid
+        # This seems to work
+        dist_deg = []
+        if n_grids == 2:
+            for i in range(0,np.size(all_grids[1][0])):
+                dist_deg = spherical_distance_degrees(lat_0[1],lon_0[1],all_grids[1][1][i],all_grids[1][0][i])
+                if dist_deg <= gamma[1]:
+                    final_grid_lat.append(all_grids[1][1][i])
+                    final_grid_lon.append(all_grids[1][0][i])
+                else:
+                    continue
+        else:
+            for j in range(1,n_grids):
+                for i in range(0,np.size(all_grids[j][0])):
+                    dist_deg = spherical_distance_degrees(lat_0[j],lon_0[j],all_grids[j][1][i],all_grids[j][0][i])
+                    if dist_deg <= gamma[j]:
+                        final_grid_lat.append(all_grids[j][1][i])
+                        final_grid_lon.append(all_grids[j][0][i])
+                    else:
+                        continue
+
+
+        # plot
+        plt.figure(figsize=(25,10))
+        ax = plt.axes(projection=ccrs.Mollweide())
+        ax.coastlines()
+        plt.scatter(final_grid_lon,final_grid_lat,s=1,c='k',transform=ccrs.Geodetic())
+        plt.title('Final grid with {} gridpoints'.format(np.size(final_grid_lon)))
+        plt.show()
+        
+        print('Final number of gridpoints:',np.size(final_grid_lon))
+
+    return list((final_grid_lon,final_grid_lat))
+    
 
 
 def create_sourcegrid_gauss(config):
@@ -243,7 +368,7 @@ def create_sourcegrid_gauss(config):
     
     #ToDo read extra parameters into configuration
     grid = gauss_grid(config['gauss_sigma'],config['gauss_beta'],config['gauss_phi_ini'],config['gauss_phi_max'],
-                      config['gauss_lat_0'],config['gauss_lon_0'],config['gauss_n'],
+                      config['gauss_lat_0'],config['gauss_lon_0'],config['gauss_n'],gamma=config['gauss_gamma'],
                       plot=config['gauss_plot'],dense_antipole=config['gauss_dense_antipole'],
                       only_ocean=config['gauss_only_ocean'])
    
