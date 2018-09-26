@@ -101,12 +101,28 @@ def gauss_grid_one(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,plot=True,dense_anti
     # Step 2: Longitudinal angles (azmiuth)
     # We want these angles to be close to the latitudinal distance between the circles
 
-    dtheta = dphi
-    N = np.around(np.divide(360,dtheta))
+    ### OLD BELOW
+    #dtheta = dphi
+    #N = np.around(np.divide(360,dtheta))
     
     # To get the angle we now use 2*Pi/N
-    theta = np.divide(2*np.pi,N)
+    #theta = np.divide(2*np.pi,N)
+    ### OLD ABOVE
     
+    #### Try with circumference of circles
+
+    r_earth = 6371 #km
+
+    # Use phi
+    S = np.abs(2*np.pi*r_earth*np.sin(np.deg2rad(phi)))
+
+    # Now have circumference in km. One degree = 111km. 
+    # To get number of points on each circle we divide S by the distance between the circles dphi
+    N = np.around(np.divide(S,np.multiply(dphi,111)))
+
+    theta = np.divide(2*np.pi,N)
+
+
     ## We now have the latitudes and the angle over which we have to loop to get the longitudes. 
     # Step 3: Loop
 
@@ -314,12 +330,13 @@ def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,gamma,plot,dense_antipol
                     final_grid_lat.append(all_grids[0][1][i])
                     final_grid_lon.append(all_grids[0][0][i])
 
-        plt.figure(figsize=(25,10))
-        ax = plt.axes(projection=ccrs.Mollweide())
-        ax.coastlines()
-        plt.scatter(final_grid_lon,final_grid_lat,s=1,c='k',transform=ccrs.Geodetic())
-        plt.title('Gauss Grid with gridpoints removed')
-        plt.show() 
+        if plot[0]:
+            plt.figure(figsize=(25,10))
+            ax = plt.axes(projection=ccrs.Mollweide())
+            ax.coastlines()
+            plt.scatter(final_grid_lon,final_grid_lat,s=1,c='k',transform=ccrs.Geodetic())
+            plt.title('Gauss Grid with gridpoints removed')
+            plt.show() 
 
 
         # Now loop over the non-primary grids and add them to the grid
@@ -345,12 +362,13 @@ def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,gamma,plot,dense_antipol
 
 
         # plot
-        plt.figure(figsize=(25,10))
-        ax = plt.axes(projection=ccrs.Mollweide())
-        ax.coastlines()
-        plt.scatter(final_grid_lon,final_grid_lat,s=1,c='k',transform=ccrs.Geodetic())
-        plt.title('Final grid with {} gridpoints'.format(np.size(final_grid_lon)))
-        plt.show()
+        if plot[0]:
+            plt.figure(figsize=(25,10))
+            ax = plt.axes(projection=ccrs.Mollweide())
+            ax.coastlines()
+            plt.scatter(final_grid_lon,final_grid_lat,s=1,c='k',transform=ccrs.Geodetic())
+            plt.title('Final grid with {} gridpoints'.format(np.size(final_grid_lon)))
+            plt.show()
         
         print('Final number of gridpoints:',np.size(final_grid_lon))
 
