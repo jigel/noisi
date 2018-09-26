@@ -28,7 +28,8 @@ setup(
         "pandas",
         "click",
         "instaseis",
-        "h5py"],
+        "h5py",
+        "cartopy"],
     # ToDo: Use entry points in the future to handle two completely different approaches to the noise modeling: with delta-correlated sources or finite-correlation-length correlated sources
     # ToDo: Add entry points for test suite
     entry_points = {

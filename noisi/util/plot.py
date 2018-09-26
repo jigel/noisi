@@ -150,7 +150,7 @@ def plot_grid(map_x,map_y,map_z,stations=[],v=None,globe=False,
 
     #draw station locations
     for sta in stations:
-        m.plot(sta[0],sta[1],'^',color='r',markersize=15,markeredgecolor='0.5',latlon=True)
+        m.plot(sta[0],sta[1],'^',color='r',markersize=7,markeredgecolor='0.5',latlon=True)
         #m.plot(sta[0],sta[1],'^',color='lime',markersize=5,markeredgecolor='0.5',latlon=True)
     if outfile is None:
         plt.show()
