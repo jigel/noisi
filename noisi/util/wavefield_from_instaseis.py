@@ -43,9 +43,13 @@ sta = stationlist.at[rank,'sta']
 lat = stationlist.at[rank,'lat']
 lon = stationlist.at[rank,'lon']
 print(net,sta,lat,lon)
+
+
 # output directory:
 if rank == 0:
 	os.system('mkdir -p wavefield_processed')
+    
+comm.barrier()
 
 f_out_name = '{}.{}..{}.h5'.format(net,sta,channel)
 f_out_name = os.path.join('wavefield_processed',f_out_name)

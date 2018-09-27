@@ -8,6 +8,7 @@ basemap
 pandas
 click
 mpi4py
+cartopy
 
 If installing in a conda environment with pip, pip will try to meet most requirements automatically, however, basemap has to be installed manually using conda. mpi4py also has to be installed manually (an mpi compiler is required), and in order to install mpi4py, it is recommended to use pip (pip install mpi4py).
 
