@@ -1,3 +1,4 @@
+
 # create a wavefield from instaseis
 from mpi4py import MPI
 import instaseis
@@ -16,14 +17,14 @@ rank = comm.Get_rank()
 
 
 # get config
-source_config=json.load(open('source_config.json'))
-config = json.load(open('../config.json'))
+source_config=json.load(open(sys.argv[1]))
+config = json.load(open(sys.argv[2]))
 Fs = source_config['sampling_rate']
 path_to_db = config['wavefield_path']
 channel = source_config['channel']
 
 # read sourcegrid
-f_sources = np.load('../sourcegrid.npy')
+f_sources = np.load(sys.argv[3])
 ntraces = f_sources.shape[-1]
 
 # open the database
@@ -37,7 +38,9 @@ ntimesteps = stest.stats.npts
 
 
 # read station from file
-stationlist = read_csv('../stationlist.csv')
+stationlist_path = sys.argv[4]
+
+stationlist = read_csv(stationlist_path)
 net = stationlist.at[rank,'net']
 sta = stationlist.at[rank,'sta']
 lat = stationlist.at[rank,'lat']
@@ -47,12 +50,12 @@ print(net,sta,lat,lon)
 
 # output directory:
 if rank == 0:
-	os.system('mkdir -p wavefield_processed')
-    
+    os.system('mkdir -p '+ os.path.join(sys.argv[5],'wavefield_processed'))
+
 comm.barrier()
 
 f_out_name = '{}.{}..{}.h5'.format(net,sta,channel)
-f_out_name = os.path.join('wavefield_processed',f_out_name)
+f_out_name = os.path.join(sys.argv[5],'wavefield_processed',f_out_name)
 
 
 if not os.path.exists(f_out_name):
@@ -78,19 +81,20 @@ if not os.path.exists(f_out_name):
     # DATASET Nr 3: Seismograms itself
     traces = f_out.create_dataset('data',(ntraces,ntimesteps),dtype=np.float32)
     if channel[-1] == 'Z':
-    	c_index = 0
+        c_index = 0
     elif channel[-1] == 'R':
-    	c_index = 1
+        c_index = 1
     elif channel[-1] == 'T':
-    	c_index = 2
+        c_index = 2
 
 else:
     f_out = h5py.File(f_out_name, "r+")
-    startindex = len(f_out['data'])  
+    startindex = len(f_out['data'])
 
 
 # jump to the beginning of the trace in the binary file
 for i in range(startindex,ntraces):
+
     if i%1000 == 1:
         print('Converted %g of %g traces' %(i,ntraces))
     # read station name, copy to output file
@@ -109,18 +113,18 @@ for i in range(startindex,ntraces):
     values =  db.get_seismograms(source=fsrc,receiver=rec1,dt=1./Fs)
     
     if c_index in [1,2]:
-    	baz = gps2dist_azimuth(lat_src,lon_src,lat,lon)[2]
-    	values.rotate('NE->RT',back_azimuth=baz)
+        baz = gps2dist_azimuth(lat_src,lon_src,lat,lon)[2]
+        values.rotate('NE->RT',back_azimuth=baz)
 
     values = values[c_index]
 
     if config['synt_data'] in ['VEL','ACC']:
-    	values.differentiate()
-    	if config['synt_data'] == 'ACC':
-    		values.differentiate()
+        values.differentiate()
+        if config['synt_data'] == 'ACC':
+            values.differentiate()
     # Save in traces array
     traces[i,:] = values.data
-    
-    
+
+
 f_out.close()
 

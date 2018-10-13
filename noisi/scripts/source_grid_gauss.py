@@ -278,6 +278,7 @@ def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,gamma,plot,dense_antipol
     
     # first check the number of grids given
     n_grids = np.size(sigma)
+    print("Number of grids: ", n_grids)
 
     if n_grids == 1:
         plot = True
@@ -290,7 +291,7 @@ def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,gamma,plot,dense_antipol
 
         # Compute the different grids
         for i in range(0,n_grids):
-            print('GRID: ',i+1)
+            print('Grid {} of {}'.format(i+1,n_grids))
             grid_one = gauss_grid_one(sigma[i],beta[i],phi_ini[i],phi_max[i],lat_0[i],lon_0[i],n[i],
                                   plot,dense_antipole,only_ocean)
             all_grids.append(grid_one)
