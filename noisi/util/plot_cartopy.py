@@ -45,7 +45,7 @@ def plot_gradient(project_path, source_path,gridlines = False,extent=None):
         ax.gridlines(draw_labels=True)
     if extent is not None:
         ax.set_extent(extent)
-    plt.scatter(grd[0],grd[1],s=30,c=grad_file[:,0],transform=ccrs.Geodetic(),cmap=plt.get_cmap('seismic'),norm=colors.Normalize(-v,v))
+    plt.scatter(grd[0],grd[1],s=10,c=grad_file[:,0],transform=ccrs.Geodetic(),cmap=plt.get_cmap('seismic'),norm=colors.Normalize(-v,v))
     plt.colorbar()
     plt.scatter(stations_lon,stations_lat,c='k',marker='^')
     plt.title('Gradient for {} with {} stations'.format(source_name,np.size(stations_lat)),y=1.05)
