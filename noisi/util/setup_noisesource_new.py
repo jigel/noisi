@@ -250,17 +250,14 @@ def setup_noisesource_new(project_path,source_path, data_path = None,t_data= Non
             
             n_grids = np.size(config['gauss_sigma'])
               
-            if n_grids == 1:
-                only_ocean_false = False
-            else:
-                only_ocean_false = False
+            only_ocean_false = False
                 
-            plot_true = False
+            plot_false = False
     
             # compute full grid with only_ocean = False
             grd_full = gauss_grid(config['gauss_sigma'],config['gauss_beta'],config['gauss_phi_ini'],config['gauss_phi_max'],
                           config['gauss_lat_0'],config['gauss_lon_0'],config['gauss_n'],config['gauss_gamma'],
-                          plot=plot_true,dense_antipole=config['gauss_dense_antipole'],
+                          plot=plot_false,dense_antipole=config['gauss_dense_antipole'],
                           only_ocean=only_ocean_false)
             
             # Calculate voronoi cells for the whole grid

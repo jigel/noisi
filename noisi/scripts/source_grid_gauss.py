@@ -270,8 +270,6 @@ def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,gamma,plot,dense_antipol
     The first grid does not need a gamma, but a random value should be given. This grid will be used as the base grid.
     Example input: [sigma1,sigma2],[beta1,beta2],[phi_ini1,phi_ini2],....,[gamma1,gamma2],[True,True],[False,True],[True,True]
     
-    CAREFUL: When additional grids overlap, gridpoints are NOT removed. 
-    
     :sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,gamma = array of integers
     :plot,dense_antipole,only_ocean = array of True/False
     """

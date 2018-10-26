@@ -76,8 +76,8 @@ az_selection=None,scale=4.,resol=1,plot=True):
     inpt = glob(os.path.join(pathname,'*{}*{}*.{}'.format(comp[2],comp[2],fmt.lower())))
     inpt.extend(glob(os.path.join(pathname,'*{}*{}*.{}'.format(comp[2],comp[2],fmt.upper()))))
 
-    print(os.path.join(pathname,'*{}--*{}.*.{}'.format(comp[0],comp[1],fmt.lower())))
-    print(inpt)
+    #print(os.path.join(pathname,'*{}--*{}.*.{}'.format(comp[0],comp[1],fmt.lower())))
+    #print(inpt)
 
     traces = Stream()
 
