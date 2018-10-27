@@ -9,6 +9,7 @@ import io
 import json
 import numpy as np
 from pandas import read_csv
+import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
