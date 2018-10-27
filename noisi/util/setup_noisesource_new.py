@@ -77,7 +77,7 @@ def setup_noisesource_new(project_path,source_path, data_path = None,t_data= Non
         plt.colorbar()
         plt.title('Dataset_path transformed up to frequency {} Hz'.format(np.around(f[f_max],decimals=5)))
         ax.coastlines()
-        plt.show()
+        plt.show(block=False)
     
     
     config = json.load(open(os.path.join(project_path,'config.json')))    
@@ -228,11 +228,11 @@ def setup_noisesource_new(project_path,source_path, data_path = None,t_data= Non
     ax.coastlines()
     if outfile:
         plt.savefig(os.path.join(source_path,'noisesource_dist.png'))
-    plt.show()
+    plt.show(block=False)
     
     plt.semilogx(freq,np.dot(weights2[0,:],basis2))
     plt.title('Frequency spectrum of noise source distribution')
-    plt.show()
+    plt.show(block=False)
     
     
     ##################
@@ -269,7 +269,7 @@ def setup_noisesource_new(project_path,source_path, data_path = None,t_data= Non
             ax.coastlines()
             plt.scatter(grd[0],grd[1],s=1,c='k',transform=ccrs.Geodetic())
             plt.title('Intial Gauss Grid with all gridpoints')
-            plt.show() 
+            plt.show(block=False) 
     
             # Remove points on land again
             from noisi.util.cartopy_is_land import is_land
@@ -291,7 +291,7 @@ def setup_noisesource_new(project_path,source_path, data_path = None,t_data= Non
             plt.scatter(grid_onlyocean_lon,grid_onlyocean_lat,s=1,c=voronoi_areas_onlyocean,transform=ccrs.Geodetic(),cmap=plt.get_cmap('seismic_r'))
             plt.title('Final Gauss Grid with gridpoints removed')
             plt.colorbar()
-            plt.show() 
+            plt.show(block=False) 
             
             print('Gridpoints and voronoi cells on land removed.')
             grd = np.asarray([grid_onlyocean_lon,grid_onlyocean_lat])
