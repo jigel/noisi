@@ -46,7 +46,7 @@ def setup_noisesource_new(project_path,source_path, data_path = None,t_data= Non
         # sum everything up to dominant period of wavefield
         f_max = np.argmin(np.abs(f-f_dom))
         
-        p2l_freq = data.variables['p2l'][t_data,:f_max,:,:]
+        p2l_freq = data.variables['p2l'][t_data,f_max-2:f_max+1,:,:]
         
         #p2l_freq_sum = np.sum(p2l_freq,axis=0)
         #p2l_freq_10 = 10**p2l_freq_sum
