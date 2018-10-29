@@ -1,8 +1,8 @@
 {
     "n_cores": 8,
-    "project_name": "Fabrice_Thresh_0_1",
+    "project_name": "Fabrice_Thresh_0_1_16stat",
     "data_path": "/Users/jigel/noisi/WW3-GLOB-30M_201701_p2l.nc",
-    "t_data": 72,
+    "t_data": 206,
     "f_dom": 0.1,
     "data_thresh": 0.1,
     "gamma_thresh": 8,
@@ -13,8 +13,8 @@
         90
     ],
     "gamma_const": 3,
-    "back_grid_phi": 4,
-    "data_grid_phi": 0.4,
-    "stationlist_path": "/Users/jigel/noisi/stationlist_atlantic_26.csv",
+    "back_grid_phi": 5,
+    "data_grid_phi": 0.7,
+    "stationlist_path": "/Users/jigel/noisi/stationlist_atlantic_18.csv",
     "wavefield_path": "/Users/jigel/axisem/SOLVER/Noisi_10s_repacked"
 }

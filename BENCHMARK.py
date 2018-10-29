@@ -78,14 +78,14 @@ for i in range(0,np.size(gridpoints_homo)):
         conf = json.loads(fh.read())
         
     conf['gauss_grid'] = True      
-    conf['gauss_sigma'] = sigma_homo[i]
-    conf['gauss_beta'] = beta_homo[i]
-    conf['gauss_phi_ini'] = phi_ini_homo[i]
-    conf['gauss_phi_max'] = phi_max_homo[i]
-    conf['gauss_lat_0'] = lat_0_homo[i]
-    conf['gauss_lon_0'] = lon_0_homo[i]
-    conf['gauss_n'] = n_homo[i]
-    conf['gauss_gamma'] = gamma_homo[i]
+    conf['gauss_sigma'] = [sigma_homo[i]]
+    conf['gauss_beta'] = [beta_homo[i]]
+    conf['gauss_phi_ini'] = [phi_ini_homo[i]]
+    conf['gauss_phi_max'] = [phi_max_homo[i]]
+    conf['gauss_lat_0'] = [lat_0_homo[i]]
+    conf['gauss_lon_0'] = [lon_0_homo[i]]
+    conf['gauss_n'] = [n_homo[i]]
+    conf['gauss_gamma'] = [gamma_homo[i]]
     conf['gauss_plot'] = False
     conf['gauss_dense_antipole'] = False
     conf['gauss_only_ocean'] = True
@@ -237,14 +237,14 @@ for i in range(0,np.size(gridpoints_gauss)):
         conf = json.loads(fh.read())
         
     conf['gauss_grid'] = True      
-    conf['gauss_sigma'] = sigma_gauss[i]
-    conf['gauss_beta'] = beta_gauss[i]
-    conf['gauss_phi_ini'] = phi_ini_gauss[i]
-    conf['gauss_phi_max'] = phi_max_gauss[i]
-    conf['gauss_lat_0'] = lat_0_gauss[i]
-    conf['gauss_lon_0'] = lon_0_gauss[i]
-    conf['gauss_n'] = n_gauss[i]
-    conf['gauss_gamma'] = gamma_gauss[i]
+    conf['gauss_sigma'] = [sigma_gauss[i]]
+    conf['gauss_beta'] = [beta_gauss[i]]
+    conf['gauss_phi_ini'] = [phi_ini_gauss[i]]
+    conf['gauss_phi_max'] = [phi_max_gauss[i]]
+    conf['gauss_lat_0'] = [lat_0_gauss[i]]
+    conf['gauss_lon_0'] = [lon_0_gauss[i]]
+    conf['gauss_n'] = [n_gauss[i]]
+    conf['gauss_gamma'] = [gamma_gauss[i]]
     conf['gauss_plot'] = False
     conf['gauss_dense_antipole'] = False
     conf['gauss_only_ocean'] = True

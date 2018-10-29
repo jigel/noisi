@@ -46,7 +46,9 @@ stationlist_path = alpha_config['stationlist_path']
 wavefield_path = alpha_config['wavefield_path']
 
 ############## Setup new project ##############
-os.system('noisi setup_project ' + project_name)
+
+os.system('noisi setup-project ' + project_name)
+    
 print('New project created:', project_name)
 
 project_path = os.path.join(main_path,project_name)
@@ -109,13 +111,17 @@ with io.open(config_path,'w') as fh:
 
 ########  calculate grid with noisi ###########
 print('Computing grid...')
-os.system('noisi setup_sourcegrid .')
+
+os.system('noisi setup-sourcegrid .')
+    
 print('Grid computed and saved as sourcegrid.npy')
 plt.close()
 
 ######## Plot and save sourcegrid #########
 sourcegrid_path = os.path.join(project_path,'sourcegrid.npy')
 grid = np.load(sourcegrid_path)
+
+print('Number of gridpoints: ', np.size(grid[0]))
 
 plt.figure(figsize=(25,10))
 ax = plt.axes(projection=ccrs.Mollweide())
@@ -129,7 +135,9 @@ plt.show(block=False)
 source_homo = "homo_source"
 
 source_homo_path = os.path.join(project_path,source_homo)
-os.system ('noisi setup_source ' + source_homo_path)
+
+
+os.system ('noisi setup-source ' + source_homo_path)
 
 print('New source created: ', source_homo_path)
 
@@ -215,7 +223,9 @@ reftime = traces_homo[0].stats.starttime + maxlag,scale=1.,outfile=os.path.join(
 source_data = "data_source"
 
 source_data_path = os.path.join(project_path,source_data)
-os.system ('noisi setup_source ' + source_data_path)
+
+
+os.system ('noisi setup-source ' + source_data_path)
 
 
 print('New source created: ', source_data_path)
