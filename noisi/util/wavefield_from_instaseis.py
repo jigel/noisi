@@ -1,3 +1,11 @@
+"""
+Input arguments:
+1. source_config.json path
+2. config.json path 
+3. sourcegrid.npy path
+4. stationlist.csv path
+5. project path
+"""
 
 # create a wavefield from instaseis
 from mpi4py import MPI
@@ -37,94 +45,115 @@ stest = db.get_seismograms(source=instaseis.ForceSource(latitude=0.0,
 ntimesteps = stest.stats.npts
 
 
+
+
+
 # read station from file
 stationlist_path = sys.argv[4]
 
 stationlist = read_csv(stationlist_path)
-net = stationlist.at[rank,'net']
-sta = stationlist.at[rank,'sta']
-lat = stationlist.at[rank,'lat']
-lon = stationlist.at[rank,'lon']
-print(net,sta,lat,lon)
 
+# number of wavefields that have to be computed
+nr_wf = np.shape(stationlist)[0]
+# number of processes
+nr_pr = int(np.ceil(nr_wf/size))
+# station indices
+station_ind = np.arange(rank*nr_pr,(rank+1)*nr_pr)
 
-# output directory:
-if rank == 0:
-    os.system('mkdir -p '+ os.path.join(sys.argv[5],'wavefield_processed'))
-
-comm.barrier()
-
-f_out_name = '{}.{}..{}.h5'.format(net,sta,channel)
-f_out_name = os.path.join(sys.argv[5],'wavefield_processed',f_out_name)
-
-
-if not os.path.exists(f_out_name):
-
-    startindex = 0
-
-    f_out = h5py.File(f_out_name, "w")
+for i in range(0,nr_pr):
     
-    # DATASET NR 1: STATS
-    stats = f_out.create_dataset('stats',data=(0,))
-    stats.attrs['reference_station'] = '{}.{}'.format(net,sta)
-    stats.attrs['data_quantity'] = config['synt_data']
-    stats.attrs['ntraces'] = ntraces
-    stats.attrs['Fs'] = Fs
-    stats.attrs['nt'] = int(ntimesteps)
+    # avoid index out of bounds
+    if station_ind[i] >= nr_wf:
+        break
     
-    # DATASET NR 2: Source grid
-    sources = f_out.create_dataset('sourcegrid',data=f_sources[0:2])
-    lat1 = geograph_to_geocent(float(lat))
-    lon1 = float(lon)
-    rec1 = instaseis.Receiver(latitude=lat1,longitude=lon1)
+    net = stationlist.at[station_ind[i],'net']
+    sta = stationlist.at[station_ind[i],'sta']
+    lat = stationlist.at[station_ind[i],'lat']
+    lon = stationlist.at[station_ind[i],'lon']
+    print('======= Working on station:  ========')
+    print(net,sta,lat,lon)
     
-    # DATASET Nr 3: Seismograms itself
-    traces = f_out.create_dataset('data',(ntraces,ntimesteps),dtype=np.float32)
-    if channel[-1] == 'Z':
-        c_index = 0
-    elif channel[-1] == 'R':
-        c_index = 1
-    elif channel[-1] == 'T':
-        c_index = 2
-
-else:
-    f_out = h5py.File(f_out_name, "r+")
-    startindex = len(f_out['data'])
-
-
-# jump to the beginning of the trace in the binary file
-for i in range(startindex,ntraces):
-
-    if i%1000 == 1:
-        print('Converted %g of %g traces' %(i,ntraces))
-    # read station name, copy to output file
-   
-    lat_src = geograph_to_geocent(f_sources[1,i])
-    lon_src = f_sources[0,i]
-
-    ######### ToDo! Right now, only either horizontal or vertical component sources ##########
-    if c_index in [1,2]:
-        fsrc = instaseis.ForceSource(latitude=lat_src,
-                    longitude=lon_src,f_t=1.e09,f_p=1.e09)
-    elif c_index == 0:
-        fsrc = instaseis.ForceSource(latitude=lat_src,
-                    longitude=lon_src,f_r=1.e09)
-
-    values =  db.get_seismograms(source=fsrc,receiver=rec1,dt=1./Fs)
     
-    if c_index in [1,2]:
-        baz = gps2dist_azimuth(lat_src,lon_src,lat,lon)[2]
-        values.rotate('NE->RT',back_azimuth=baz)
-
-    values = values[c_index]
-
-    if config['synt_data'] in ['VEL','ACC']:
-        values.differentiate()
-        if config['synt_data'] == 'ACC':
+    # output directory:
+    if rank == 0:
+        os.system('mkdir -p '+ os.path.join(sys.argv[5],'wavefield_processed'))
+    
+    comm.barrier()
+    
+    f_out_name = '{}.{}..{}.h5'.format(net,sta,channel)
+    f_out_name = os.path.join(sys.argv[5],'wavefield_processed',f_out_name)
+    
+    
+    if not os.path.exists(f_out_name):
+    
+        startindex = 0
+    
+        f_out = h5py.File(f_out_name, "w")
+        
+        # DATASET NR 1: STATS
+        stats = f_out.create_dataset('stats',data=(0,))
+        stats.attrs['reference_station'] = '{}.{}'.format(net,sta)
+        stats.attrs['data_quantity'] = config['synt_data']
+        stats.attrs['ntraces'] = ntraces
+        stats.attrs['Fs'] = Fs
+        stats.attrs['nt'] = int(ntimesteps)
+        
+        # DATASET NR 2: Source grid
+        sources = f_out.create_dataset('sourcegrid',data=f_sources[0:2])
+        lat1 = geograph_to_geocent(float(lat))
+        lon1 = float(lon)
+        rec1 = instaseis.Receiver(latitude=lat1,longitude=lon1)
+        
+        # DATASET Nr 3: Seismograms itself
+        traces = f_out.create_dataset('data',(ntraces,ntimesteps),dtype=np.float32)
+        if channel[-1] == 'Z':
+            c_index = 0
+        elif channel[-1] == 'R':
+            c_index = 1
+        elif channel[-1] == 'T':
+            c_index = 2
+    
+    else:
+        f_out = h5py.File(f_out_name, "r+")
+        startindex = len(f_out['data'])
+    
+    
+    # jump to the beginning of the trace in the binary file
+    for i in range(startindex,ntraces):
+    
+        #if i%1000 == 1:
+        #    print('Converted %g of %g traces' %(i,ntraces))
+            
+        if i%1000 == 0:
+            print('Converted {} out of {} traces'.format(i,ntraces))
+        # read station name, copy to output file
+       
+        lat_src = geograph_to_geocent(f_sources[1,i])
+        lon_src = f_sources[0,i]
+    
+        ######### ToDo! Right now, only either horizontal or vertical component sources ##########
+        if c_index in [1,2]:
+            fsrc = instaseis.ForceSource(latitude=lat_src,
+                        longitude=lon_src,f_t=1.e09,f_p=1.e09)
+        elif c_index == 0:
+            fsrc = instaseis.ForceSource(latitude=lat_src,
+                        longitude=lon_src,f_r=1.e09)
+    
+        values =  db.get_seismograms(source=fsrc,receiver=rec1,dt=1./Fs)
+        
+        if c_index in [1,2]:
+            baz = gps2dist_azimuth(lat_src,lon_src,lat,lon)[2]
+            values.rotate('NE->RT',back_azimuth=baz)
+    
+        values = values[c_index]
+    
+        if config['synt_data'] in ['VEL','ACC']:
             values.differentiate()
-    # Save in traces array
-    traces[i,:] = values.data
-
-
-f_out.close()
+            if config['synt_data'] == 'ACC':
+                values.differentiate()
+        # Save in traces array
+        traces[i,:] = values.data
+    
+    
+    f_out.close()
 
