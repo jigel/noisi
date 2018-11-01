@@ -29,6 +29,8 @@ from noisi.main import setup_source
 from noisi.main import correlation
 from noisi.main import kernel
 from noisi.main import gradient
+from subprocess import call
+import time
 
 # get the main directory
 main_path = os.getcwd()
@@ -211,10 +213,10 @@ print('Number of stations: ',station_n)
 # need arguments: source_config, config, sourcegrid, stationlist, output folder
 
 source_config_path = os.path.join(source_homo_path,'source_config.json')
-
 # copy wavefield_from_instaseis.py
 os.system ('cp {} {}'.format(os.path.join(main_path,'noisi/util/wavefield_from_instaseis.py'),source_homo_path))
 print('Copied wavefield_from_instaseis.py file to source directory.')
+
 
 wavefield_from_instaseis_path = os.path.join(source_homo_path,'wavefield_from_instaseis.py')
 

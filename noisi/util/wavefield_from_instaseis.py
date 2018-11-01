@@ -1,13 +1,3 @@
-"""
-Input arguments:
-1. source_config.json path
-2. config.json path 
-3. sourcegrid.npy path
-4. stationlist.csv path
-5. project path
-"""
-
-# create a wavefield from instaseis
 from mpi4py import MPI
 import instaseis
 import h5py

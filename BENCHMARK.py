@@ -1,4 +1,4 @@
-# code to do a benchmark test for the grid
+open# code to do a benchmark test for the grid
 
 import os
 import io
@@ -66,7 +66,7 @@ for i in range(0,np.size(gridpoints_homo)):
     print('============= Working on Grid {} of {} ================'.format(i+1,np.size(gridpoints_homo)))
     
     # new project
-    project_name = "BENCHMARK_Homo_" + str(gridpoints_homo[i])
+    project_name = "BENCHMARK_Homo_TEST_" + str(gridpoints_homo[i])
     if os.path.exists(project_name):
         print('Project exists already, must give it a new name.')
         #break out of loop so that it's not calculated again.
