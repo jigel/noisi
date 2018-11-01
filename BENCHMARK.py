@@ -9,6 +9,12 @@ import numpy as np
 from pandas import read_csv
 from noisi.util.setup_noisesource_new import setup_noisesource_new
 from noisi.util.plot_with_azimuth_sel import plot_section
+from noisi.scripts.source_grid import setup_sourcegrid as setup_sgrid
+from noisi.scripts.source_grid_gauss import setup_sourcegrid_gauss as setup_sgrid_gauss
+from noisi.util.setup_data_gaussgrid import setup_data_gaussgrid
+from noisi.main import setup_proj
+from noisi.main import setup_sourcegrid
+from noisi.main import setup_source
 
 
 
@@ -16,6 +22,7 @@ from noisi.util.plot_with_azimuth_sel import plot_section
 main_path = os.getcwd()
 print(main_path)
 
+n_cores = 8
 
 # homogeneous grids input
 
@@ -47,7 +54,7 @@ gamma_gauss = [[0,40],[0,40],[0,40],[0,40],[0,40],[0,40],[0,40],[0,40],[0,40],[0
 
 
 # station list input
-stationlist_path = os.path.abspath("./stationlist_atlantic_26.csv")
+stationlist_path = os.path.abspath("./stationlist_europe_16.csv")
 
 # wavefield input
 wavefield_path = os.path.abspath("../axisem/SOLVER/Noisi_10s_repacked/")
@@ -60,14 +67,23 @@ for i in range(0,np.size(gridpoints_homo)):
     
     # new project
     project_name = "BENCHMARK_Homo_" + str(gridpoints_homo[i])
-    os.system('noisi setup_project ' + project_name)
-    print('New project created:', project_name)
+    if os.path.exists(project_name):
+        print('Project exists already, must give it a new name.')
+        #break out of loop so that it's not calculated again.
+        break
+    else:
+        setup_proj(project_name)
+        print('New project created:', project_name)
+
     project_path = os.path.join(main_path,project_name)
     print('Path to new project: ', project_path)
+
+    os.system ('cp {} {}'.format(stationlist_path,os.path.join(project_path,'stationlist.csv')))
+    print ('Copied stationlist file to project directory.')
     
     # move to project directory
-    os.chdir(project_path)
-    print('Changed to project directory:',os.getcwd())
+    #os.chdir(project_path)
+    #print('Changed to project directory:',os.getcwd())
     
     # setup grid
     
@@ -103,7 +119,12 @@ for i in range(0,np.size(gridpoints_homo)):
 
     # calculate grid with noisi
     print('Computing grid...')
-    os.system('noisi setup_sourcegrid ' + project_path)
+    conf = json.load(open(os.path.join(project_path,'config.json')))
+
+    if conf['gauss_grid']:
+        setup_sgrid_gauss(os.path.join(project_path,'config.json'))
+    else:
+        setup_sgrid(os.path.join(project_path,'config.json'))
     print('Grid computed and saved as sourcegrid.npy')
     
     #plot and save sourcegrid
@@ -117,12 +138,50 @@ for i in range(0,np.size(gridpoints_homo)):
     plt.title('Final grid with {} gridpoints'.format(np.size(grid[0])))
     plt.savefig(os.path.join(project_path,"sourcegrid.png"))
     plt.show(block=False)
-    
+    plt.close()
     # Setup a homogeneous source called homo_source
     source_homo = "homo_source"
-
     source_homo_path = os.path.join(project_path,source_homo)
-    os.system ('noisi setup_source ' + source_homo_path)
+
+    source_model = source_homo_path
+
+    if not os.path.exists('config.json'):
+        print('No config file for project found \
+              (detailing e.g. source grid). Run setup_project first.')
+
+    if os.path.exists(source_model):
+        print('Source exists already, must give it a new name.')
+
+    else:
+        
+        os.makedirs(os.path.join(source_model,'step_0'))
+        os.mkdir(os.path.join(source_model,'observed_correlations'))
+        
+        for d in ['adjt','grad','corr','kern']:
+            os.mkdir(os.path.join(source_model,'step_0',d))
+
+        from noisi import _ROOT
+        import time
+
+        with io.open(os.path.join(_ROOT,'config','source_config.json'),'r') as fh:
+            conf = json.loads(fh.read())
+            conf['date_created'] = str(time.strftime("%Y.%m.%d"))
+            conf['project_name'] = os.path.basename(os.getcwd())
+            conf['project_path'] = os.getcwd()
+            conf['source_name'] = source_model
+            conf['source_path'] = os.path.abspath(source_model)
+
+        with io.open(os.path.join(source_model,'source_config.json'),'w') as fh:
+            cf = json.dumps(conf,sort_keys=True, indent=4, separators=(",", ": "))
+            fh.write(cf)
+
+        with io.open(os.path.join(_ROOT,'config','measr_config.json'),'r') as fh:
+            conf = json.loads(fh.read())
+            conf['date_created'] = str(time.strftime("%Y.%m.%d"))
+
+        with io.open(os.path.join(source_model,'measr_config.json'),'w') as fh:
+            cf = json.dumps(conf,sort_keys=True, indent=4, separators=(",", ": "))
+            fh.write(cf)
 
     print('New source created: ', source_homo_path)
 
@@ -136,10 +195,15 @@ for i in range(0,np.size(gridpoints_homo)):
     # need arguments: source_config, config, sourcegrid, stationlist, output folder
 
     source_config_path = os.path.join(source_homo_path,'source_config.json')
+    # copy wavefield_from_instaseis.py
+    os.system ('cp {} {}'.format(os.path.join(main_path,'noisi/util/wavefield_from_instaseis.py'),source_homo_path))
+    print('Copied wavefield_from_instaseis.py file to source directory.')
+
+
     wavefield_from_instaseis_path = os.path.join(source_homo_path,'wavefield_from_instaseis.py')
 
     print('Converting wavefield from instaseis...')
-    os.system('mpirun -np {} python {} {} {} {} {} {}'.format(station_n,wavefield_from_instaseis_path,source_config_path,config_path,sourcegrid_path,stationlist_path,project_path))
+    os.system('mpirun -np {} python {} {} {} {} {} {}'.format(n_cores,wavefield_from_instaseis_path,source_config_path,config_path,sourcegrid_path,stationlist_path,project_path))
     print('Done.')
     
     wavefield_processed_path = os.path.join(project_path,'wavefield_processed')
@@ -166,7 +230,7 @@ for i in range(0,np.size(gridpoints_homo)):
 
             
     # change instaseis and wavefield
-    conf['max_lag'] = 2500
+    conf['max_lag'] = 1500
     conf['preprocess_do'] = False
     conf ['project_name'] = project_name
     conf ['project_path'] = project_path
@@ -183,7 +247,7 @@ for i in range(0,np.size(gridpoints_homo)):
     
     # calculate correlations for homogeneous source
     print("Computing correlations...")
-    os.system("mpirun -np 8 noisi correlation {} {}".format(source_homo_path,0))
+    os.system("mpirun -np {} noisi correlation {} {}".format(n_cores,source_homo_path,0))
     print("All correlations computed.")
     
     # plot correlations and save the file
@@ -199,10 +263,13 @@ for i in range(0,np.size(gridpoints_homo)):
     traces_homo.plot(type='section',orientation='horizontal',
     reftime = traces_homo[0].stats.starttime + maxlag,scale=1.,outfile=os.path.join(project_path,'homo_correlations.png'))
 
+    # Remove wavefield_processed folder to save space
+    os.system('rm -r {}'.format(wavefield_processed_path))
+    print('{} removed to save space.'.format(wavefield_processed_path))
 
     # Go back to main directory
-    os.chdir(main_path)
-    print('Back to main directory:',os.getcwd())
+    #os.chdir(main_path)
+    #print('Back to main directory:',os.getcwd())
     
     
     
@@ -219,14 +286,20 @@ for i in range(0,np.size(gridpoints_gauss)):
     
     # new project
     project_name = "BENCHMARK_Gauss_" + str(gridpoints_gauss[i])
-    os.system('noisi setup_project ' + project_name)
-    print('New project created:', project_name)
-    project_path = os.path.join(os.getcwd(),project_name)
+
+    if os.path.exists(project_name):
+        print('Project exists already, must give it a new name.')
+
+    else:
+        setup_proj(project_name)
+        print('New project created:', project_name)
+
+    project_path = os.path.join(main_path,project_name)
     print('Path to new project: ', project_path)
-        
-    # move to project directory
-    os.chdir(project_path)
-    print('Changed to project directory:',os.getcwd())
+
+    os.system ('cp {} {}'.format(stationlist_path,os.path.join(project_path,'stationlist.csv')))
+    print ('Copied stationlist file to project directory.')
+
     
     # setup grid
     
@@ -262,7 +335,14 @@ for i in range(0,np.size(gridpoints_gauss)):
 
     # calculate grid with noisi
     print('Computing grid...')
-    os.system('noisi setup_sourcegrid ' + project_path)
+
+    conf = json.load(open(os.path.join(project_path,'config.json')))
+    
+    if conf['gauss_grid']:
+        setup_sgrid_gauss(os.path.join(project_path,'config.json'))
+    else:
+        setup_sgrid(os.path.join(project_path,'config.json'))
+
     print('Grid computed and saved as sourcegrid.npy')
     
     #plot and save sourcegrid
@@ -281,7 +361,47 @@ for i in range(0,np.size(gridpoints_gauss)):
     source_homo = "homo_source"
 
     source_homo_path = os.path.join(project_path,source_homo)
-    os.system ('noisi setup_source ' + source_homo_path)
+
+    source_model = source_homo_path
+        
+    if not os.path.exists('config.json'):
+        print('No config file for project found \
+              (detailing e.g. source grid). Run setup_project first.')
+
+    if os.path.exists(source_model):
+        print('Source exists already, must give it a new name.')
+
+    else:
+        
+        os.makedirs(os.path.join(source_model,'step_0'))
+        os.mkdir(os.path.join(source_model,'observed_correlations'))
+        
+        for d in ['adjt','grad','corr','kern']:
+            os.mkdir(os.path.join(source_model,'step_0',d))
+        
+        from noisi import _ROOT
+        import time
+
+        with io.open(os.path.join(_ROOT,'config','source_config.json'),'r') as fh:
+            conf = json.loads(fh.read())
+            conf['date_created'] = str(time.strftime("%Y.%m.%d"))
+            conf['project_name'] = os.path.basename(os.getcwd())
+            conf['project_path'] = os.getcwd()
+            conf['source_name'] = source_model
+            conf['source_path'] = os.path.abspath(source_model)
+        
+        with io.open(os.path.join(source_model,'source_config.json'),'w') as fh:
+            cf = json.dumps(conf,sort_keys=True, indent=4, separators=(",", ": "))
+            fh.write(cf)
+        
+        with io.open(os.path.join(_ROOT,'config','measr_config.json'),'r') as fh:
+            conf = json.loads(fh.read())
+            conf['date_created'] = str(time.strftime("%Y.%m.%d"))
+        
+        with io.open(os.path.join(source_model,'measr_config.json'),'w') as fh:
+            cf = json.dumps(conf,sort_keys=True, indent=4, separators=(",", ": "))
+            fh.write(cf)
+
 
     print('New source created: ', source_homo_path)
 
@@ -295,10 +415,15 @@ for i in range(0,np.size(gridpoints_gauss)):
     # need arguments: source_config, config, sourcegrid, stationlist, output folder
 
     source_config_path = os.path.join(source_homo_path,'source_config.json')
+
+    # copy wavefield_from_instaseis.py
+    os.system ('cp {} {}'.format(os.path.join(main_path,'noisi/util/wavefield_from_instaseis.py'),source_homo_path))
+    print('Copied wavefield_from_instaseis.py file to source directory.')
+
     wavefield_from_instaseis_path = os.path.join(source_homo_path,'wavefield_from_instaseis.py')
 
     print('Converting wavefield from instaseis...')
-    os.system('mpirun -np {} python {} {} {} {} {} {}'.format(station_n,wavefield_from_instaseis_path,source_config_path,config_path,sourcegrid_path,stationlist_path,project_path))
+    os.system('mpirun -np {} python {} {} {} {} {} {}'.format(n_cores,wavefield_from_instaseis_path,source_config_path,config_path,sourcegrid_path,stationlist_path,project_path))
     print('Done.')
     
     wavefield_processed_path = os.path.join(project_path,'wavefield_processed')
@@ -340,7 +465,7 @@ for i in range(0,np.size(gridpoints_gauss)):
     
     # calculate correlations for homogeneous source
     print("Computing correlations...")
-    os.system("mpirun -np 8 noisi correlation {} {}".format(source_homo_path,0))
+    os.system("mpirun -np {} noisi correlation {} {}".format(n_cores,source_homo_path,0))
     print("All correlations computed.")
     
     # plot correlations and save the file
@@ -357,8 +482,8 @@ for i in range(0,np.size(gridpoints_gauss)):
 
     
     # Go back to main directory
-    os.chdir(main_path)
-    print('Back to main directory:',os.getcwd())
+    #os.chdir(main_path)
+    #print('Back to main directory:',os.getcwd())
     
 print('=======================================')  
 print('======== GAUSSIAN GRIDS DONE ==========')

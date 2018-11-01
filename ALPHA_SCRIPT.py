@@ -213,8 +213,8 @@ print('Number of stations: ',station_n)
 source_config_path = os.path.join(source_homo_path,'source_config.json')
 
 # copy wavefield_from_instaseis.py
-os.system ('cp {} {}'.format(os.path.join(main_path,'noisi/util/wavefield_from_instaseis.py'),source_homo_path)
-print ('Copied wavefield_from_instaseis.py file to source directory.')
+os.system ('cp {} {}'.format(os.path.join(main_path,'noisi/util/wavefield_from_instaseis.py'),source_homo_path))
+print('Copied wavefield_from_instaseis.py file to source directory.')
 
 wavefield_from_instaseis_path = os.path.join(source_homo_path,'wavefield_from_instaseis.py')
 

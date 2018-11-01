@@ -242,7 +242,8 @@ def gauss_grid_one(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,plot=True,dense_anti
         ax.coastlines()
         plt.scatter(lon_final_final,lat_final_final,s=1,c='k',transform=ccrs.Geodetic())
         plt.title('Centre at %0.2f ° latitude and %0.2f ° longitude with %i gridpoints' %(lat_0,lon_0,np.size(lat_final_final)))
-        plt.show()
+        plt.show(block=False)
+        plt.close()
 
         
     return list((lon_final_final,lat_final_final))
@@ -279,7 +280,7 @@ def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,gamma,plot,dense_antipol
     print("Number of grids: ", n_grids)
 
     if n_grids == 1:
-        plot = True
+        plot = False
         grid = gauss_grid_one(sigma[0],beta[0],phi_ini[0],phi_max[0],lat_0[0],lon_0[0],n[0],plot,dense_antipole,only_ocean)
         final_grid_lon = grid[0]
         final_grid_lat = grid[1]
@@ -339,7 +340,8 @@ def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,gamma,plot,dense_antipol
             ax.coastlines()
             plt.scatter(final_grid_lon,final_grid_lat,s=1,c='k',transform=ccrs.Geodetic())
             plt.title('Final grid with {} gridpoints'.format(np.size(final_grid_lon)))
-            plt.show()
+            plt.show(block=False)
+            plt.close()
         
             print('Final number of gridpoints:',np.size(final_grid_lon))
 
