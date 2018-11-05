@@ -26,31 +26,32 @@ n_cores = 8
 
 # homogeneous grids input
 
-gridpoints_homo = [1018,2543,5092,7499,10071,20125,30048,40748,50993,60079,70771,81857,101004]
+#gridpoints_homo = [1018,2543,5092,7499,10071,20125,30048,40748,50993,60079,70771,81857,101004]
+gridpoints_homo = [60079,70771,81857,101004]
+phi_ini_homo = [0.7,0.645,0.6,0.54]
 
-phi_ini_homo = [5.4,3.4,2.4,1.98,1.71,1.21,0.99,0.85,0.76,0.7,0.645,0.6,0.54]
-
-sigma_homo = [10]*13
-beta_homo = [5]*13
+sigma_homo = [10]*4
+beta_homo = [5]*4
 phi_max_homo = phi_ini_homo
-lat_0_homo = [0]*13
-lon_0_homo = [0]*13
-n_homo = [1000]*13
-gamma_homo = [0]*13
+lat_0_homo = [0]*4
+lon_0_homo = [0]*4
+n_homo = [1000]*4
+gamma_homo = [0]*4
 
 
 # multiple gaussian grids input
 
-gridpoints_gauss = [1080,2510,5106,7331,10330,20840,29984,40095,50000,61968,73311,81861,103365]
+#gridpoints_gauss = [1080,2510,5106,7331,10330,20840,29984,40095,50000,61968,73311,81861,103365]
+gridpoints_gauss = [61968,73311,81861,103365]
 
-sigma_gauss = [[10,10],[10,10],[15,15],[16,16],[26,26],[20,20],[23,23],[27,27],[28,28],[31,31],[35,35],[34,34],[3,3]]
-beta_gauss = [[5,5],[5,5],[5,5],[5,5],[5,5],[5,5],[5,5],[5,5],[5,5],[5,5],[5,5],[5,5],[5,5]]
-phi_ini_gauss = [[3.5,3.5],[2,2],[1.2,1.2],[1,1],[0.8,0.8],[0.5,0.5],[0.4,0.4],[0.3,0.3],[0.3,0.3],[0.2,0.2],[0.1,0.1],[0.1,0.1],[0.1,0.1]]
-phi_max_gauss = [[10,10],[5,5],[4,4],[3,3],[4,4],[4,4],[3,3],[3,3],[2,2],[2,2],[2,2],[1.5,1.5],[1,1]]
-lat_0_gauss = [[50,-16],[50,-16],[50,-16],[50,-16],[50,-16],[50,-16],[50,-16],[50,-16],[50,-16],[50,-16],[50,-16],[50,-16],[50,-16]]
-lon_0_gauss = [[-30,70],[-30,70],[-30,70],[-30,70],[-30,70],[-30,70],[-30,70],[-30,70],[-30,70],[-30,70],[-30,70],[-30,70],[-30,70]]
-n_gauss = [[200,200],[200,200],[200,200],[200,200],[200,200],[400,400],[400,400],[400,400],[400,400],[400,400],[400,400],[400,400],[400,400]]
-gamma_gauss = [[0,40],[0,40],[0,40],[0,40],[0,40],[0,40],[0,40],[0,40],[0,40],[0,40],[0,40],[0,40],[0,40]]
+sigma_gauss = [[31,31],[35,35],[34,34],[3,3]]
+beta_gauss = [[5,5],[5,5],[5,5],[5,5]]
+phi_ini_gauss = [[0.2,0.2],[0.1,0.1],[0.1,0.1],[0.1,0.1]]
+phi_max_gauss = [[2,2],[2,2],[1.5,1.5],[1,1]]
+lat_0_gauss = [[50,-16],[50,-16],[50,-16],[50,-16]]
+lon_0_gauss = [[-30,70],[-30,70],[-30,70],[-30,70]]
+n_gauss = [[400,400],[400,400],[400,400],[400,400]]
+gamma_gauss = [[0,40],[0,40],[0,40],[0,40]]
 
 
 # station list input
@@ -66,7 +67,7 @@ for i in range(0,np.size(gridpoints_homo)):
     print('============= Working on Grid {} of {} ================'.format(i+1,np.size(gridpoints_homo)))
     
     # new project
-    project_name = "BENCHMARK_Homo_TEST_" + str(gridpoints_homo[i])
+    project_name = "BENCHMARK_Homo_" + str(gridpoints_homo[i])
     if os.path.exists(project_name):
         print('Project exists already, must give it a new name.')
         #break out of loop so that it's not calculated again.
@@ -310,14 +311,14 @@ for i in range(0,np.size(gridpoints_gauss)):
         conf = json.loads(fh.read())
         
     conf['gauss_grid'] = True      
-    conf['gauss_sigma'] = [sigma_gauss[i]]
-    conf['gauss_beta'] = [beta_gauss[i]]
-    conf['gauss_phi_ini'] = [phi_ini_gauss[i]]
-    conf['gauss_phi_max'] = [phi_max_gauss[i]]
-    conf['gauss_lat_0'] = [lat_0_gauss[i]]
-    conf['gauss_lon_0'] = [lon_0_gauss[i]]
-    conf['gauss_n'] = [n_gauss[i]]
-    conf['gauss_gamma'] = [gamma_gauss[i]]
+    conf['gauss_sigma'] = sigma_gauss[i]
+    conf['gauss_beta'] = beta_gauss[i]
+    conf['gauss_phi_ini'] = phi_ini_gauss[i]
+    conf['gauss_phi_max'] = phi_max_gauss[i]
+    conf['gauss_lat_0'] = lat_0_gauss[i]
+    conf['gauss_lon_0'] = lon_0_gauss[i]
+    conf['gauss_n'] = n_gauss[i]
+    conf['gauss_gamma'] = gamma_gauss[i]
     conf['gauss_plot'] = False
     conf['gauss_dense_antipole'] = False
     conf['gauss_only_ocean'] = True
@@ -479,7 +480,9 @@ for i in range(0,np.size(gridpoints_gauss)):
     traces_homo.plot(type='section',orientation='horizontal',
     reftime = traces_homo[0].stats.starttime + maxlag,scale=1.,outfile=os.path.join(project_path,'homo_correlations.png'))
 
-
+    # Remove wavefield_processed folder to save space
+    os.system('rm -r {}'.format(wavefield_processed_path))
+    print('{} removed to save space.'.format(wavefield_processed_path))
     
     # Go back to main directory
     #os.chdir(main_path)
