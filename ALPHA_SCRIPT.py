@@ -23,13 +23,14 @@ from noisi.util.setup_noisesource_new import setup_noisesource_new
 from noisi.util.plot_with_azimuth_sel import plot_section
 from noisi.util.make_synthetic_data import make_synth_data
 from noisi.util.plot_cartopy import plot_gradient
-from noisi.main import setup_proj
-from noisi.main import setup_sourcegrid
-from noisi.main import setup_source
-from noisi.main import correlation
-from noisi.main import kernel
-from noisi.main import gradient
+#from noisi.main import setup_proj
+#from noisi.main import setup_sourcegrid
+#from noisi.main import setup_source
+#from noisi.main import correlation
+#from noisi.main import kernel
+#from noisi.main import gradient
 from subprocess import call
+from noisi.util.setup_new import setup_proj
 import time
 
 # get the main directory
@@ -68,7 +69,7 @@ project_path = os.path.join(main_path,project_name)
 print('Path to new project: ', project_path)
 
 # copy stationlist file to project and rename stationlist.csv
-os.system ('cp {} {}'.format(stationlist_path,os.path.join(project_path,'stationlist.csv')))
+call('cp {} {}'.format(stationlist_path,os.path.join(project_path,'stationlist.csv')),shell=True)
 print ('Copied stationlist file to project directory.')
 
 
@@ -165,7 +166,6 @@ else:
         os.mkdir(os.path.join(source_model,'step_0',d))
 
     from noisi import _ROOT
-    import time 
     
     with io.open(os.path.join(_ROOT,'config','source_config.json'),'r') as fh:
         conf = json.loads(fh.read())
@@ -214,14 +214,14 @@ print('Number of stations: ',station_n)
 
 source_config_path = os.path.join(source_homo_path,'source_config.json')
 # copy wavefield_from_instaseis.py
-os.system ('cp {} {}'.format(os.path.join(main_path,'noisi/util/wavefield_from_instaseis.py'),source_homo_path))
+call('cp {} {}'.format(os.path.join(main_path,'noisi/util/wavefield_from_instaseis.py'),source_homo_path),shell=True)
 print('Copied wavefield_from_instaseis.py file to source directory.')
 
 
 wavefield_from_instaseis_path = os.path.join(source_homo_path,'wavefield_from_instaseis.py')
 
 print('Converting wavefield from instaseis...')
-os.system('mpirun -np {} python {} {} {} {} {} {}'.format(n_cores,wavefield_from_instaseis_path,source_config_path,config_path,sourcegrid_path,stationlist_path,project_path))
+call('mpirun -np {} python {} {} {} {} {} {}'.format(n_cores,wavefield_from_instaseis_path,source_config_path,config_path,sourcegrid_path,stationlist_path,project_path),shell=True)
 print('Done.')
 
 
@@ -265,7 +265,7 @@ print('Done.')
 
 ######## calculate correlations for homogeneous source #########
 print("Computing correlations...")
-os.system("mpirun -np {} noisi correlation {} {}".format(n_cores,source_homo_path,0))
+call("mpirun -np {} noisi correlation {} {}".format(n_cores,source_homo_path,0),shell=True)
 print("All correlations computed.")
 
 
@@ -312,7 +312,6 @@ else:
         os.mkdir(os.path.join(source_model,'step_0',d))
 
     from noisi import _ROOT
-    import time 
     
     with io.open(os.path.join(_ROOT,'config','source_config.json'),'r') as fh:
         conf = json.loads(fh.read())
@@ -373,7 +372,7 @@ setup_noisesource_new(project_path,source_data_path,data_path = data_path, t_dat
 
 ##########  calculate correlations for homogeneous source #########
 print("Computing correlations...")
-os.system("mpirun -np {} noisi correlation {} {}".format(n_cores,source_data_path,0))
+call("mpirun -np {} noisi correlation {} {}".format(n_cores,source_data_path,0),shell=True)
 print("All correlations computed.")
 
 # plot correlations and save the file
@@ -405,13 +404,13 @@ print('Synthetic data created.')
 
 ######## noisi measurement ###############
 print('Computing adjoint sources...')
-os.system('noisi measurement {} {}'.format(source_homo_path,0))
+call('noisi measurement {} {}'.format(source_homo_path,0),shell=True)
 print('Done.')
 
 
 ############ Compute kernels  ##############
 print('Computing kernels...')
-os.system('mpirun -np {} noisi kernel {} {}'.format(n_cores,source_homo_path,0))
+call('mpirun -np {} noisi kernel {} {}'.format(n_cores,source_homo_path,0),shell=True)
 print('Done.')
 
 ## EXIT if config 'compute' = 'kernel'
@@ -422,7 +421,7 @@ if alpha_config['compute'] == 'kernel':
 
 ########## Compute gradient #############
 print('Computing gradient...')
-os.system('noisi gradient {} {}'.format(source_homo_path,0))
+call('noisi gradient {} {}'.format(source_homo_path,0),shell=True)
 print('Done.')
 
 
