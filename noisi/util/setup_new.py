@@ -2,7 +2,8 @@ import os
 import io
 import time
 import json
-from noisi import _ROOT
+#from noisi import _ROOT
+_ROOT = os.path.abspath(os.getcwd())
 
 def setup_proj(project_name):
 

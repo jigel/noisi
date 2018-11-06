@@ -1,7 +1,7 @@
 {
     "n_cores": 8,
     "project_name": "TEST_Project",
-    "data_path": "/Users/jigel/noisi/WW3-GLOB-30M_201701_p2l.nc",
+    "data_path": "/home/jigel/fabrice_data/WW3-GLOB-30M_201701_p2l.nc",
     "t_data": 206,
     "f_dom": 0.1,
     "data_thresh": 0.4,
@@ -15,7 +15,7 @@
     "gamma_const": 3,
     "back_grid_phi": 5,
     "data_grid_phi": 2,
-    "stationlist_path": "/Users/jigel/noisi/stationlist_europe_16.csv",
-    "wavefield_path": "/Users/jigel/axisem/SOLVER/Noisi_10s_repacked",
+    "stationlist_path": "/home/jigel/noisi/stationlist_europe_16.csv",
+    "wavefield_path": "/home/jigel/wavefields/Noisi_10s_repacked",
     "compute": "correlation"
 }
