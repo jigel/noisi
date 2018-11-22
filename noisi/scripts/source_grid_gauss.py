@@ -405,7 +405,7 @@ def create_sourcegrid_gauss(config):
     grid = gauss_grid(config['gauss_sigma'],config['gauss_beta'],config['gauss_phi_ini'],config['gauss_phi_max'],
                       config['gauss_lat_0'],config['gauss_lon_0'],config['gauss_n'],gamma=config['gauss_gamma'],
                       plot=config['gauss_plot'],dense_antipole=config['gauss_dense_antipole'],
-                      only_ocean=config['gauss_only_ocean'])
+                      only_ocean=config['gauss_only_ocean'],stationlist_file=config['gauss_stationlist'])
    
     sources = np.zeros((2,len(grid[0])))
     #sources[0,:] = ids

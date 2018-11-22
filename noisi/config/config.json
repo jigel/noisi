@@ -21,6 +21,7 @@
     "gauss_plot": true,
     "gauss_dense_antipole": true,
     "gauss_only_ocean": false,
+    "gauss_stationlist": None,
     "voronoi_surface_area": false,
 	"hdur_pointsource":10,
     "station_channels": [
