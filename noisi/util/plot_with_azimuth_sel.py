@@ -36,12 +36,12 @@ az_selection=None,scale=4.,resol=1,plot=True):
             sta2 = os.path.basename(t).split('--')[1].split('.')[1]
         except IndexError:
             sta2 = os.path.basename(t).split('.')[5]
-        print(sta1,sta2)
+        #print(sta1,sta2)
         lat1 = float(meta[meta['sta']==sta1].iloc[0]['lat'])
         lat2 = float(meta[meta['sta']==sta2].iloc[0]['lat'])
         lon1 = float(meta[meta['sta']==sta1].iloc[0]['lon'])
         lon2 = float(meta[meta['sta']==sta2].iloc[0]['lon'])
-        print(lat1,lon1,lat2,lon2)
+        #print(lat1,lon1,lat2,lon2)
 
         tr[0].stats.network = os.path.basename(t).split('.')[0]
         tr[0].stats.station = sta1
@@ -100,7 +100,7 @@ az_selection=None,scale=4.,resol=1,plot=True):
                 if t.stats.sac.az >= az_selection[0] and t.stats.sac.az <= az_selection[1]:
 
                     t.data = t.data[::-1]
-                    print("Trace changed from {}--{} to {}--{}.".format(sta1,sta2,sta2,sta1))
+                    #print("Trace changed from {}--{} to {}--{}.".format(sta1,sta2,sta2,sta1))
                 else:
                     traces.remove(t)
 

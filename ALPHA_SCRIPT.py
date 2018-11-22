@@ -291,8 +291,8 @@ if alpha_config['compute'] == 'correlation':
 ########## Setup the Data Source  #########
 
 source_data = "data_source"
-source_data_path = os.path.join(project_path,source_homo)
-source_model = source_homo_path
+source_data_path = os.path.join(project_path,source_data)
+source_model = source_data_path
 
 
     
@@ -346,7 +346,7 @@ else:
     #Please run setup_noisesource.ipynb or setup_noisesource.py after editing to \
     #create starting model.")
 
-print('New source created: ', source_homo_path)
+print('New source created: ', source_data_path)
 
 
 # Change source_config file

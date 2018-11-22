@@ -5,6 +5,7 @@ import json
 import os
 import io
 import warnings
+from pandas import read_csv
 warnings.filterwarnings("ignore")
 
 def gauss_grid_one(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,plot=True,dense_antipole = True,only_ocean=False):
@@ -235,15 +236,15 @@ def gauss_grid_one(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,plot=True,dense_anti
         
     #print('Number of gridpoints:',np.size(lat_final_final))
     
-    if plot:
-        print('Number of gridpoints:',np.size(lat_final_final))
-        plt.figure(figsize=(25,10))
-        ax = plt.axes(projection=ccrs.Mollweide())
-        ax.coastlines()
-        plt.scatter(lon_final_final,lat_final_final,s=1,c='k',transform=ccrs.Geodetic())
-        plt.title('Centre at %0.2f ° latitude and %0.2f ° longitude with %i gridpoints' %(lat_0,lon_0,np.size(lat_final_final)))
-        plt.show(block=False)
-        plt.close()
+    #if plot:
+    #    print('Number of gridpoints:',np.size(lat_final_final))
+    #    plt.figure(figsize=(25,10))
+    #    ax = plt.axes(projection=ccrs.Mollweide())
+    #    ax.coastlines()
+    #    plt.scatter(lon_final_final,lat_final_final,s=1,c='k',transform=ccrs.Geodetic())
+    #    plt.title('Centre at %0.2f ° latitude and %0.2f ° longitude with %i gridpoints' %(lat_0,lon_0,np.size(lat_final_final)))
+    #    plt.show(block=False)
+    #    plt.close()
 
         
     return list((lon_final_final,lat_final_final))
@@ -264,7 +265,7 @@ def spherical_distance_degrees(lat1,lon1,lat2,lon2):
     return dist_deg
 
 
-def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,gamma,plot,dense_antipole,only_ocean):
+def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,gamma,plot,dense_antipole,only_ocean,stationlist_file = None):
     """
     This function creates several gaussian grids. To turn them into one grid the variable gamma has to be defined. 
     The input should be arrays with the variables for the gaussian grid plus gamma.
@@ -273,6 +274,7 @@ def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,gamma,plot,dense_antipol
     
     :sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,gamma = array of integers
     :plot,dense_antipole,only_ocean = array of True/False
+    :stationlist_file = path to stationlist file
     """
     
     # first check the number of grids given
@@ -280,7 +282,7 @@ def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,gamma,plot,dense_antipol
     print("Number of grids: ", n_grids)
 
     if n_grids == 1:
-        plot = False
+        #plot = False
         grid = gauss_grid_one(sigma[0],beta[0],phi_ini[0],phi_max[0],lat_0[0],lon_0[0],n[0],plot,dense_antipole,only_ocean)
         final_grid_lon = grid[0]
         final_grid_lat = grid[1]
@@ -332,18 +334,60 @@ def gauss_grid(sigma,beta,phi_ini,phi_max,lat_0,lon_0,n,gamma,plot,dense_antipol
                     final_grid_lat = np.append(final_grid_lat,all_grids[i+1][1][k])
                 else:
                     continue
-                    
-        # plot
-        if plot:
-            plt.figure(figsize=(25,10))
-            ax = plt.axes(projection=ccrs.Mollweide())
-            ax.coastlines()
-            plt.scatter(final_grid_lon,final_grid_lat,s=1,c='k',transform=ccrs.Geodetic())
-            plt.title('Final grid with {} gridpoints'.format(np.size(final_grid_lon)))
-            plt.show(block=False)
-            plt.close()
+            
+            
+            
+    # Remove gridpoints in area around stations if stationlist is given
+    if stationlist_file is not None:
+        print('Removing points around stations..')
+        stationlist = read_csv(stationlist_file)
         
-            print('Final number of gridpoints:',np.size(final_grid_lon))
+        
+        stations_lat = []
+        stations_lon = []
+        
+        for i in range(0,np.size(stationlist,0)):
+            lat = stationlist.at[i,'lat']
+            lon = stationlist.at[i,'lon']
+            stations_lat.append(lat)
+            stations_lon.append(lon)
+            
+        grid_lat_new = final_grid_lat
+        grid_lon_new = final_grid_lon
+        
+        dist_ind_all = []
+        
+        for i in range(0,np.size(stations_lat)):
+            #print('Working on station: ',i+1)
+            # compute distance to each gridpoint
+            dist = []
+            for j in range(0,np.size(final_grid_lat)):
+                dist_var = spherical_distance_degrees(stations_lat[i],stations_lon[i],final_grid_lat[j],final_grid_lon[j])
+                dist.append(dist_var)
+                
+            dist_ind_all.append(list(np.where(np.array(dist) <= 1)[0]))
+            
+        dist_ind_all = np.concatenate(dist_ind_all)
+        grid_lat_new = np.delete(grid_lat_new,dist_ind_all)
+        grid_lon_new = np.delete(grid_lon_new,dist_ind_all)
+        
+        
+        final_grid_lat = grid_lat_new
+        final_grid_lon = grid_lon_new
+        
+    #plot
+    if plot:
+        plt.figure(figsize=(25,10))
+        ax = plt.axes(projection=ccrs.Mollweide())
+        ax.coastlines()
+        plt.scatter(final_grid_lon,final_grid_lat,s=1,c='k',transform=ccrs.Geodetic())
+        plt.title('Final grid with {} gridpoints'.format(np.size(final_grid_lon)))
+        plt.show(block=False)
+        plt.close()
+        
+    
+        print('Final number of gridpoints:',np.size(final_grid_lon))
+                    
 
     return list((final_grid_lon,final_grid_lat))
     
