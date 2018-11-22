@@ -4,7 +4,7 @@ from obspy.geodetics import gps2dist_azimuth
 from obspy.signal.invsim import cosine_taper
 import matplotlib.pyplot as plt
 import h5py
-from noisi import WaveField
+from noisi.my_classes.wavefield import WaveField
 import json
 from glob import glob
 import os

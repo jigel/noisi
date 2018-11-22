@@ -30,12 +30,17 @@ from noisi.util.plot_cartopy import plot_gradient
 #from noisi.main import kernel
 #from noisi.main import gradient
 from subprocess import call
-from noisi.util.setup_new import setup_proj
+#from noisi.util.setup_new import setup_proj
 import time
 
+#call('mpirun python hi.py',shell=True)
+#sys.exit()
+
 # get the main directory
-main_path = os.getcwd()
+main_path = os.path.abspath(os.getcwd())
+noisi_path = os.path.join(os.getcwd(),'noisi')
 print(main_path)
+print(noisi_path)
 
 # load the alpha_config.json file
 with io.open('./alpha_config.json','r') as fh:
@@ -62,7 +67,25 @@ if os.path.exists(project_name):
     print('Project exists already, must give it a new name.')
 
 else:
-    setup_proj(project_name)
+    #setup_proj(project_name)
+    os.makedirs(os.path.join(project_name))
+    
+    with io.open(os.path.join(noisi_path,'config','config.json'),'r+') as fh:
+        conf = json.loads(fh.read())
+        
+    conf['date_created'] = time.strftime("%Y.%m.%d")
+    conf['project_name'] = project_name
+    conf['project_path'] = os.path.abspath(project_name)
+
+    
+    with io.open(os.path.join(project_name,'config.json'),'w') as fh:
+        cf = json.dumps(conf,sort_keys=False, indent=4, separators=(",", ": "))
+        fh.write(cf)
+        
+    # Copy gaussian grid notebook
+    os.system('cp {} {}'.format(os.path.join(noisi_path,'jnotebks/setup_gaussian_grid.ipynb'),
+    project_name))
+    
     print('New project created:', project_name)
 
 project_path = os.path.join(main_path,project_name)
@@ -165,9 +188,9 @@ else:
     for d in ['adjt','grad','corr','kern']:
         os.mkdir(os.path.join(source_model,'step_0',d))
 
-    from noisi import _ROOT
+    #from noisi import _ROOT
     
-    with io.open(os.path.join(_ROOT,'config','source_config.json'),'r') as fh:
+    with io.open(os.path.join(noisi_path,'config','source_config.json'),'r') as fh:
         conf = json.loads(fh.read())
         conf['date_created'] = str(time.strftime("%Y.%m.%d"))
         conf['project_name'] = os.path.basename(os.getcwd())
@@ -179,7 +202,7 @@ else:
         cf = json.dumps(conf,sort_keys=True, indent=4, separators=(",", ": "))
         fh.write(cf)
 
-    with io.open(os.path.join(_ROOT,'config','measr_config.json'),'r') as fh:
+    with io.open(os.path.join(noisi_path,'config','measr_config.json'),'r') as fh:
         conf = json.loads(fh.read())
         conf['date_created'] = str(time.strftime("%Y.%m.%d"))
 
